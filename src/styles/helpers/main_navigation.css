@@ -1,0 +1,9 @@
+.navbar {
+    @apply justify-center flex;
+}
+
+.navbar + .main {
+    @apply mt-28 overflow-x-hidden;
+    margin-top: var(--navbar-height);
+    min-height: calc(100vh - var(--navbar-height));
+}
