@@ -1,2 +1,3 @@
-@import "styles/settings.css";
-@import "styles/helpers/parts/buttons.css"
+@import 'styles/settings.css';
+@import 'styles/helpers/parts/buttons.css';
+@import 'styles/helpers/main_navigation.css';

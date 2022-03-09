@@ -1,28 +1,26 @@
-import React from "react";
-import { Button } from "./views/partials/Button";
+import React, { Component } from 'react';
+import { BrowserRouter, Route, Routes as Switch } from 'react-router-dom';
+import OverviewPage from './Pages/OverviewPage';
+import StatsPage from './Pages/StatsPage';
+import TodayPage from './Pages/TodayPage';
+import MainContainer from './views/navbar/MainContainer';
 
-const doNothing = () =>{
-  return(
-    <h1> More text</h1>
-  )
-}
+class App extends Component {
+    componentDidMount() {}
 
-export const App = () => {
-  return (
-    <div className="flex select-none bg-slate-900">
-     <h1> Test1</h1>
-     <h2> Test2</h2>
-     <div className="h-6 w-10 ">
-     <Button 
-        disabled={false}
-        onClick = {()=>{doNothing()}}
-        className ="flex h-full w-full items-center justify-center button" >Click me</Button>
-      </div>
-     
-    </div>
-  );
+    render() {
+        return (
+            <BrowserRouter>
+                <MainContainer>
+                    <Switch>
+                        <Route path="/" element={<OverviewPage />} />
+                        <Route path="today" element={<TodayPage />} />
+                        <Route path="stats" element={<StatsPage />} />
+                    </Switch>
+                </MainContainer>
+            </BrowserRouter>
+        );
+    }
 }
 
 export default App;
-
-
