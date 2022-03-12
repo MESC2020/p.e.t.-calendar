@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../views/partials/Button';
-import VictoryLineChart from '../components/models/VictoryLineChart';
+import VictoryLineChart from '../components/charts/VictoryLineChart';
 
 export interface IOverviewPageProps {}
 

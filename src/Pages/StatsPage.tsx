@@ -1,10 +1,10 @@
 import React from 'react';
-import LineChart from '../components/models/LineChart';
-import PieChart from '../components/models/PieChart';
-import ScatterChart from '../components/models/ScatterChart';
-import StatsBox from '../components/models/StatsBox';
-import VictoryLineChart from '../components/models/VictoryLineChart';
-import VictoryPieChart from '../components/models/VictoryPieChart';
+import LineChart from '../components/charts/LineChart';
+import PieChart from '../components/charts/PieChart';
+import ScatterChart from '../components/charts/ScatterChart';
+import StatsBox from '../components/charts/StatsBox';
+import VictoryLineChart from '../components/charts/VictoryLineChart';
+import VictoryPieChart from '../components/charts/VictoryPieChart';
 
 export interface IStatsPageProps {}
 
