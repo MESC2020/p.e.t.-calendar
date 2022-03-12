@@ -2,7 +2,7 @@ button,
 .btn {
     @apply transition-all duration-300
     py-2 px-2 h-10 overflow-ellipsis
-    bg-blue-800
+    bg-blue-400
     shadow-lg
     block rounded-xl
     text-white font-medium uppercase text-xs text-center

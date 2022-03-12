@@ -1,12 +1,14 @@
 import React from 'react';
 import MainNavigation from './MainNavigation';
 
-export interface IMainContainerProps {}
+export interface IMainContainerProps {
+    className?: string;
+}
 
 const MainContainer: React.FunctionComponent<IMainContainerProps> = (props) => {
     return (
         <>
-            <div className="navbar border-2 border-green-500">
+            <div className={'navbar pt-5'}>
                 <MainNavigation />
             </div>
             <div className="main">{props.children}</div>;
