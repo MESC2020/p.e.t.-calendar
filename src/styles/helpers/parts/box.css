@@ -1,0 +1,7 @@
+.box-squared {
+    @apply w-1/2;
+}
+.box-squared,
+.box-stretched {
+    @apply h-2/4;
+}
