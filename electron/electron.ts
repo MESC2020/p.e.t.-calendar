@@ -1,21 +1,21 @@
 // main entry point for electron
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
-const path = require('path')
+const { app, BrowserWindow, ipcMain } = require("electron");
+const path = require("path");
 
-function createWindow () {
+function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
-    }
-  })
-  if(app.isPackaged){
-    mainWindow.loadFile(path.join(__dirname, "../build/index.html"))
-  }
-  else{
+      contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+  if (app.isPackaged) {
+    mainWindow.loadFile(path.join(__dirname, "../build/index.html"));
+  } else {
     mainWindow.loadURL("http://localhost:3000");
   }
 
@@ -24,28 +24,57 @@ function createWindow () {
   //mainWindow.loadFile(path.join(__dirname,'index.html'));
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
 
-  app.on('activate', function () {
+  app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
-})
+app.on("window-all-closed", function () {
+  if (process.platform !== "darwin") app.quit();
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+const sqlite3 = require("sqlite3");
+
+// Initializing a new database
+const db = new sqlite3.Database("../db/testDB.db", (err) => {
+  if (err) {
+    return console.error(err.message);
+  }
+  console.log("Connected to SQlite database");
+});
+
+const getNames = () => {
+  const sql = "SELECT * FROM test";
+  const result = db.all(sql, [], (err, rows) => {
+    if (err) {
+      throw err;
+    }
+    return rows;
+  });
+
+  return result;
+};
+
+ipcMain.handle("get-names", (event, args) => {
+  console.log("we're here");
+  const data = getNames();
+
+  return data;
+});
