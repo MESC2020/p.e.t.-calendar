@@ -2,7 +2,7 @@
   "name": "desktop-task-app",
   "version": "0.1.0",
   "private": true,
-  "main": "electron/electron.js",
+  "main": "build/electron/electron.js",
   "homepage": "./",
   "dependencies": {
     "@craco/craco": "^6.4.3",
@@ -53,8 +53,8 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p electron/tsconfig.json",
-    "start": "concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
+    "compile": "tsc",
+    "start": "npm run compile && concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "craco build",
     "test": "craco test",
     "postinstall": "electron-builder install-app-deps"

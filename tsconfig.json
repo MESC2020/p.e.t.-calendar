@@ -1,20 +1,23 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": ["dom", "dom.iterable"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": false,
     "jsx": "react",
+    "outDir": "./build",
+    "sourceMap": true,
     "typeRoots": ["./types"]
   },
-  "include": ["src", "electron/**/*"]
+  "include": ["scr/**/*.ts", "src", "electron"],
+  "exclude": ["node_modules"]
 }
