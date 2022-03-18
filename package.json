@@ -53,8 +53,11 @@
     }
   },
   "scripts": {
+    "start": "nf start",
+    "start-react": "craco start",
+    "start-electron": "ts-node --skip-project electron/connect-electron.ts",
+    "watch-electron": "tsc --watch --project electron/tsconfig.json",
     "compile": "tsc",
-    "start": "npm run compile && concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "craco build",
     "test": "craco test",
     "postinstall": "electron-builder install-app-deps"
@@ -80,6 +83,8 @@
   "devDependencies": {
     "@faker-js/faker": "^6.0.0-beta.0",
     "electron": "^17.1.0",
-    "electron-builder": "^22.14.13"
+    "electron-builder": "^22.14.13",
+    "foreman": "^3.0.1",
+    "nodemon": "^2.0.15"
   }
 }
