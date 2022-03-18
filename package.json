@@ -53,7 +53,7 @@
     }
   },
   "scripts": {
-    "compile": "tsc",
+    "compile": "tsc -p electron/tsconfig.json",
     "start": "npm run compile && concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "craco build",
     "test": "craco test",
