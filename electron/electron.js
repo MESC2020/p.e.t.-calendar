@@ -53,28 +53,35 @@ app.on("window-all-closed", function () {
 const sqlite3 = require("sqlite3");
 
 // Initializing a new database
-const db = new sqlite3.Database("../db/testDB.db", (err) => {
+const db = new sqlite3.Database("./db/testDB.db", (err) => {
   if (err) {
     return console.error(err.message);
   }
   console.log("Connected to SQlite database");
 });
 
-const getNames = () => {
-  const sql = "SELECT * FROM test";
-  const result = db.all(sql, [], (err, rows) => {
-    if (err) {
-      throw err;
-    }
-    return rows;
+const getNames = (db) => {
+  const sql = "SELECT * FROM family";
+  return new Promise((resolve, reject) => {
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        throw err;
+      }
+      const list = [];
+      rows.forEach((row) => {
+        list.push(row);
+      });
+      resolve(list);
+    });
   });
-
-  return result;
 };
 
-ipcMain.handle("get-names", (event, args) => {
-  console.log("we're here");
-  const data = getNames();
-
-  return data;
+ipcMain.handle("get-names", async (event, args) => {
+  console.log("we're in handler");
+  const results = getNames(db)
+    .then((list) => {
+      return list;
+    })
+    .catch((err) => console.log(err));
+  return results;
 });

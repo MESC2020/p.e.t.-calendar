@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 export interface ITodayPageProps {}
 
 declare global {
@@ -8,16 +8,20 @@ declare global {
 }
 
 const TodayPage: React.FunctionComponent<ITodayPageProps> = (props) => {
+    const [name, setName] = useState<any[]>([]);
     useEffect(() => {
         async function fetchData() {
-            console.log(await window.api.getNames());
+            const result = await window.api.getNames();
+            console.log(result);
+            setName(result);
         }
         fetchData();
     }, []);
+
     return (
         <div>
             <p>This is the Today Page</p>
-            {}
+            {name.length == 0 ? '...' : name[0].names}
         </div>
     );
 };

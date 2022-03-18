@@ -1,13 +1,23 @@
 const sqlite3 = require("sqlite3");
 
-// Initializing a new database
-const db = new sqlite3.Database("./storage.db", (err) => {
+const db = new sqlite3.Database("testDB.db", (err) => {
   if (err) {
     return console.error(err.message);
   }
   console.log("Connected to SQlite database");
 });
 
+const sql = "SELECT * FROM family";
+list = db.all(sql, [], (err, rows) => {
+  if (err) {
+    throw err;
+  }
+
+  rows.forEach((row) => {
+    list.push(row);
+  });
+});
+console.log(list);
 /*
 db.close((err) => {
   if (err) {
