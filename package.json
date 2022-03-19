@@ -2,7 +2,7 @@
   "name": "desktop-task-app",
   "version": "0.1.0",
   "private": true,
-  "main": "build/electron/electron.js",
+  "main": "./build/electron/electron.js",
   "homepage": "./",
   "dependencies": {
     "@craco/craco": "^6.4.3",

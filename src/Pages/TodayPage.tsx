@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 export interface ITodayPageProps {}
 
-declare global {
-    interface Window {
-        api: any;
-    }
-}
-
 const TodayPage: React.FunctionComponent<ITodayPageProps> = (props) => {
     const [name, setName] = useState<any[]>([]);
     useEffect(() => {
