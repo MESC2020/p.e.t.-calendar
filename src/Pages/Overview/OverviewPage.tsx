@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -7,15 +7,16 @@ import ExternalEvent from './partials/ExternalEvent';
 export interface IOverviewPageProps {}
 
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
+    const calendarRef = useRef<any>();
     const [showDemandLevel, setShowDemandLevel] = useState(false);
     const [firstTime, setFirstTime] = useState(true);
     const [state, setState] = useState({
         weekendsVisible: true,
         externalEvents: [
-            { title: 'Task 1', color: '#74AAEB', id: 'd', demanding: 3 },
+            { title: 'Task 1', color: '#74AAEB', textColor: 'white', id: 'd', demanding: 3 },
             { title: 'Task 2', color: '#E7EDFB', textColor: 'black', id: 'e', demanding: 5 },
             { title: 'Task 3', color: '#E7EDFB', textColor: 'black', id: 'f', demanding: 1 },
-            { title: 'Task 4', color: '#74AAEB', id: 'g', demanding: 7 }
+            { title: 'Task 4', color: '#74AAEB', textColor: 'white', id: 'g', demanding: 7 }
         ],
         events: [
             {
@@ -24,6 +25,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 start: '2022-03-21T12:30:00',
                 end: '2022-03-21T16:30:00',
                 backgroundColor: '#74AAEB',
+                textColor: 'white',
                 demanding: 5
             },
             {
@@ -47,21 +49,22 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     const handleEventReceive = (eventInfo: any) => {
         const newEvent = {
-            id: eventInfo.draggedEl.getAttribute('data-id'),
-            title: eventInfo.draggedEl.getAttribute('title'),
-            color: eventInfo.draggedEl.getAttribute('data-color'),
-            start: eventInfo.date,
-            end: eventInfo.date,
-            demanding: eventInfo.draggedEl.getAttribute('data-demanding'),
-            textColor: eventInfo.draggedE1.getAttribute('data-textColor')
+            id: eventInfo.event.id,
+            title: eventInfo.event.title,
+            start: eventInfo.event.start,
+            end: eventInfo.event.end,
+            backgroundColor: eventInfo.event.backgroundColor,
+            textColor: eventInfo.event.textColor,
+            demanding: eventInfo.event.extendedProps.demanding
         };
 
         setState((state) => {
             return {
                 ...state,
-                calendarEvents: state.events.concat(newEvent)
+                events: state.events.concat(newEvent)
             };
         });
+        manageAPI();
     };
 
     const toggleDemandOnOff = () => {
@@ -71,10 +74,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         else newValue = true;
         setShowDemandLevel(newValue);
     };
+    function handleEventChange(eventInfo: any) {}
 
     function eventChangeWidth(arg: any) {
-        console.log(firstTime);
-        console.log(showDemandLevel);
         const demandingLevel = arg.event.extendedProps.demanding;
         const classNames = [''];
         if (arg.isDragging) {
@@ -92,6 +94,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
         return classNames;
     }
+    const manageAPI = () => {
+        if (calendarRef.current != null) {
+            let calendarApi = calendarRef.current.getApi();
+            console.log(calendarApi.getEvents());
+        }
+    };
 
     return (
         <>
@@ -103,6 +111,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 <div style={{ height: 800, width: 1200 }}>
                     <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl">
                         <FullCalendar
+                            ref={calendarRef}
                             plugins={[timeGridPlugin, interactionPlugin]}
                             initialView="timeGridWeek"
                             allDaySlot={false}
@@ -117,6 +126,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             eventClassNames={eventChangeWidth}
                             droppable={true}
                             eventReceive={handleEventReceive}
+                            forceEventDuration={true}
+                            eventDrop={handleEventChange}
                         />
                     </div>
                     <div className="mt-5 bg-green-50 border-2 rounded-lg w-full h-auto p-2">

@@ -25,7 +25,7 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo(({ even
     return (
         <div
             ref={elRef}
-            className="fc-event fc-h-event mb-1 inline-block fc-daygrid-event fc-daygrid-block-event p-2"
+            className="fc-event fc-h-event mb-1 fc-daygrid-event fc-daygrid-block-event p-2"
             title={event.title}
             style={{
                 backgroundColor: event.color,
