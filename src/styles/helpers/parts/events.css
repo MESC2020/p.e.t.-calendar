@@ -1,0 +1,90 @@
+.demand-1 {
+    width: 14%;
+}
+.demand-2 {
+    width: 29%;
+}
+.demand-3 {
+    width: 43%;
+}
+.demand-4 {
+    width: 57%;
+}
+.demand-5 {
+    width: 71%;
+    transition: 2s;
+}
+
+.demand-5::off {
+    width: 100%;
+}
+
+.default::on {
+    width: 71%;
+}
+.demand-6 {
+    width: 86%;
+}
+.demand-7 {
+    width: 100%;
+}
+
+.maxLevelOff {
+    animation-duration: 1s;
+    animation-name: maxOff;
+    animation-fill-mode: forwards;
+}
+@keyframes maxOff {
+    from {
+        width: 71%;
+    }
+    to {
+        width: 100%;
+    }
+}
+.maxLevelOn {
+    animation-duration: 1s;
+    animation-name: maxOn;
+    animation-fill-mode: forwards;
+}
+
+@keyframes maxOn {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 71%;
+    }
+}
+
+.minLevelOff {
+    animation-duration: 1s;
+    animation-name: minOff;
+    animation-fill-mode: forwards;
+}
+@keyframes minOff {
+    from {
+        width: 20%;
+    }
+    to {
+        width: 100%;
+    }
+}
+.minLevelOn {
+    animation-duration: 1s;
+    animation-name: minOn;
+    animation-fill-mode: forwards;
+}
+
+@keyframes minOn {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 20%;
+    }
+}
+
+.showHand {
+    cursor: pointer;
+}
