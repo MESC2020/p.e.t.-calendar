@@ -1,29 +1,57 @@
-import React, { useRef, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
+import React, { useEffect, useRef, useState } from 'react';
+import FullCalendar, { EventContentArg, EventSourceInput } from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SwitchButton from '../../views/partials/switchButton';
 import ExternalEvent from './partials/ExternalEvent';
+import VerticalGraph from './partials/verticalGraphs';
+import styled from '@emotion/styled';
 export interface IOverviewPageProps {}
 
+export const StyleWrapper = styled.div`
+    .fc-event {
+        z-index: 500 !important;
+        position: absolute !important;
+    }
+`;
+
+type EventObject = {
+    id: string | number;
+    title: string;
+    start: string;
+    end: string;
+    backgroundColor: string;
+    textColor: string;
+    demanding: number;
+};
+type ExternalEventObject = {
+    id: string | number;
+    title: string;
+    backgroundColor: string;
+    textColor: string;
+    demanding: number;
+};
+interface State {
+    externalEvents: ExternalEventObject[];
+    events: EventObject[];
+}
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
     const [showDemandLevel, setShowDemandLevel] = useState(false);
     const [firstTime, setFirstTime] = useState(true);
-    const [state, setState] = useState({
-        weekendsVisible: true,
+    const [state, setState] = useState<State>({
         externalEvents: [
-            { title: 'Task 1', color: '#74AAEB', textColor: 'white', id: 'd', demanding: 3 },
-            { title: 'Task 2', color: '#E7EDFB', textColor: 'black', id: 'e', demanding: 5 },
-            { title: 'Task 3', color: '#E7EDFB', textColor: 'black', id: 'f', demanding: 1 },
-            { title: 'Task 4', color: '#74AAEB', textColor: 'white', id: 'g', demanding: 7 }
+            { id: 'd', title: 'Task 1', backgroundColor: '#74AAEB', textColor: 'white', demanding: 3 },
+            { id: 'e', title: 'Task 2', backgroundColor: '#E7EDFB', textColor: 'black', demanding: 5 },
+            { id: 'f', title: 'Task 3', backgroundColor: '#E7EDFB', textColor: 'black', demanding: 1 },
+            { id: 'g', title: 'Task 4', backgroundColor: '#74AAEB', textColor: 'white', demanding: 7 }
         ],
         events: [
             {
                 id: 'a',
                 title: 'This is just an example',
-                start: '2022-03-21T12:30:00',
-                end: '2022-03-21T16:30:00',
+                start: '2022-03-28T12:30:00',
+                end: '2022-03-28T16:30:00',
                 backgroundColor: '#74AAEB',
                 textColor: 'white',
                 demanding: 5
@@ -31,40 +59,50 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             {
                 id: 'b',
                 title: 'This is another example',
-                start: '2022-03-24T08:00:00',
-                end: '2022-03-24T11:30:00',
+                start: '2022-03-29T08:00:00',
+                end: '2022-03-29T11:30:00',
+                backgroundColor: '#74AAEB',
+                textColor: 'white',
                 demanding: 5
             },
             {
                 id: 'c',
                 title: 'I wonder if you can have line seperator:\n Did this work? ',
-                start: '2022-03-25T14:00:00',
-                end: '2022-03-25T16:00:00',
+                start: '2022-03-30T14:00:00',
+                end: '2022-03-30T16:00:00',
                 backgroundColor: '#E7EDFB',
                 textColor: 'black',
                 demanding: 5
             }
         ]
     });
+    useEffect(() => {
+        return storeEvents();
+    });
 
     const handleEventReceive = (eventInfo: any) => {
         const newEvent = {
-            id: eventInfo.event.id,
-            title: eventInfo.event.title,
-            start: eventInfo.event.start,
-            end: eventInfo.event.end,
-            backgroundColor: eventInfo.event.backgroundColor,
-            textColor: eventInfo.event.textColor,
-            demanding: eventInfo.event.extendedProps.demanding
+            id: eventInfo.event.id
         };
+        const externalEvents: ExternalEventObject[] = state.externalEvents;
+        let updatedExternalEvents: ExternalEventObject[] = [];
+        for (let externalEvent of externalEvents) {
+            //remove Event if already dropped into calendar
+            if (externalEvent.id == newEvent.id) {
+                const index = externalEvents.indexOf(externalEvent);
+                updatedExternalEvents = index > -1 ? externalEvents.splice(index) : externalEvents;
+                break;
+            }
+        }
 
-        setState((state) => {
-            return {
-                ...state,
-                events: state.events.concat(newEvent)
-            };
-        });
-        manageAPI();
+        if (updatedExternalEvents.length != 0) {
+            setState((state) => {
+                return {
+                    ...state,
+                    externalEvents: updatedExternalEvents
+                };
+            });
+        }
     };
 
     const toggleDemandOnOff = () => {
@@ -73,10 +111,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         if (showDemandLevel) newValue = false;
         else newValue = true;
         setShowDemandLevel(newValue);
+        storeEvents();
     };
     function handleEventChange(eventInfo: any) {}
 
-    function eventChangeWidth(arg: any) {
+    function eventChangeWidth(arg: EventContentArg) {
         const demandingLevel = arg.event.extendedProps.demanding;
         const classNames = [''];
         if (arg.isDragging) {
@@ -94,49 +133,69 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
         return classNames;
     }
-    const manageAPI = () => {
-        if (calendarRef.current != null) {
-            let calendarApi = calendarRef.current.getApi();
-            console.log(calendarApi.getEvents());
+    const storeEvents = () => {
+        const calendarApi = calendarRef.current.getApi();
+        if (calendarApi != null) {
+            const currentEvents = calendarApi.getEvents();
+            const storeAllEvents: EventObject[] = [];
+            currentEvents.map((event: any) => {
+                const newEvent: EventObject = {
+                    id: event.id,
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                    backgroundColor: event.backgroundColor,
+                    textColor: event.textColor,
+                    demanding: event.demanding
+                };
+                storeAllEvents.push(newEvent);
+            });
+            console.log('data stored temporarly');
+            window.sessionStorage.setItem('events', JSON.stringify(storeAllEvents));
         }
     };
 
     return (
         <>
-            <div className="flex flex-col">
-                <div className="flex justify-end">
-                    <p className="mr-2">Demanding Level</p>
-                    <SwitchButton onChange={toggleDemandOnOff} />
-                </div>
-                <div style={{ height: 800, width: 1200 }}>
-                    <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl">
-                        <FullCalendar
-                            ref={calendarRef}
-                            plugins={[timeGridPlugin, interactionPlugin]}
-                            initialView="timeGridWeek"
-                            allDaySlot={false}
-                            slotMinTime="08:00:00"
-                            slotMaxTime="17:00:00"
-                            nowIndicator={true}
-                            height="800px"
-                            contentHeight="100px"
-                            expandRows={true}
-                            events={state.events}
-                            editable={true}
-                            eventClassNames={eventChangeWidth}
-                            droppable={true}
-                            eventReceive={handleEventReceive}
-                            forceEventDuration={true}
-                            eventDrop={handleEventChange}
-                        />
-                    </div>
-                    <div className="mt-5 bg-green-50 border-2 rounded-lg w-full h-auto p-2">
+            <StyleWrapper>
+                <div className="flex">
+                    <div className="bg-green-50 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
                         {state.externalEvents.map((event) => (
                             <ExternalEvent key={event.id} event={event} />
                         ))}
                     </div>
+                    <div className="flex flex-col">
+                        <div className="flex justify-end">
+                            <p className="mr-2">Demanding Level</p>
+                            <SwitchButton onChange={toggleDemandOnOff} />
+                        </div>
+                        <div className="container-overview overflow-hidden">
+                            <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                                <FullCalendar
+                                    ref={calendarRef}
+                                    plugins={[timeGridPlugin, interactionPlugin]}
+                                    initialView="timeGridWeek"
+                                    allDaySlot={false}
+                                    slotMinTime="08:00:00"
+                                    slotMaxTime="17:00:00"
+                                    nowIndicator={true}
+                                    height="800px"
+                                    contentHeight="100px"
+                                    expandRows={true}
+                                    events={state.events as EventSourceInput}
+                                    editable={true}
+                                    eventClassNames={eventChangeWidth}
+                                    droppable={true}
+                                    forceEventDuration={true}
+                                    eventDrop={handleEventChange}
+                                    eventReceive={handleEventReceive}
+                                />
+                            </div>
+                            {showDemandLevel ? <VerticalGraph className="box z-20" /> : ''}
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </StyleWrapper>
         </>
     );
 };

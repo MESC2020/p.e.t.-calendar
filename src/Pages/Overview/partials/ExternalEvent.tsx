@@ -28,8 +28,8 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo(({ even
             className="fc-event fc-h-event mb-1 fc-daygrid-event fc-daygrid-block-event p-2"
             title={event.title}
             style={{
-                backgroundColor: event.color,
-                borderColor: event.color,
+                backgroundColor: event.backgroundColor,
+                borderColor: event.backgroundColor,
                 cursor: 'pointer'
             }}
         >
