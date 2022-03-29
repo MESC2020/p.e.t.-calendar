@@ -3,6 +3,7 @@ import TestChart from '../../../components/charts/VictoryTestChart';
 
 export interface IVerticalGraphProps {
     className?: string;
+    showAnimation: boolean;
 }
 
 const dataTestSet1 = [
@@ -73,19 +74,19 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
             <div className="flex overlap-main overflow-hidden">
                 <div className="overlap-day-box"></div>
                 <div className="overlap-day-box overflow-hidden ">
-                    <TestChart data={dataTestSet1} />
+                    <TestChart showAnimation={props.showAnimation} data={dataTestSet1} />
                 </div>
                 <div className="overlap-day-box overflow-hidden">
-                    <TestChart data={dataTestSet2} />
+                    <TestChart showAnimation={props.showAnimation} data={dataTestSet2} />
                 </div>
                 <div className="overlap-day-box overflow-hidden">
-                    <TestChart data={dataTestSet3} />
+                    <TestChart showAnimation={props.showAnimation} data={dataTestSet3} />
                 </div>
                 <div className="overlap-day-box overflow-hidden">
-                    <TestChart data={dataTestSet4} />
+                    <TestChart showAnimation={props.showAnimation} data={dataTestSet4} />
                 </div>
                 <div className="overlap-day-box overflow-hidden">
-                    <TestChart data={dataTestSet5} />
+                    <TestChart showAnimation={props.showAnimation} data={dataTestSet5} />
                 </div>
                 <div className="overlap-day-box "></div>
             </div>

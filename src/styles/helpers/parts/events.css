@@ -1,8 +1,14 @@
 .demand {
     transition: width 1s ease-in;
 }
+.demand-no-animation {
+    transition: none !important;
+}
 .demand.full-width {
-    width: 100%;
+    width: 100% !important;
+}
+.test {
+    width: 10% !important;
 }
 .demand-1 {
     width: 14%;

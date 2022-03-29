@@ -1,10 +1,11 @@
 import { translateRect } from '@fullcalendar/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { transform } from 'typescript';
 import { VictoryArea, VictoryChart, VictoryLegend, VictoryLine, VictoryScatter, VictoryTheme } from 'victory';
 
 export interface ITestChartProps {
     data?: DataObject[];
+    showAnimation: boolean;
 }
 type DataObject = {
     x: string;
@@ -24,10 +25,14 @@ const TestChart: React.FunctionComponent<ITestChartProps> = (props) => {
                         },
                         parent: { border: '1px solid #ccc' }
                     }}
-                    animate={{
-                        duration: 2000,
-                        onLoad: { duration: 1500 }
-                    }}
+                    animate={
+                        props.showAnimation
+                            ? {
+                                  duration: 2000,
+                                  onLoad: { duration: 1500 }
+                              }
+                            : false
+                    }
                     data={props.data}
                 />
             </VictoryChart>

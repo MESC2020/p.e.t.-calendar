@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 
 export interface ISwitchButtonProps {
     onChange: any;
+    defaultMode: boolean;
 }
 type SetStateAction<Boolean> = any;
 
 const SwitchButton: React.FunctionComponent<ISwitchButtonProps> = (props) => {
-    const [checked, setChecked] = useState(false);
+    const [checked, setChecked] = useState(props.defaultMode);
     const handleChange = (nextChecked: SetStateAction<Boolean>) => {
         setChecked(nextChecked);
         props.onChange();
