@@ -25,14 +25,14 @@ type EventObject = {
     end: string;
     backgroundColor: string;
     textColor: string;
-    demanding: number;
+    classNames: string[];
 };
 type ExternalEventObject = {
     id: string | number;
     title: string;
     backgroundColor: string;
     textColor: string;
-    demanding: number;
+    classNames: string[];
 };
 interface State {
     externalEvents: ExternalEventObject[];
@@ -44,20 +44,20 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const [firstTime, setFirstTime] = useState(true);
     const [state, setState] = useState<State>({
         externalEvents: [
-            { id: 'd', title: 'Task 1', backgroundColor: '#74AAEB', textColor: 'white', demanding: 3 },
-            { id: 'e', title: 'Task 2', backgroundColor: '#E7EDFB', textColor: 'black', demanding: 5 },
-            { id: 'f', title: 'Task 3', backgroundColor: '#E7EDFB', textColor: 'black', demanding: 1 },
-            { id: 'g', title: 'Task 4', backgroundColor: '#74AAEB', textColor: 'white', demanding: 7 }
+            { id: 'd', title: 'Task 1', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand', 'demand-7'] },
+            { id: 'e', title: 'Task 2', backgroundColor: '#E7EDFB', textColor: 'black', classNames: ['demand', 'demand-3'] },
+            { id: 'f', title: 'Task 3', backgroundColor: '#E7EDFB', textColor: 'black', classNames: ['demand', 'demand-2'] },
+            { id: 'g', title: 'Task 4', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand', 'demand-6'] }
         ],
         events: [
             {
                 id: 'a',
                 title: 'This is just an example',
                 start: '2022-03-28T12:30:00',
-                end: '2022-03-28T16:30:00',
+                end: '2022-03-28T13:30:00',
                 backgroundColor: '#74AAEB',
                 textColor: 'white',
-                demanding: 5
+                classNames: ['demand', 'demand-5']
             },
             {
                 id: 'b',
@@ -66,16 +66,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 end: '2022-03-29T11:30:00',
                 backgroundColor: '#74AAEB',
                 textColor: 'white',
-                demanding: 5
-            },
-            {
-                id: 'c',
-                title: 'I wonder if you can have line seperator:\n Did this work? ',
-                start: '2022-03-30T14:00:00',
-                end: '2022-03-30T16:00:00',
-                backgroundColor: '#E7EDFB',
-                textColor: 'black',
-                demanding: 5
+                classNames: ['demand', 'demand-2']
             }
         ]
     });
@@ -117,7 +108,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         if (showDemandLevel) newValue = false;
         else newValue = true;
         setShowDemandLevel(newValue);
-        storeEvents();
+        let demand = document.querySelectorAll('.demand');
+        demand.forEach((el) => {
+            if (el.classList.contains('full-width')) el.classList.remove('full-width');
+            else el.classList.add('full-width');
+        });
     };
     function handleEventChange(eventInfo: any) {}
 
@@ -152,7 +147,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     end: event.end,
                     backgroundColor: event.backgroundColor,
                     textColor: event.textColor,
-                    demanding: event.demanding
+                    classNames: event.classNames
                 };
                 storeAllEvents.push(newEvent);
             });
@@ -191,7 +186,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 expandRows={true}
                                 events={state.events as EventSourceInput}
                                 editable={true}
-                                eventClassNames={eventChangeWidth}
                                 droppable={true}
                                 forceEventDuration={true}
                                 eventDrop={handleEventChange}
