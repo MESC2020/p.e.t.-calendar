@@ -27,6 +27,6 @@
     height: 100%;
 }
 
-.transing {
-    transform: rotate(45deg);
+.click-through {
+    pointer-events: none;
 }

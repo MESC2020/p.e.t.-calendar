@@ -68,7 +68,7 @@ const dataTestSet5 = [
 ];
 const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     return (
-        <div className={`${props.className}` + ' opacity-40 h-full w-full '}>
+        <div className={`${props.className}` + ' click-through opacity-10 h-full w-full '}>
             <div className="w-full overlap-header"></div>
             <div className="flex overlap-main overflow-hidden">
                 <div className="overlap-day-box"></div>

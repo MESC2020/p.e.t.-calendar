@@ -13,6 +13,9 @@ export const StyleWrapper = styled.div`
         z-index: 500 !important;
         position: absolute !important;
     }
+    .fc {
+        position: relative !important;
+    }
 `;
 
 type EventObject = {
@@ -81,25 +84,28 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     const handleEventReceive = (eventInfo: any) => {
+        let changedExternalEvents: boolean = false;
         const newEvent = {
             id: eventInfo.event.id
         };
         const externalEvents: ExternalEventObject[] = state.externalEvents;
-        let updatedExternalEvents: ExternalEventObject[] = [];
         for (let externalEvent of externalEvents) {
             //remove Event if already dropped into calendar
             if (externalEvent.id == newEvent.id) {
                 const index = externalEvents.indexOf(externalEvent);
-                updatedExternalEvents = index > -1 ? externalEvents.splice(index) : externalEvents;
+                if (index > -1) {
+                    externalEvents.splice(index, 1);
+                    changedExternalEvents = true;
+                }
                 break;
             }
         }
 
-        if (updatedExternalEvents.length != 0) {
+        if (changedExternalEvents) {
             setState((state) => {
                 return {
                     ...state,
-                    externalEvents: updatedExternalEvents
+                    externalEvents: externalEvents
                 };
             });
         }
@@ -155,47 +161,48 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
     };
 
+    const handleEventContent = () => {};
+
     return (
         <>
-            <StyleWrapper>
-                <div className="flex">
-                    <div className="bg-green-50 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
-                        {state.externalEvents.map((event) => (
-                            <ExternalEvent key={event.id} event={event} />
-                        ))}
+            <div className="flex">
+                <div className="bg-green-50 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
+                    {state.externalEvents.map((event) => (
+                        <ExternalEvent key={event.id} event={event} />
+                    ))}
+                </div>
+                <div className="flex flex-col">
+                    <div className="flex justify-end">
+                        <p className="mr-2">Demanding Level</p>
+                        <SwitchButton onChange={toggleDemandOnOff} />
                     </div>
-                    <div className="flex flex-col">
-                        <div className="flex justify-end">
-                            <p className="mr-2">Demanding Level</p>
-                            <SwitchButton onChange={toggleDemandOnOff} />
+                    <div className="container-overview overflow-hidden">
+                        <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                            <FullCalendar
+                                ref={calendarRef}
+                                plugins={[timeGridPlugin, interactionPlugin]}
+                                initialView="timeGridWeek"
+                                allDaySlot={false}
+                                slotMinTime="08:00:00"
+                                slotMaxTime="17:00:00"
+                                nowIndicator={true}
+                                height="800px"
+                                contentHeight="100px"
+                                expandRows={true}
+                                events={state.events as EventSourceInput}
+                                editable={true}
+                                eventClassNames={eventChangeWidth}
+                                droppable={true}
+                                forceEventDuration={true}
+                                eventDrop={handleEventChange}
+                                eventReceive={handleEventReceive}
+                                eventContent={handleEventContent}
+                            />
                         </div>
-                        <div className="container-overview overflow-hidden">
-                            <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
-                                <FullCalendar
-                                    ref={calendarRef}
-                                    plugins={[timeGridPlugin, interactionPlugin]}
-                                    initialView="timeGridWeek"
-                                    allDaySlot={false}
-                                    slotMinTime="08:00:00"
-                                    slotMaxTime="17:00:00"
-                                    nowIndicator={true}
-                                    height="800px"
-                                    contentHeight="100px"
-                                    expandRows={true}
-                                    events={state.events as EventSourceInput}
-                                    editable={true}
-                                    eventClassNames={eventChangeWidth}
-                                    droppable={true}
-                                    forceEventDuration={true}
-                                    eventDrop={handleEventChange}
-                                    eventReceive={handleEventReceive}
-                                />
-                            </div>
-                            {showDemandLevel ? <VerticalGraph className="box z-20" /> : ''}
-                        </div>
+                        {showDemandLevel ? <VerticalGraph className="box z-20" /> : ''}
                     </div>
                 </div>
-            </StyleWrapper>
+            </div>
         </>
     );
 };
