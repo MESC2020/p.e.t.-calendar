@@ -2,7 +2,7 @@
   "name": "desktop-task-app",
   "version": "0.1.0",
   "private": true,
-  "main": "electron/electron.ts",
+  "main": "./build/electron/electron.js",
   "homepage": "./",
   "dependencies": {
     "@craco/craco": "^6.4.3",
@@ -29,17 +29,41 @@
     "react-router-dom": "^6.2.2",
     "react-scripts": "5.0.0",
     "react-switch": "^6.0.0",
+    "sqlite3": "^5.0.2",
     "tailwindcss": "^3.0.23",
     "typescript": "^4.6.2",
     "victory": "^36.3.0",
     "wait-on": "^6.0.1",
     "web-vitals": "^2.1.4"
   },
+  "build": {
+    "extends": null,
+    "appId": "universityTaskProject",
+    "productName": "Task Project",
+    "copyright": "MSCI",
+    "files": [
+      "build/**/*"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "extraResources": [
+      {},
+      {}
+    ],
+    "win": {
+      "icon": "",
+      "target": [
+        "7z"
+      ]
+    }
+  },
   "scripts": {
     "compile": "tsc -p electron/tsconfig.json",
-    "start": "concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
+    "start": "npm run compile && concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "postinstall": "electron-builder install-app-deps"
   },
   "eslintConfig": {
     "extends": [
@@ -62,6 +86,7 @@
   "devDependencies": {
     "@faker-js/faker": "^6.0.0-beta.0",
     "@types/jquery": "^3.5.14",
-    "electron": "^17.1.0"
+    "electron": "^17.1.0",
+    "electron-builder": "^22.14.13"
   }
 }
