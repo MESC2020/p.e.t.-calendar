@@ -5,18 +5,9 @@ import interactionPlugin from '@fullcalendar/interaction';
 import SwitchButton from '../../views/partials/switchButton';
 import ExternalEvent from './partials/ExternalEvent';
 import VerticalGraph from './partials/verticalGraphs';
-import styled from '@emotion/styled';
+import { Button } from '../../views/partials/Button';
+import NewTaskForm from './partials/newTaskForm';
 export interface IOverviewPageProps {}
-
-export const StyleWrapper = styled.div`
-    .fc-event {
-        z-index: 500 !important;
-        position: absolute !important;
-    }
-    .fc {
-        position: relative !important;
-    }
-`;
 
 type EventObject = {
     id: string | number;
@@ -39,7 +30,9 @@ interface State {
     events: EventObject[];
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
+    const [someVar, setSomeVar] = useState(false);
     const calendarRef = useRef<any>();
+    const [displayTaskForm, setDisplayTaskForm] = useState(false);
     const [flags, setFlags] = useState({
         showAnimation: true,
         demandToggle: true,
@@ -49,8 +42,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const [state, setState] = useState<State>({
         externalEvents: [
             { id: 'd', title: 'Task 1', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand', 'demand-7'] },
-            { id: 'e', title: 'Task 2', backgroundColor: '#E7EDFB', textColor: 'black', classNames: ['demand', 'demand-3'] },
-            { id: 'f', title: 'Task 3', backgroundColor: '#E7EDFB', textColor: 'black', classNames: ['demand', 'demand-2'] },
+            { id: 'e', title: 'Task 2', backgroundColor: '#91BEEB', textColor: 'black', classNames: ['demand', 'demand-3'] },
+            { id: 'f', title: 'Task 3', backgroundColor: '#91BEEB', textColor: 'black', classNames: ['demand', 'demand-2'] },
             { id: 'g', title: 'Task 4', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand', 'demand-6'] }
         ],
         events: [
@@ -137,6 +130,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         let currentDemandToggle = flags.demandToggle;
         let currentShowAnimation = flags.showAnimation;
         let currentShowGraphs = flags.showGraphs;
+        setSomeVar(true);
+        setDisplayTaskForm(!displayTaskForm);
 
         if (!currentDemandToggle) {
             currentDemandToggle = true;
@@ -232,10 +227,22 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     return (
         <>
             <div className="flex">
-                <div className="bg-green-50 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
+                <div className="flex flex-col bg-slate-100 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
                     {state.externalEvents.map((event) => (
                         <ExternalEvent key={event.id} event={event} />
                     ))}
+                    <Button
+                        color={'white'}
+                        backgroundColor={'#1e2b3'}
+                        disabled={false}
+                        onClick={() => {
+                            document!.getElementById('overlay')!.style.display = 'block';
+                            setDisplayTaskForm(!displayTaskForm);
+                        }}
+                        className={'mr-auto ml-auto mt-auto'}
+                    >
+                        Add Task
+                    </Button>
                 </div>
                 <div className="flex flex-col">
                     <div className="flex justify-end">
@@ -267,6 +274,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             />
                         </div>
                         {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
+                        <div id="overlay" className="">
+                            {displayTaskForm ? (
+                                <NewTaskForm
+                                    className="mt-10 ml-14"
+                                    display={() => {
+                                        document!.getElementById('overlay')!.style.display = 'none';
+                                        setDisplayTaskForm(!displayTaskForm);
+                                    }}
+                                />
+                            ) : (
+                                ''
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
