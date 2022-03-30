@@ -46,15 +46,12 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "./build/icon.ico"
     },
     "directories": {
       "buildResources": "build"
     },
-    "extraResources": [
-      {},
-      {}
-    ]
+    "extraResources": []
   },
   "scripts": {
     "compile": "tsc -p electron/tsconfig.json",
