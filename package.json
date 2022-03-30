@@ -38,32 +38,32 @@
   },
   "build": {
     "extends": null,
-    "appId": "universityTaskProject",
+    "appId": "michauniversityTaskProject",
     "productName": "Task Project",
     "copyright": "MSCI",
     "files": [
       "build/**/*"
     ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
     "directories": {
       "buildResources": "build"
     },
     "extraResources": [
       {},
       {}
-    ],
-    "win": {
-      "icon": "",
-      "target": [
-        "7z"
-      ]
-    }
+    ]
   },
   "scripts": {
     "compile": "tsc -p electron/tsconfig.json",
     "start": "npm run compile && concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
     "build": "craco build",
     "test": "craco test",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "eslintConfig": {
     "extends": [

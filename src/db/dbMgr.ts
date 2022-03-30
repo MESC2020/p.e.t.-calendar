@@ -5,7 +5,7 @@ export class dbMgr {
     constructor() {}
 
     initDb() {
-        this.db = new sqlite3.Database('./testDB.db', (err: error) => {
+        this.db = new sqlite3.Database('./DB.db', (err: error) => {
             if (err) {
                 return console.error(err.message);
             }
