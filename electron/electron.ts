@@ -14,11 +14,11 @@ function createWindow() {
     height: 600,
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "/preload.js"),
     },
   });
   if (app.isPackaged) {
-    mainWindow.loadFile(path.join(__dirname, "../build/index.html"));
+    mainWindow.loadFile(path.join(__dirname, "../index.html"));
   } else {
     mainWindow.loadURL("http://localhost:3000");
   }
@@ -28,7 +28,7 @@ function createWindow() {
   //mainWindow.loadFile(path.join(__dirname,'index.html'));
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished

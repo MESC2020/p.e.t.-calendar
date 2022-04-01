@@ -22,6 +22,7 @@
     "chart.js": "^3.7.1",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
+    "electron-builder-squirrel-windows": "^23.0.3",
     "postcss": "^8.4.7",
     "react": "^17.0.2",
     "react-chartjs-2": "^4.0.1",
@@ -38,25 +39,28 @@
   },
   "build": {
     "extends": null,
-    "appId": "michauniversityTaskProject",
+    "appId": "com.micha.task.project.app",
     "productName": "Task Project",
-    "copyright": "MSCI",
+    "copyright": "",
+    "directories": {
+      "output": "dist",
+      "buildResources": ""
+    },
     "files": [
-      "build/**/*"
+      "build/**/*",
+      "package.json",
+      "node_modules"
     ],
+    "extraResources": [],
     "win": {
       "target": "nsis",
       "icon": "./build/icon.ico"
-    },
-    "directories": {
-      "buildResources": "build"
-    },
-    "extraResources": []
+    }
   },
   "scripts": {
     "compile": "tsc -p electron/tsconfig.json",
     "start": "npm run compile && concurrently \"cross-env BROWSER=none cross-env craco start\" \"wait-on http://localhost:3000 && electron .\"",
-    "build": "craco build",
+    "build": "craco build && npm run compile",
     "test": "craco test",
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder --dir",
