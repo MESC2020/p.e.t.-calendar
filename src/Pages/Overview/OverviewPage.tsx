@@ -18,19 +18,19 @@ type EventObject = {
     textColor: string;
     classNames: string[];
 };
-type ExternalEventObject = {
+export type ExternalEventObject = {
     id: string | number;
     title: string;
     backgroundColor: string;
     textColor: string;
     classNames: string[];
+    deadline?: string;
 };
 interface State {
     externalEvents: ExternalEventObject[];
     events: EventObject[];
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
-    const [someVar, setSomeVar] = useState(false);
     const calendarRef = useRef<any>();
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
     const [flags, setFlags] = useState({
@@ -130,9 +130,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         let currentDemandToggle = flags.demandToggle;
         let currentShowAnimation = flags.showAnimation;
         let currentShowGraphs = flags.showGraphs;
-        setSomeVar(true);
-        setDisplayTaskForm(!displayTaskForm);
-
         if (!currentDemandToggle) {
             currentDemandToggle = true;
             currentShowGraphs = true;
@@ -224,10 +221,22 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
     }
 
+    function handleNewTask(newTask: ExternalEventObject) {
+        const currentExternalEvents = state.externalEvents;
+        currentExternalEvents.push(newTask);
+
+        setState((state) => {
+            return {
+                ...state,
+                externalEvents: currentExternalEvents
+            };
+        });
+    }
+
     return (
         <>
             <div className="flex">
-                <div className="flex flex-col bg-slate-100 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
+                <div className="flex flex-grow flex-col max-height bg-slate-100 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
                     {state.externalEvents.map((event) => (
                         <ExternalEvent key={event.id} event={event} />
                     ))}
@@ -278,6 +287,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             {displayTaskForm ? (
                                 <NewTaskForm
                                     className="mt-10 ml-14"
+                                    onChange={handleNewTask}
                                     display={() => {
                                         document!.getElementById('overlay')!.style.display = 'none';
                                         setDisplayTaskForm(!displayTaskForm);

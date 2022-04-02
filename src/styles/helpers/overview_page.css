@@ -54,3 +54,8 @@
     transform: translate(-50%, -50%);
     -ms-transform: translate(-50%, -50%);
 }
+
+.max-height {
+    max-height: 800px;
+    overflow-y: scroll;
+}
