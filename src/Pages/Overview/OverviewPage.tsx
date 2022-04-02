@@ -6,7 +6,7 @@ import SwitchButton from '../../views/partials/switchButton';
 import ExternalEvent from './partials/ExternalEvent';
 import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
-import NewTaskForm from './partials/newTaskForm';
+import TaskForm from './partials/TaskForm';
 export interface IOverviewPageProps {}
 
 type EventObject = {
@@ -285,7 +285,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                         {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
                         <div id="overlay" className="">
                             {displayTaskForm ? (
-                                <NewTaskForm
+                                <TaskForm
                                     className="mt-10 ml-14"
                                     onChange={handleNewTask}
                                     display={() => {

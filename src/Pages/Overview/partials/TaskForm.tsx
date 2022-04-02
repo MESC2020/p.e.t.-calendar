@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
-import { ExternalEventObject } from '../OverviewPage';
 import RangeSlider from './RangeSlider';
 
-export interface INewTaskFormProps {
+export interface ITaskFormProps {
     className?: string;
     value?: any;
     onFocus?: any;
@@ -13,10 +12,9 @@ export interface INewTaskFormProps {
     onChange: any;
 }
 
-const NewTaskForm: React.FunctionComponent<INewTaskFormProps> = (props) => {
+const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const [deadlineToggle, setDeadlineToggle] = useState(false);
     const [externalEvent, setExternalEvent] = useState({ id: 'test', title: '', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand'], deadline: '' });
-    let demandLevel;
     const today = new Date();
 
     useEffect(() => {});
@@ -35,7 +33,6 @@ const NewTaskForm: React.FunctionComponent<INewTaskFormProps> = (props) => {
     };
 
     const handleChangeDemand = (demand: number) => {
-        demandLevel = demand;
         const currentClassNames = externalEvent.classNames;
         currentClassNames.length > 1 ? currentClassNames.splice(1, 1, 'demand-' + demand) : currentClassNames.push('demand-' + demand);
         setExternalEvent((state) => {
@@ -106,4 +103,4 @@ const NewTaskForm: React.FunctionComponent<INewTaskFormProps> = (props) => {
     );
 };
 
-export default NewTaskForm;
+export default TaskForm;
