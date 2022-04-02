@@ -1,13 +1,10 @@
 import React from 'react';
+import TestChart from '../components/charts/VictoryTestChart';
 
 export interface ITodayPageProps {}
 
 const TodayPage: React.FunctionComponent<ITodayPageProps> = (props) => {
-    return (
-        <div>
-            <p>This is the Today Page</p>
-        </div>
-    );
+    return <div className="mt-56" style={{ height: 800, width: 400 }}></div>;
 };
 
 export default TodayPage;

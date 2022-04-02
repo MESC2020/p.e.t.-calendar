@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Routes as Switch } from 'react-router-dom';
-import OverviewPage from './Pages/OverviewPage';
+import { BrowserRouter, HashRouter, Route, Routes as Switch } from 'react-router-dom';
+import OverviewPage from './Pages/Overview/OverviewPage';
 import StatsPage from './Pages/StatsPage';
 import TodayPage from './Pages/TodayPage';
 import MainContainer from './views/navbar/MainContainer';
@@ -10,7 +10,7 @@ class App extends Component {
 
     render() {
         return (
-            <BrowserRouter>
+            <HashRouter>
                 <MainContainer>
                     <Switch>
                         <Route path="/" element={<OverviewPage />} />
@@ -18,7 +18,7 @@ class App extends Component {
                         <Route path="stats" element={<StatsPage />} />
                     </Switch>
                 </MainContainer>
-            </BrowserRouter>
+            </HashRouter>
         );
     }
 }
