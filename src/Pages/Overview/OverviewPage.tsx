@@ -53,7 +53,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
             console.log(newEvent);
-            if (newEvent.start !== undefined) {
+            if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
             } else externalEvents.push(newEvent);
         });
