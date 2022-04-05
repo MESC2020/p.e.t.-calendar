@@ -36,5 +36,5 @@
     "src/setupTests.ts",
     "dist"
   ],
-  "include": ["src, db"]
+  "include": ["src"]
 }
