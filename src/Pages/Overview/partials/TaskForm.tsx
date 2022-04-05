@@ -12,9 +12,19 @@ export interface ITaskFormProps {
     onChange: any;
 }
 
+const STANDARD_DEMAND = 5;
 const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const [deadlineToggle, setDeadlineToggle] = useState(false);
-    const [externalEvent, setExternalEvent] = useState({ id: 'test', title: '', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand'], deadline: '' });
+    const [externalEvent, setExternalEvent] = useState({
+        id: undefined,
+        title: '',
+        backgroundColor: '#74AAEB',
+        textColor: 'white',
+        classNames: ['demand', `demand-${STANDARD_DEMAND}`],
+        deadline: undefined,
+        start: undefined,
+        end: undefined
+    });
     const today = new Date();
 
     useEffect(() => {});
@@ -61,7 +71,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
                 <div className="ml-10 mt-4 mr-10">
                     <p>How demanding will this task be?</p>
-                    <RangeSlider onChange={handleChangeDemand} />
+                    <RangeSlider standardDemand={STANDARD_DEMAND} onChange={handleChangeDemand} />
                 </div>
                 <div className="flex mt-4 ml-10 gap-x-4">
                     <div className="">
@@ -88,7 +98,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 </div>
                 <Button
                     backgroundColor="#01E68A"
-                    disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline?.length == 0)}
+                    disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
                     onClick={handleConfirmation}
                     className={'w-1/6 block mr-auto ml-auto'}
                 >

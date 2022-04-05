@@ -3,16 +3,15 @@ const { ipcRenderer, contextBridge } = require("electron");
 //contextBridge: bridge between React and Electron
 
 contextBridge.exposeInMainWorld("api", {
-  // Invoke Methods
-  testInvoke: (args: any) => ipcRenderer.invoke("test-invoke", args),
-  // Send Methods
-  testSend: (args: any) => ipcRenderer.send("test-send", args),
   // Receive Methods
   testReceive: (callback: any) =>
     ipcRenderer.on("test-receive", (event: any, data: any) => {
       callback(data);
     }),
 
-  getNames: (args: any) => ipcRenderer.invoke("get-names", args),
+  saveEvents: (args: any) => ipcRenderer.invoke("save-events", args),
+  updateEvents: (args: any) => ipcRenderer.send("update-events", args),
+
+  getAllEvents: (args: any) => ipcRenderer.invoke("get-all-events", args),
 });
 export {};

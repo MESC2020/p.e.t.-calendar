@@ -2,6 +2,11 @@
 
 import { dbMgr } from "../src/db/dbMgr";
 
+//dev toole extension
+import installExtension, {
+  REACT_DEVELOPER_TOOLS,
+} from "electron-devtools-installer";
+
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
@@ -35,6 +40,10 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  installExtension(REACT_DEVELOPER_TOOLS)
+    .then((name) => console.log(`Added Extension:  ${name}`))
+    .catch((err) => console.log("An error occurred: ", err));
+
   createWindow();
   dbManager = new dbMgr();
   dbManager.initDb();
@@ -58,7 +67,17 @@ app.on("window-all-closed", function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-ipcMain.handle("get-names", async (event: any, args: any) => {
-  const results = dbManager.getAllData("family");
+ipcMain.handle("get-all-events", async (event: any, args: any) => {
+  const results = await dbManager.getAllData("Events");
   return results;
+});
+
+ipcMain.handle("save-events", async (event: any, args: any) => {
+  console.log("in saveData");
+  return await dbManager.saveEvents(args);
+});
+
+ipcMain.on("update-events", (event: any, args: any) => {
+  console.log("in updateEvent");
+  dbManager.updateEvents(args);
 });

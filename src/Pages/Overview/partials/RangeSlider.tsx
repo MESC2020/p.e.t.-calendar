@@ -3,6 +3,7 @@ import { makeStyles } from '@mui/material';
 import Slider from '@mui/material/Slider';
 
 export interface IRangeSliderProps {
+    standardDemand: number;
     onChange: any;
 }
 
@@ -10,8 +11,7 @@ function valuetext(value: any) {
     return `${value}`;
 }
 const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
-    const defaultValue = 5;
-    const [value, setValue] = React.useState(defaultValue);
+    const [value, setValue] = React.useState(props.standardDemand);
     const demandLevels = [
         { value: 1, label: 'Extremly Low' },
         { value: 2, label: '2' },
@@ -31,7 +31,7 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
         <div className={'w-full text-pink-500'}>
             <Slider
                 aria-label="Demanding Level"
-                defaultValue={defaultValue}
+                defaultValue={props.standardDemand}
                 step={1}
                 color={'primary'}
                 min={1}
