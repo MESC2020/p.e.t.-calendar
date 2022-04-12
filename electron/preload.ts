@@ -10,8 +10,9 @@ contextBridge.exposeInMainWorld("api", {
     }),
 
   saveEvents: (args: any) => ipcRenderer.invoke("save-events", args),
+  deleteEvents: (args: any) => ipcRenderer.send("delete-events", args),
   updateEvents: (args: any) => ipcRenderer.send("update-events", args),
-
   getAllEvents: (args: any) => ipcRenderer.invoke("get-all-events", args),
+  closePopup: (args: any) => ipcRenderer.send("close-popup", args),
 });
 export {};

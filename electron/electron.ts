@@ -8,15 +8,50 @@ import installExtension, {
 } from "electron-devtools-installer";
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
 const path = require("path");
 let dbManager: dbMgr;
 
-function createWindow() {
+type Window = {
+  minimize(): any;
+  loadURL(url: string): any;
+  maximaze(): any;
+  close(): any;
+  loadFile(path: any): any;
+};
+
+let popupWindow: Window;
+
+function createPopupWindow(width: any, height: any) {
+  popupWindow = new BrowserWindow({
+    frame: false,
+    resizable: false,
+    movable: false,
+    focusable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true, //this might be unnecessary since in win, this is already applied when focusable: false
+    height: 300,
+    width: 400,
+    x: width - 400, //to get it into the right bottom corner
+    y: height - 300,
+
+    webPreferences: {
+      webPreferences: {
+        contextIsolation: true,
+        //preload: path.join(__dirname, "/preload.js"),
+      },
+    },
+  });
+  Menu.setApplicationMenu(null);
+  popupWindow.loadURL("http://localhost:3000/report"); //loadURL(`file://${__dirname}/app.html#/report`);
+}
+
+function createWindow(width: any, height: any) {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: width,
+    height: height,
+    fullscreen: false,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, "/preload.js"),
@@ -40,17 +75,20 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  const mainScreen = screen.getPrimaryDisplay();
+  const { width, height } = mainScreen.workAreaSize;
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));
 
-  createWindow();
+  createWindow(width, height);
+  //createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(width, height);
   });
 });
 
@@ -73,11 +111,19 @@ ipcMain.handle("get-all-events", async (event: any, args: any) => {
 });
 
 ipcMain.handle("save-events", async (event: any, args: any) => {
-  console.log("in saveData");
   return await dbManager.saveEvents(args);
 });
 
 ipcMain.on("update-events", (event: any, args: any) => {
-  console.log("in updateEvent");
   dbManager.updateEvents(args);
+});
+
+ipcMain.on("delete-events", (event: any, args: any) => {
+  dbManager.deleteEvents(args);
+});
+
+ipcMain.on("close-popup", (event: any, args: any) => {
+  console.log(args);
+  console.log("here in closing");
+  if (args.value) popupWindow.close();
 });

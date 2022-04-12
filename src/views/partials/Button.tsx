@@ -13,11 +13,13 @@ interface IbuttonProps {
     children?: any;
     backgroundColor?: string;
     textColor?: string;
+    id?: string;
 }
 
 export const Button = (props: IbuttonProps) => {
     return (
         <button
+            id={props?.id}
             disabled={props.disabled}
             onClick={props.onClick}
             background-color={props.backgroundColor ? props.backgroundColor : '#2c3e50'}

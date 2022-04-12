@@ -13,6 +13,7 @@ interface State {
     externalEvents: EventObject[];
     events: EventObject[];
 }
+
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
     const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +23,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         demandToggle: true,
         showGraphs: true
     });
+
+    const [currentEvent, setCurrentEvent] = useState<EventObject>(emptyEventObject);
 
     const [state, setState] = useState<State>({
         externalEvents: [],
@@ -52,7 +55,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
-            console.log(newEvent);
             if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
             } else externalEvents.push(newEvent);
@@ -67,15 +69,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function updateData(arg: any) {
-        const currentEvent: EventObject = {
-            id: arg.event.id,
-            title: arg.event.title,
-            deadline: arg.event.extendedProps.deadline,
-            start: arg.event.startStr,
-            end: arg.event.endStr,
-            classNames: arg.event.classNames
-        };
-        console.log(currentEvent);
+        let currentEvent: EventObject = fcEventToReactEvent(arg);
         window.api.updateEvents([currentEvent]);
     }
 
@@ -213,21 +207,91 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
     }
 
+    function deleteEvents(events: EventObject[]) {
+        console.log('in deleteevents');
+        const externalEvents = state.externalEvents;
+        const calendarEvents = state.events;
+        let notFound = true;
+        for (let event of events) {
+            for (let storedEvent of externalEvents) {
+                if (event.id === storedEvent.id) {
+                    externalEvents.splice(externalEvents.indexOf(storedEvent), 1);
+                    notFound = false;
+                    break;
+                }
+            }
+            if (notFound) {
+                //only continue search if element hasn't been found yet
+                for (let storedCalendarEvents of calendarEvents) {
+                    if (event.id === storedCalendarEvents.id) {
+                        console.log(calendarEvents);
+
+                        calendarEvents.splice(calendarEvents.indexOf(storedCalendarEvents), 1);
+                        console.log(calendarEvents);
+                        break;
+                    }
+                }
+            }
+            notFound = true;
+        }
+        setState(() => {
+            return {
+                events: calendarEvents,
+                externalEvents: externalEvents
+            };
+        });
+        window.api.deleteEvents(events);
+    }
+
     /*
     Created by the task pool
     */
-    async function handleNewTask(newTask: EventObject) {
-        const currentExternalEvents = state.externalEvents;
-        const id = await saveData([newTask]);
-        newTask.id = id.value;
-        currentExternalEvents.push(newTask);
+    async function handleNewOrEditEvent(eventInWork: EventObject) {
+        console.log(eventInWork);
+        //if already existing
+        if (eventInWork.id !== undefined) updateData(eventInWork);
+        //otherwise create new Task
+        else {
+            const currentExternalEvents = state.externalEvents;
+            const id = await saveData([eventInWork]);
+            eventInWork.id = id.value;
+            currentExternalEvents.push(eventInWork);
 
-        setState((state) => {
-            return {
-                ...state,
-                externalEvents: currentExternalEvents
+            setState((state) => {
+                return {
+                    ...state,
+                    externalEvents: currentExternalEvents
+                };
+            });
+        }
+    }
+
+    function handleLeftclick(arg: any) {
+        const currentEvent = fcEventToReactEvent(arg);
+        setCurrentEvent(currentEvent); //callback set back to undefined) TODO
+        openTaskMenu();
+    }
+
+    function openTaskMenu() {
+        document!.getElementById('overlay')!.style.display = 'block';
+        setDisplayTaskForm(!displayTaskForm);
+    }
+
+    function fcEventToReactEvent(arg: any): EventObject {
+        let event;
+        if (arg.event !== undefined) {
+            event = {
+                id: parseInt(arg.event.id),
+                title: arg.event.title,
+                deadline: arg.event.extendedProps.deadline,
+                start: arg.event.startStr,
+                end: arg.event.endStr,
+                classNames: arg.event.classNames
             };
-        });
+        } else if (arg.id) event = arg;
+        else event = emptyEventObject;
+
+        return event;
     }
 
     return (
@@ -245,8 +309,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             backgroundColor={'#1e2b3'}
                             disabled={false}
                             onClick={() => {
-                                document!.getElementById('overlay')!.style.display = 'block';
-                                setDisplayTaskForm(!displayTaskForm);
+                                openTaskMenu();
                             }}
                             className={'mr-auto ml-auto mt-auto'}
                         >
@@ -280,6 +343,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     eventDrop={handleDrop}
                                     eventReceive={handleEventReceive}
                                     eventLeave={handleExternalEventLeave}
+                                    eventClick={handleLeftclick}
                                 />
                             </div>
                             {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
@@ -287,11 +351,14 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 {displayTaskForm ? (
                                     <TaskForm
                                         className="mt-10 ml-14"
-                                        onChange={handleNewTask}
+                                        onChange={handleNewOrEditEvent}
                                         display={() => {
                                             document!.getElementById('overlay')!.style.display = 'none';
                                             setDisplayTaskForm(!displayTaskForm);
                                         }}
+                                        data={currentEvent}
+                                        onDelete={deleteEvents}
+                                        callback={setCurrentEvent}
                                     />
                                 ) : (
                                     ''

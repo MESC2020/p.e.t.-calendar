@@ -47,6 +47,21 @@ export class dbMgr {
         return results;
     }
 
+    deleteEvents(data: EventObject[]) {
+        if (this.db != undefined) {
+            for (let event of data) {
+                if (event.id !== undefined) {
+                    const sql = `DELETE FROM Events WHERE id = ?`;
+                    this.db.run(sql, [event.id], (err: error) => {
+                        if (err) {
+                            return console.log(err.message);
+                        }
+                    });
+                }
+            }
+        }
+    }
+
     updateEvents(data: EventObject[]) {
         if (this.db != undefined) {
             for (let event of data) {

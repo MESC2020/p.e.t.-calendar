@@ -1,5 +1,5 @@
 import React from 'react';
-import MainNavigation from './MainNavigation';
+import MainNavigation from './Navbar';
 
 export interface IMainContainerProps {
     className?: string;

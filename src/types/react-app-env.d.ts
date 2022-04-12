@@ -1,6 +1,7 @@
 /// <reference types="react-scripts" />
 
 declare global {
+    var emptyEventObject: EventObject;
     interface Window {
         api: any;
     }
