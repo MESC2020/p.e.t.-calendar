@@ -3,17 +3,18 @@ import React, { memo, useEffect, useRef } from 'react';
 
 export interface IExternalEventProps {
     event: any;
+    onClick: any;
 }
 
-const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo(({ event }) => {
+const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props) => {
     let elRef = useRef(null);
-    let textColor = event?.textColor || 'white';
+    let textColor = props.event?.textColor || 'white';
 
     useEffect(() => {
         if (elRef.current != null) {
             let draggable = new Draggable(elRef.current, {
                 eventData: function () {
-                    return { ...event, create: true };
+                    return { ...props.event, create: true };
                 }
             });
 
@@ -24,18 +25,22 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo(({ even
 
     return (
         <div
+            onClick={() => {
+                props.onClick(props.event);
+            }}
+            id="divBox"
             ref={elRef}
             className="fc-event fc-h-event mb-1 fc-daygrid-event fc-daygrid-block-event p-2"
-            title={event.title}
+            title={props.event.title}
             style={{
-                backgroundColor: event.backgroundColor,
-                borderColor: event.backgroundColor,
+                backgroundColor: props.event.backgroundColor,
+                borderColor: props.event.backgroundColor,
                 cursor: 'pointer'
             }}
         >
             <div className="fc-event-main">
                 <div>
-                    <strong style={{ color: textColor }}>{event.title}</strong>
+                    <strong style={{ color: textColor }}>{props.event.title}</strong>
                 </div>
             </div>
         </div>

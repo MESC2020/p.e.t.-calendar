@@ -13,9 +13,17 @@ interface State {
     externalEvents: EventObject[];
     events: EventObject[];
 }
-
+export enum Mode {
+    updating = 'updating',
+    deleting = 'deleting',
+    dragAndDrop = 'dragAndDrop'
+}
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
+    let onlyOnce = true;
     const calendarRef = useRef<any>();
+    const [calendarApi, setCalendarApi] = useState<any>();
+    const [isUpdating, setIsUpdating] = useState(false);
+
     const [isLoading, setIsLoading] = useState(true);
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
     const [flags, setFlags] = useState({
@@ -49,6 +57,46 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         return id;
     }
 
+    async function editEventsInCalendar(event: EventObject, mode: Mode) {
+        const eventsInCalendar: EventObject[] = state.events;
+        const externalEvents: EventObject[] = state.externalEvents;
+        let alreadyChanged = false;
+
+        for (let eventCalendar of eventsInCalendar) {
+            if (eventCalendar.id === event.id) {
+                let index = eventsInCalendar.indexOf(eventCalendar);
+                if (mode === Mode.updating) eventsInCalendar.splice(index, 1, event);
+                else eventsInCalendar.splice(eventsInCalendar.indexOf(eventCalendar), 1);
+                alreadyChanged = true;
+                break;
+            }
+        }
+        if (!alreadyChanged) {
+            for (let externalEvent of externalEvents) {
+                if (externalEvent.id === event.id) {
+                    let index = externalEvents.indexOf(externalEvent);
+                    if (mode === Mode.updating) externalEvents.splice(index, 1, event);
+                    else externalEvents.splice(externalEvents.indexOf(externalEvent), 1);
+                    break;
+                }
+            }
+        }
+        if (mode === Mode.dragAndDrop) eventsInCalendar.push(event);
+
+        if (mode === Mode.deleting) window.api.deleteEvents([event]);
+        else window.api.updateEvents([event]);
+        if (eventsInCalendar.length !== 0 || externalEvents.length !== 0) {
+            await setIsUpdating(true);
+            setState(() => {
+                return {
+                    events: eventsInCalendar,
+                    externalEvents: externalEvents
+                };
+            });
+            setIsUpdating(false);
+        }
+    }
+
     function sortData(events: EventObject[]) {
         const eventsInCalendar: EventObject[] = [];
         const externalEvents: EventObject[] = [];
@@ -68,9 +116,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             });
     }
 
-    function updateData(arg: any) {
+    async function updateData(arg: any, mode: Mode) {
         let currentEvent: EventObject = fcEventToReactEvent(arg);
-        window.api.updateEvents([currentEvent]);
+        setFlags((flags) => {
+            return { ...flags, showAnimation: false };
+        });
+        await editEventsInCalendar(currentEvent, mode); //update and forcing refresh of component "FullCalendar"
     }
 
     function handlingResizeOfEvents() {
@@ -103,32 +154,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     When Task is dropped from task pool into the calendar
      */
     function handleEventReceive(eventInfo: any) {
-        let changedExternalEvents: boolean = false;
-        const newEvent = {
-            id: eventInfo.event.id
-        };
-        const externalEvents: EventObject[] = state.externalEvents;
-        for (let externalEvent of externalEvents) {
-            //remove Event if already dropped into calendar
-            if (externalEvent.id == newEvent.id) {
-                const index = externalEvents.indexOf(externalEvent);
-                if (index > -1) {
-                    externalEvents.splice(index, 1);
-                    changedExternalEvents = true;
-                }
-                break;
-            }
-        }
-        updateData(eventInfo);
-
-        if (changedExternalEvents) {
-            setState((state) => {
-                return {
-                    ...state,
-                    externalEvents: externalEvents
-                };
-            });
-        }
+        updateData(eventInfo, Mode.dragAndDrop);
     }
 
     function toggleDemandOnOff() {
@@ -192,7 +218,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 }
             }
         }
-        updateData(arg);
+        updateData(arg, Mode.updating);
     }
 
     function handleExternalEventLeave() {
@@ -208,7 +234,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function deleteEvents(events: EventObject[]) {
-        console.log('in deleteevents');
         const externalEvents = state.externalEvents;
         const calendarEvents = state.events;
         let notFound = true;
@@ -247,9 +272,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     Created by the task pool
     */
     async function handleNewOrEditEvent(eventInWork: EventObject) {
-        console.log(eventInWork);
         //if already existing
-        if (eventInWork.id !== undefined) updateData(eventInWork);
+        if (eventInWork.id !== undefined) updateData(eventInWork, Mode.updating);
         //otherwise create new Task
         else {
             const currentExternalEvents = state.externalEvents;
@@ -296,13 +320,13 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     return (
         <>
-            {isLoading ? (
+            {isLoading || isUpdating ? (
                 ''
             ) : (
                 <div className="flex">
                     <div className="flex flex-grow flex-col max-height bg-slate-100 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
                         {state.externalEvents.map((event) => (
-                            <ExternalEvent key={event.id} event={event} />
+                            <ExternalEvent onClick={handleLeftclick} event={event} />
                         ))}
                         <Button
                             color={'white'}
@@ -334,10 +358,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     height="800px"
                                     contentHeight="100px"
                                     expandRows={true}
-                                    events={state.events as EventSourceInput}
                                     editable={true}
                                     droppable={true}
                                     forceEventDuration={true}
+                                    events={state.events as EventSourceInput}
                                     eventDragStart={handleDragStart}
                                     eventDragStop={handleDragStop}
                                     eventDrop={handleDrop}
@@ -357,7 +381,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                             setDisplayTaskForm(!displayTaskForm);
                                         }}
                                         data={currentEvent}
-                                        onDelete={deleteEvents}
+                                        onDelete={editEventsInCalendar}
                                         callback={setCurrentEvent}
                                     />
                                 ) : (

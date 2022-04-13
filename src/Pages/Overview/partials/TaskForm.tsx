@@ -2,6 +2,7 @@ import { data } from 'jquery';
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
+import { Mode } from '../OverviewPage';
 import RangeSlider from './RangeSlider';
 
 export interface ITaskFormProps {
@@ -41,10 +42,12 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     };
 
     const handleChangeToggle = () => {
+        if (deadlineToggle) handleExternalEvent('deadline', undefined);
         setDeadlineToggle(!deadlineToggle);
     };
 
     const handleConfirmation = () => {
+        if (props.data.id) props.callback(emptyEventObject);
         props.onChange(externalEvent);
         props.display();
     };
@@ -55,8 +58,8 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     };
 
     const closeAndDelete = () => {
-        const events: EventObject[] = [props.data];
-        props.onDelete(events); //delete
+        const event: EventObject = props.data;
+        props.onDelete(event, Mode.deleting); //delete
         props.callback(emptyEventObject);
         props.display(); // close popup
     };

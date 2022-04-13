@@ -65,13 +65,12 @@ export class dbMgr {
     updateEvents(data: EventObject[]) {
         if (this.db != undefined) {
             for (let event of data) {
-                let valuesToChange = 'title = ?, demand = ?';
+                let valuesToChange = 'title = ?, demand = ?, deadline = ?';
                 const demand = this.retrieveDemandLevel(event.classNames);
                 const data = [event.title, demand];
-                if (event.deadline != undefined) {
-                    valuesToChange = valuesToChange + ', deadline = ?';
-                    data.push(event.deadline);
-                }
+                if (event.deadline != undefined) data.push(event.deadline);
+                else data.push(undefined);
+
                 if (event.start) {
                     valuesToChange = valuesToChange + ', start = ?, end = ?';
                     data.push(event.start, event.end);
