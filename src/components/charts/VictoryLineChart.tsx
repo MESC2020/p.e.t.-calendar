@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { VictoryChart, VictoryLegend, VictoryLine, VictoryTheme } from 'victory';
+import { IaggregatedWeekdays } from '../../db/Aggregator';
 
 export interface IVictoryLineChartProps {
-    data: any;
+    data: IaggregatedWeekdays[] | undefined;
 }
 
 const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props) => {
@@ -30,7 +31,7 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                         onLoad: { duration: 1500 }
                     }}
                     data={[
-                        { x: 'Monday', y: props.data[0]['MO'] },
+                        { x: 'Monday', y: props.data ? props.data[0]['MO']?.productive : 0 },
                         { x: 'Tuesday', y: 3 },
                         { x: 'Wednesday', y: 5 },
                         { x: 'Thursday', y: 4 },
@@ -47,7 +48,7 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                         onLoad: { duration: 1500 }
                     }}
                     data={[
-                        { x: 'Monday', y: 7 },
+                        { x: 'Monday', y: props.data ? props.data[0]['MO'].energy : 0 },
                         { x: 'Tuesday', y: 4 },
                         { x: 'Wednesday', y: 6 },
                         { x: 'Thursday', y: 2 },

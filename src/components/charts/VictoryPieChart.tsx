@@ -18,7 +18,9 @@ const VictoryPieChart: React.FunctionComponent<IVictoryPieChartProps> = (props) 
     ];
     const [graphicData, setGraphicData] = useState(defaultGraphicData);
     useEffect(() => {
-        setGraphicData(wantedGraphicData); // Setting the data that we want to display
+        setTimeout(() => {
+            setGraphicData(wantedGraphicData);
+        }, 3); // Setting the data that we want to display
     }, []);
     return (
         <svg className="relative w-full" viewBox="0 0 400 400">

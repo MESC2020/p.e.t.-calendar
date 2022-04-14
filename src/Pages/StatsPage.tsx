@@ -5,34 +5,46 @@ import ScatterChart from '../components/charts/ScatterChart';
 import StatsBox from '../components/charts/StatsBox';
 import VictoryLineChart from '../components/charts/VictoryLineChart';
 import VictoryPieChart from '../components/charts/VictoryPieChart';
+import { IaggregatedHoursWithEnergy, IaggregatedWeekdays, measurement } from '../db/Aggregator';
 
 export interface IStatsPageProps {}
+export interface ItotalAvg {
+    [measurement: string]: number;
+}
 
 const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
-    const [data, setData] = useState<any>();
-    const [totalAvgProd, setTotalAvgProd] = useState(0);
+    const [data, setData] = useState<IaggregatedWeekdays[]>();
+    const [totalAvgProd, setTotalAvgProd] = useState<ItotalAvg>();
 
     useEffect(() => {
         async function getData() {
-            const res = await window.api.getAggregatedWeekdays();
+            const res: IaggregatedWeekdays[] = await window.api.getAggregatedWeekdays();
+            console.log(res);
             const totalAvgProd = totalAvgProductivity(res);
             setTotalAvgProd(totalAvgProd);
             setData(res);
+            console.log(totalAvgProd);
 
             setIsLoading(!isLoading);
         }
         if (isLoading) getData();
     });
 
-    function totalAvgProductivity(data: any) {
-        let sum = 0;
+    function totalAvgProductivity(data: IaggregatedWeekdays[]) {
+        let sumProductive = 0;
+        let sumEnergy = 0;
         let count = 0;
         for (let day of data) {
-            sum = sum + day[Object.keys(day)[0]];
+            sumProductive = sumProductive + day[Object.keys(day)[0]][measurement.productive];
+            sumEnergy = sumEnergy + day[Object.keys(day)[0]][measurement.energy];
+
             count++;
         }
-        return Math.round((sum / count) * 10) / 10;
+        return {
+            [measurement.productive]: Math.round((sumProductive / count) * 10) / 10,
+            [measurement.energy]: Math.round((sumEnergy / count) * 10) / 10
+        };
     }
 
     return (
@@ -43,10 +55,10 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                 <div style={{ height: 1000, width: 1700 }} className="flex bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl">
                     <div className="w-1/2 b flex">
                         <StatsBox text="Weekly avg. Productivity" className="box-squared">
-                            <VictoryPieChart data={totalAvgProd} max={7} inPrecent={false} />
+                            <VictoryPieChart data={totalAvgProd!.productive} max={7} inPrecent={false} />
                         </StatsBox>
-                        <StatsBox text="Task Completition on time" className="box-squared">
-                            <VictoryPieChart data={80} max={100} inPrecent={true} />
+                        <StatsBox text="Weekly avg. Energy" className="box-squared">
+                            <VictoryPieChart data={totalAvgProd!.energy} max={7} inPrecent={false} />
                         </StatsBox>
                     </div>
                     <div className="w-1/2">

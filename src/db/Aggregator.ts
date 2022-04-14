@@ -1,45 +1,55 @@
-interface Weekday {
-    [weekday: string]: [productive: number, energy: number];
-}
-
-interface Hour {
-    [hour: string]: [productive: number, energy: number];
-}
-
-interface test {
+export interface IaggregatedHoursWithoutEnergy {
     [day: string]: { [time: string]: number };
 }
 
+export interface IaggregatedHoursWithEnergy {
+    [day: string]: { [time: string]: { [measurement: string]: number } };
+}
+
+export type aggregatedHours = IaggregatedHoursWithoutEnergy | IaggregatedHoursWithEnergy;
+
+export enum measurement {
+    productive = 'productive',
+    energy = 'energy'
+}
+export interface IaggregatedWeekdays {
+    [day: string]: { [measurement: string]: number };
+}
 export class Aggregator {
     dbManager: any;
     constructor(dbMgr: any) {
         this.dbManager = dbMgr;
     }
 
-    async aggregatingWeekdays() {
-        const weekdays: any = await this.aggregatingHours();
+    async aggregatingWeekdays(): Promise<IaggregatedWeekdays[]> {
+        const weekdays: any = await this.aggregatingHours(true);
         console.log(weekdays);
         let count = 0;
-        let sum = 0;
-        const avgWeekdays = [];
+        let sumProductive = 0;
+        let sumEnergy = 0;
+
+        const avgWeekdays: IaggregatedWeekdays[] = [];
 
         for (let day in weekdays) {
             for (let time in weekdays[day]) {
-                sum = sum + weekdays[day][time];
+                sumProductive = sumProductive + weekdays[day][time][measurement.productive];
+                sumEnergy = sumEnergy + weekdays[day][time][measurement.energy];
                 count++;
             }
-            const objc = { [day]: sum / count };
+            const objc: IaggregatedWeekdays = { [day]: { [measurement.productive]: sumProductive / count, [measurement.energy]: sumEnergy / count } };
             avgWeekdays.push(objc);
-            (sum = 0), (count = 0);
+            sumProductive = 0;
+            sumEnergy = 0;
+            count = 0;
         }
-        console.log(avgWeekdays);
         return avgWeekdays;
     }
 
-    aggregatingHours() {
+    aggregatingHours(includeEnergy: boolean = false) {
         const today = new Date();
         const db = this.dbManager.db;
-        const sql = 'SELECT day, time, AVG(productive) FROM Report GROUP BY day, time ORDER BY time ASC';
+        const sql = `SELECT day, time, AVG(productive)${includeEnergy ? ',AVG(energy) ' : ' '}FROM Report GROUP BY day, time ORDER BY time ASC`;
+        console.log(sql);
         let result;
         if (db !== undefined) {
             result = new Promise((resolve, reject) => {
@@ -47,11 +57,11 @@ export class Aggregator {
                     if (err) {
                         throw err;
                     }
-                    const objc: test = {};
+                    const objc: aggregatedHours = {};
+                    console.log(rows);
                     rows.forEach((row: any) => {
-                        const allKeys: any = objc.keys;
-                        //if(allKeys.includes(row.day)) objc[`${row.day}`] =
-                        objc[row.day] = { ...objc[row.day], [row.time]: row['AVG(productive)'] };
+                        objc[row.day] = { ...objc[row.day], [row.time]: includeEnergy ? { productive: row['AVG(productive)'], energy: row['AVG(energy)'] } : row['AVG(productive)'] };
+                        console.log(objc);
                     });
                     resolve(objc);
                 });
