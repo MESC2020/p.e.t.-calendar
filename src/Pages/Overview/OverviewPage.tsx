@@ -19,9 +19,7 @@ export enum Mode {
     dragAndDrop = 'dragAndDrop'
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
-    let onlyOnce = true;
     const calendarRef = useRef<any>();
-    const [calendarApi, setCalendarApi] = useState<any>();
     const [isUpdating, setIsUpdating] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
@@ -85,16 +83,15 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
         if (mode === Mode.deleting) window.api.deleteEvents([event]);
         else window.api.updateEvents([event]);
-        if (eventsInCalendar.length !== 0 || externalEvents.length !== 0) {
-            await setIsUpdating(true);
-            setState(() => {
-                return {
-                    events: eventsInCalendar,
-                    externalEvents: externalEvents
-                };
-            });
-            setIsUpdating(false);
-        }
+
+        await setIsUpdating(true);
+        setState(() => {
+            return {
+                events: eventsInCalendar,
+                externalEvents: externalEvents
+            };
+        });
+        setIsUpdating(false);
     }
 
     function sortData(events: EventObject[]) {
@@ -233,41 +230,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
     }
 
-    function deleteEvents(events: EventObject[]) {
-        const externalEvents = state.externalEvents;
-        const calendarEvents = state.events;
-        let notFound = true;
-        for (let event of events) {
-            for (let storedEvent of externalEvents) {
-                if (event.id === storedEvent.id) {
-                    externalEvents.splice(externalEvents.indexOf(storedEvent), 1);
-                    notFound = false;
-                    break;
-                }
-            }
-            if (notFound) {
-                //only continue search if element hasn't been found yet
-                for (let storedCalendarEvents of calendarEvents) {
-                    if (event.id === storedCalendarEvents.id) {
-                        console.log(calendarEvents);
-
-                        calendarEvents.splice(calendarEvents.indexOf(storedCalendarEvents), 1);
-                        console.log(calendarEvents);
-                        break;
-                    }
-                }
-            }
-            notFound = true;
-        }
-        setState(() => {
-            return {
-                events: calendarEvents,
-                externalEvents: externalEvents
-            };
-        });
-        window.api.deleteEvents(events);
-    }
-
     /*
     Created by the task pool
     */
@@ -296,7 +258,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         openTaskMenu();
     }
 
-    function openTaskMenu() {
+    async function openTaskMenu() {
         document!.getElementById('overlay')!.style.display = 'block';
         setDisplayTaskForm(!displayTaskForm);
     }
@@ -343,7 +305,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     <div className="flex flex-col">
                         <div className="flex justify-end">
                             <p className="mr-2">Demanding Level</p>
-                            <SwitchButton defaultMode={true} onChange={toggleDemandOnOff} />
+                            <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
                         </div>
                         <div className="container-overview overflow-hidden">
                             <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">

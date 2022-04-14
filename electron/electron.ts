@@ -1,6 +1,7 @@
 // main entry point for electron
 
 import { dbMgr } from "../src/db/dbMgr";
+import { Aggregator } from "../src/db/Aggregator";
 
 //dev toole extension
 import installExtension, {
@@ -11,6 +12,7 @@ import installExtension, {
 const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
 const path = require("path");
 let dbManager: dbMgr;
+let aggregator: Aggregator;
 
 type Window = {
   minimize(): any;
@@ -102,9 +104,7 @@ app.on("window-all-closed", function () {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
+//events handlers
 ipcMain.handle("get-all-events", async (event: any, args: any) => {
   const results = await dbManager.getAllData("Events");
   return results;
@@ -122,8 +122,23 @@ ipcMain.on("delete-events", (event: any, args: any) => {
   dbManager.deleteEvents(args);
 });
 
+//report handlers
 ipcMain.on("close-popup", (event: any, args: any) => {
   console.log(args);
   console.log("here in closing");
   if (args.value) popupWindow.close();
+});
+
+ipcMain.on("save-report", (event: any, args: any) => {
+  dbManager.saveReport(args);
+});
+
+ipcMain.handle("get-aggregated-hours", async (event: any, args: any) => {
+  aggregator = new Aggregator(dbManager);
+  return await aggregator.aggregatingHours();
+});
+
+ipcMain.handle("get-aggregated-weekdays", async (event: any, args: any) => {
+  aggregator = new Aggregator(dbManager);
+  return await aggregator.aggregatingWeekdays();
 });

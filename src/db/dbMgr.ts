@@ -29,12 +29,16 @@ export class dbMgr {
     }
 
     createTable() {
+        const tableQueries = [
+            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT)',
+            'CREATE TABLE IF NOT EXISTS Report (id INTEGER NOT NULL PRIMARY KEY, productive INTEGER NOT NULL, energy INTEGER NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL)',
+            'CREATE TABLE IF NOT EXISTS Weekday (weekday TEXT NOT NULL PRIMARY KEY, avgProductive INTEGER NOT NULL, avgEnergy INTEGER NOT NULL)'
+        ];
         if (this.db != undefined) {
             try {
-                this.db.run(
-                    //Creates Table "Events" in the very first run
-                    'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT)'
-                );
+                tableQueries.forEach((query) => {
+                    this.db!.run(query);
+                });
             } catch (err: any) {
                 console.log(err);
             }
@@ -77,6 +81,25 @@ export class dbMgr {
                 }
                 data.push(event.id);
                 const sql = `UPDATE Events SET ${valuesToChange} WHERE id = ?`;
+                this.db.run(sql, data, (err: error) => {
+                    if (err) {
+                        return console.log(err.message);
+                    }
+                });
+            }
+        }
+    }
+    saveReport(data: ReportObject[]) {
+        if (this.db != undefined) {
+            for (let report of data) {
+                let valuesToChange = '(productive, energy, day, time)';
+                let placeholders = '(?,?,?,?)';
+
+                const data = [report.timestamp, report.productive, report.energy];
+
+                const sql = `INSERT INTO Report ${valuesToChange} VALUES${placeholders}`;
+                console.log(sql);
+
                 this.db.run(sql, data, (err: error) => {
                     if (err) {
                         return console.log(err.message);

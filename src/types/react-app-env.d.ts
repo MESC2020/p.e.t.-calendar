@@ -6,6 +6,12 @@ declare global {
         api: any;
     }
 
+    type ReportObject = {
+        timestamp: string;
+        productive: number;
+        energy: number;
+    };
+
     type EventObject = {
         id: number | undefined;
         title: string;
