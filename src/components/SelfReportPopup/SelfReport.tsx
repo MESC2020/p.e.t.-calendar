@@ -1,7 +1,7 @@
 import { green, purple } from '@mui/material/colors';
 import { createMuiTheme, createTheme } from '@mui/material/styles';
 import React, { useState } from 'react';
-import RangeSlider from '../../Pages/Overview/partials/RangeSlider';
+import RangeSlider from '../../views/partials/RangeSlider';
 import { Button } from '../../views/partials/Button';
 
 export interface ISelfReportProps {}

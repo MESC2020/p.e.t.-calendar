@@ -77,11 +77,9 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     useEffect(() => {
         async function getData() {
             const res = await window.api.getAggregatedHours();
-            console.log(res);
             const days = await prepareData(res);
             setData(days);
             setIsLoading(!isLoading);
-            console.log(days[0]);
         }
         if (isLoading) getData();
     });

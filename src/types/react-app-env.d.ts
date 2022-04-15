@@ -22,6 +22,7 @@ declare global {
         backgroundColor?: string;
         textColor?: string;
         demand?: number;
+        duration?: string;
     };
 }
 export {};

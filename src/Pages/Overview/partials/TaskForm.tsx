@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
 import { Mode } from '../OverviewPage';
-import RangeSlider from './RangeSlider';
+import RangeSlider from '../../../views/partials/RangeSlider';
+import TimeSelector from '../../../views/partials/TimeSelector';
 
 export interface ITaskFormProps {
     className?: string;
@@ -16,13 +17,28 @@ export interface ITaskFormProps {
     onDelete: any;
     callback: any;
 }
-
+const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
 const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
+    const timeDifference = () => {
+        const startHour = parseInt(props.data.start!.charAt(11) + props.data.start!.charAt(12));
+        const startMinute = parseInt(props.data.start!.charAt(14) + props.data.start!.charAt(15));
+        const endHour = parseInt(props.data.end!.charAt(11) + props.data.end!.charAt(12));
+        const endMinute = parseInt(props.data.end!.charAt(14) + props.data.end!.charAt(15));
+        const difHour = (endHour - startHour) * 60; //in minutes
+        const difMinute = endMinute - startMinute;
+        const result = (difHour + difMinute) / 60;
+        const format = difMinute === 0 ? formatNumber(result) : formatNumber(Math.floor(result), (parseInt(result.toString().split('.')[1]) * 60).toString());
+
+        return format;
+    };
+    const formatNumber = (hour: number, minute: string = '00') => {
+        return hour >= 10 ? `${hour}:${minute}` : `0${hour}:${minute}`;
+    };
+
     const showDeadlineOrNot = props.data.deadline ? true : false;
     const [deadlineToggle, setDeadlineToggle] = useState(showDeadlineOrNot);
     const defaultDemand = props.data.classNames.length !== 0 ? parseInt(props.data.classNames[1].slice(-1)) : STANDARD_DEMAND;
-    const [demand, setDemand] = useState(defaultDemand);
     const [externalEvent, setExternalEvent] = useState({
         id: props.data.id ? props.data.id : undefined,
         title: props.data.title.length !== 0 ? props.data.title : '',
@@ -31,7 +47,8 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         classNames: props.data.classNames.length !== 0 ? props.data.classNames : ['demand', `demand-${STANDARD_DEMAND}`],
         deadline: props.data.deadline ? props.data.deadline : undefined,
         start: props.data.start ? props.data.start : undefined,
-        end: props.data.end ? props.data.end : undefined
+        end: props.data.end ? props.data.end : undefined,
+        duration: props.data.start ? timeDifference() : props.data.duration ? props.data.duration : STANDARD_DURATION
     });
     const today = new Date();
 
@@ -104,6 +121,10 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     <RangeSlider textColorWhite={false} standardDemand={defaultDemand} onChange={updateClassList} />
                 </div>
                 <div className="flex mt-4 ml-10 gap-x-4">
+                    <div className="flex flex-col">
+                        <p>Duration (h/m)</p>
+                        <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.duration} onChange={handleExternalEvent} />
+                    </div>
                     <div className="">
                         <p>Deadline?</p>
                         <SwitchButton onChange={handleChangeToggle} defaultMode={showDeadlineOrNot} />

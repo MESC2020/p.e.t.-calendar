@@ -7,6 +7,7 @@ import ExternalEvent from './partials/ExternalEvent';
 import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
+
 export interface IOverviewPageProps {}
 
 interface State {
@@ -115,9 +116,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     async function updateData(arg: any, mode: Mode) {
         let currentEvent: EventObject = fcEventToReactEvent(arg);
-        setFlags((flags) => {
-            return { ...flags, showAnimation: false };
-        });
+        if (!flags.demandToggle) {
+            setFlags((flags) => {
+                return { ...flags, showAnimation: false };
+            });
+        }
         await editEventsInCalendar(currentEvent, mode); //update and forcing refresh of component "FullCalendar"
     }
 
@@ -322,7 +325,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     expandRows={true}
                                     editable={true}
                                     droppable={true}
-                                    forceEventDuration={true}
+                                    forceEventDuration={false}
                                     events={state.events as EventSourceInput}
                                     eventDragStart={handleDragStart}
                                     eventDragStop={handleDragStop}
@@ -330,6 +333,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     eventReceive={handleEventReceive}
                                     eventLeave={handleExternalEventLeave}
                                     eventClick={handleLeftclick}
+                                    snapDuration={'00:15:00'}
                                 />
                             </div>
                             {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
