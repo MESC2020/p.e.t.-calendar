@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { VictoryChart, VictoryLegend, VictoryLine, VictoryTheme } from 'victory';
-import { IaggregatedWeekdays } from '../../db/Aggregator';
-
 export interface IVictoryLineChartProps {
     data: IaggregatedWeekdays[] | undefined;
 }

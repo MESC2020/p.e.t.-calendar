@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { transform } from 'typescript';
 import { VictoryArea, VictoryChart, VictoryLegend, VictoryLine, VictoryScatter, VictoryTheme } from 'victory';
 
-export interface ITestChartProps {
+export interface IProductivityGraphProps {
     data?: DataObject[];
     showAnimation: boolean;
 }
@@ -11,7 +11,7 @@ type DataObject = {
     x: string;
     y: number;
 };
-const TestChart: React.FunctionComponent<ITestChartProps> = (props) => {
+const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (props) => {
     return (
         // 163.41 * 700
         // viewBox = <min-x> <min-y> <width> <height>
@@ -40,4 +40,4 @@ const TestChart: React.FunctionComponent<ITestChartProps> = (props) => {
     );
 };
 
-export default TestChart;
+export default ProductivityGraph;

@@ -1,4 +1,3 @@
-import { data } from 'jquery';
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
@@ -20,6 +19,7 @@ export interface ITaskFormProps {
 const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
 const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
+    //to display duration
     const timeDifference = () => {
         const startHour = parseInt(props.data.start!.charAt(11) + props.data.start!.charAt(12));
         const startMinute = parseInt(props.data.start!.charAt(14) + props.data.start!.charAt(15));
@@ -32,6 +32,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
         return format;
     };
+
     const formatNumber = (hour: number, minute: string = '00') => {
         return hour >= 10 ? `${hour}:${minute}` : `0${hour}:${minute}`;
     };

@@ -198,5 +198,3 @@ export class dbMgr {
         return results;
     }
 }
-/*const sqlCheck = 'SELECT EXISTS(SELECT * from Events WHERE id=4)';
-                    this.db.get(sqlCheck, (err, row) => { */

@@ -5,6 +5,7 @@ export interface ILoaderProps {
     className: string;
 }
 
+//unused currently
 const Loader: React.FunctionComponent<ILoaderProps> = (props) => {
     return (
         <div className={`${props.className} ` + ' '}>

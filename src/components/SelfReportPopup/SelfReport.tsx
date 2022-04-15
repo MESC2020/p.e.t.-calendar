@@ -1,5 +1,3 @@
-import { green, purple } from '@mui/material/colors';
-import { createMuiTheme, createTheme } from '@mui/material/styles';
 import React, { useState } from 'react';
 import RangeSlider from '../../views/partials/RangeSlider';
 import { Button } from '../../views/partials/Button';
@@ -42,7 +40,6 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
     };
 
     const handleConfirm = () => {
-        console.log('hello');
         window.api.closePopup({ close: true });
     };
     return (
@@ -52,9 +49,7 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
                 <Button
                     disabled={!userInteracted.productive || !userInteracted.energy}
                     onClick={() => {
-                        window.api.closePopup({ close: true });
-
-                        console.log('hello');
+                        handleConfirm();
                     }}
                     className={'ml-5'}
                 >

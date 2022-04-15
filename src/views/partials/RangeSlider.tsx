@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { createTheme, makeStyles, ThemeProvider } from '@mui/material';
+import React, { useState } from 'react';
+import { createTheme, ThemeProvider } from '@mui/material';
 import Slider from '@mui/material/Slider';
-import { blue, green, orange, purple } from '@mui/material/colors';
+import { blue, orange } from '@mui/material/colors';
 
 export interface IRangeSliderProps {
     standardDemand: number;

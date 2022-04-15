@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import FullCalendar, { elementClosest, EventContentArg, EventSourceInput } from '@fullcalendar/react';
+import FullCalendar, { EventSourceInput } from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SwitchButton from '../../views/partials/switchButton';
@@ -363,35 +363,3 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 };
 
 export default OverviewPage;
-/*   async function fetchData() {
-            const result = await window.api.getNames();
-            console.log(result);
-            setName(result);
-        }
-        fetchData();*/
-
-/*
-         {
-                id: 'unstored5',
-                title: 'This is just an example',
-                start: '2022-03-28T12:30:00',
-                end: '2022-03-28T13:30:00',
-                backgroundColor: '#74AAEB',
-                textColor: 'white',
-                classNames: ['demand', 'demand-5']
-            },
-            {
-                id: 'unstored6',
-                title: 'This is another example',
-                start: '2022-03-29T08:00:00',
-                end: '2022-03-29T11:30:00',
-                backgroundColor: '#74AAEB',
-                textColor: 'white',
-                classNames: ['demand', 'demand-2']
-            }
-
-             { id: 'unstored1', title: 'Task 1', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand', 'demand-7'] },
-            { id: 'unstored2', title: 'Task 2', backgroundColor: '#91BEEB', textColor: 'black', classNames: ['demand', 'demand-3'] },
-            { id: 'unstored3', title: 'Task 3', backgroundColor: '#91BEEB', textColor: 'black', classNames: ['demand', 'demand-2'] },
-            { id: 'unstored4', title: 'Task 4', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand', 'demand-6'] }
-            */

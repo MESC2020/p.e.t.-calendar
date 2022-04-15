@@ -1,26 +1,9 @@
-export interface IaggregatedHoursWithoutEnergy {
-    [day: string]: { [time: string]: number };
-}
-
-export interface IaggregatedHoursWithEnergy {
-    [day: string]: { [time: string]: { [measurement: string]: number } };
-}
-
-export type aggregatedHours = IaggregatedHoursWithoutEnergy | IaggregatedHoursWithEnergy;
-
-export enum measurement {
-    productive = 'productive',
-    energy = 'energy'
-}
-export interface IaggregatedWeekdays {
-    [day: string]: { [measurement: string]: number };
-}
 export class Aggregator {
     dbManager: any;
     constructor(dbMgr: any) {
         this.dbManager = dbMgr;
     }
-
+    //Used for stats
     async aggregatingWeekdays(): Promise<IaggregatedWeekdays[]> {
         const weekdays: any = await this.aggregatingHours(true);
         console.log(weekdays);
@@ -44,7 +27,7 @@ export class Aggregator {
         }
         return avgWeekdays;
     }
-
+    //used for graphs in the calendar
     aggregatingHours(includeEnergy: boolean = false) {
         const today = new Date();
         const db = this.dbManager.db;

@@ -1,23 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import TestChart from '../../../components/charts/VictoryTestChart';
+import ProductivityGraph from '../../../components/charts/VictoryProductivityGraph';
 
 export interface IVerticalGraphProps {
     className?: string;
     showAnimation: boolean;
 }
-
-const dataTestSet1 = [
-    { x: '8:00', y: 1 },
-    { x: '9:00', y: 4 },
-    { x: '10:00', y: 5 },
-    { x: '11:00', y: 4 },
-    { x: '12:00', y: 7 },
-    { x: '13:00', y: 2 },
-    { x: '14:00', y: 3 },
-    { x: '15:00', y: 2 },
-    { x: '16:00', y: 4 },
-    { x: '17:00', y: 5 }
-];
 
 const dataTestSet2 = [
     { x: '8:00', y: 3 },
@@ -67,19 +54,20 @@ const dataTestSet5 = [
     { x: '16:00', y: 4 },
     { x: '17:00', y: 7 }
 ];
+type GraphData = {
+    x: string;
+    y: number;
+};
 
-interface t {
-    [coordination: string]: string | number;
-}
 const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
-    const [data, setData] = useState<any>();
+    const [data, setData] = useState<GraphData[][]>();
     useEffect(() => {
         async function getData() {
-            const res = await window.api.getAggregatedHours();
-            const days = await prepareData(res);
+            const res: IaggregatedHoursWithoutEnergy[] = await window.api.getAggregatedHours();
+            const days: GraphData[][] = await prepareData(res);
             setData(days);
-            setIsLoading(!isLoading);
+            if (days !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();
     });
@@ -110,19 +98,19 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 <div className="flex overlap-main overflow-hidden">
                     <div className="overlap-day-box"></div>
                     <div className="overlap-day-box overflow-hidden ">
-                        <TestChart showAnimation={props.showAnimation} data={data[0]} />
+                        <ProductivityGraph showAnimation={props.showAnimation} data={data![0]} />
                     </div>
                     <div className="overlap-day-box overflow-hidden">
-                        <TestChart showAnimation={props.showAnimation} data={dataTestSet2} />
+                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet2} />
                     </div>
                     <div className="overlap-day-box overflow-hidden">
-                        <TestChart showAnimation={props.showAnimation} data={dataTestSet3} />
+                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet3} />
                     </div>
                     <div className="overlap-day-box overflow-hidden">
-                        <TestChart showAnimation={props.showAnimation} data={dataTestSet4} />
+                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet4} />
                     </div>
                     <div className="overlap-day-box overflow-hidden">
-                        <TestChart showAnimation={props.showAnimation} data={dataTestSet5} />
+                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet5} />
                     </div>
                     <div className="overlap-day-box "></div>
                 </div>

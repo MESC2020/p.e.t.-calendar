@@ -1,6 +1,5 @@
 import React from 'react';
 import TimePicker from 'rc-time-picker';
-import ReactDOM from 'react-dom';
 import 'rc-time-picker/assets/index.css';
 import styled from '@emotion/styled';
 import moment, { Moment } from 'moment';
@@ -26,15 +25,15 @@ export const StyleWrapper = styled.div`
 const TimeSelector: React.FunctionComponent<ITimeSelectorProps> = (props) => {
     function handleTimePicking(value: Moment) {
         const onlyTime = value.format('HH:mm');
+        //if Task already in Calendar
         if (props.startTime !== undefined) {
-            console.log(props.startTime);
             const [hour, minute] = onlyTime.split(':');
-            let sec = new Date(props.startTime).getTime() + parseInt(hour) * 60 * 60 * 1000 + parseInt(minute) * 60 * 1000;
-            //const newEnd = props.startTime.substring(0, 11) + onlyTime + props.startTime.substring(16, props.startTime.length)
-            const newDate = new Date(sec).toISOString();
+            let milSec = new Date(props.startTime).getTime() + parseInt(hour) * 60 * 60 * 1000 + parseInt(minute) * 60 * 1000;
+            const newDate = new Date(milSec).toISOString(); //new End date
             props.onChange('end', newDate);
-            console.log(newDate);
-        } else props.onChange('duration', onlyTime);
+        }
+        //if Task still in Task-Pool
+        else props.onChange('duration', onlyTime);
     }
     return (
         <div className={`${props.className}` + ' '}>

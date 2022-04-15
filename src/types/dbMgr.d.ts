@@ -14,6 +14,24 @@ declare global {
     type error = {
         message?: string;
     };
+
+    interface IaggregatedHoursWithoutEnergy {
+        [day: string]: { [time: string]: number };
+    }
+
+    interface IaggregatedHoursWithEnergy {
+        [day: string]: { [time: string]: { [measurement: string]: number } };
+    }
+
+    type aggregatedHours = IaggregatedHoursWithoutEnergy | IaggregatedHoursWithEnergy;
+
+    enum measurement {
+        productive = 'productive',
+        energy = 'energy'
+    }
+    interface IaggregatedWeekdays {
+        [day: string]: { [measurement: string]: number };
+    }
 }
 
 export {};
