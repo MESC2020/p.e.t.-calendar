@@ -16,9 +16,6 @@ const Navbar: React.FunctionComponent<INavbarProps> = (props) => {
                     <Button disabled={status} className="" onClick={() => navigate('/')}>
                         Overview
                     </Button>
-                    <Button disabled={false} className="" onClick={() => navigate('/today/')}>
-                        Today
-                    </Button>
                     <Button disabled={false} className="" onClick={() => navigate('/stats/')}>
                         Stats
                     </Button>

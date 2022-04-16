@@ -1,59 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import ProductivityGraph from '../../../components/charts/VictoryProductivityGraph';
+import { weekdays } from '../../../db/Aggregator';
 
 export interface IVerticalGraphProps {
     className?: string;
     showAnimation: boolean;
 }
 
-const dataTestSet2 = [
-    { x: '8:00', y: 3 },
-    { x: '9:00', y: 4 },
-    { x: '10:00', y: 5 },
-    { x: '11:00', y: 5 },
-    { x: '12:00', y: 6 },
-    { x: '13:00', y: 7 },
-    { x: '14:00', y: 2 },
-    { x: '15:00', y: 3 },
-    { x: '16:00', y: 1 },
-    { x: '17:00', y: 5 }
-];
-const dataTestSet3 = [
-    { x: '8:00', y: 2 },
-    { x: '9:00', y: 3 },
-    { x: '10:00', y: 2 },
-    { x: '11:00', y: 4 },
-    { x: '12:00', y: 5 },
-    { x: '13:00', y: 2 },
-    { x: '14:00', y: 7 },
-    { x: '15:00', y: 6 },
-    { x: '16:00', y: 6 },
-    { x: '17:00', y: 5 }
-];
-const dataTestSet4 = [
-    { x: '8:00', y: 3 },
-    { x: '9:00', y: 2 },
-    { x: '10:00', y: 5 },
-    { x: '11:00', y: 7 },
-    { x: '12:00', y: 7 },
-    { x: '13:00', y: 6 },
-    { x: '14:00', y: 7 },
-    { x: '15:00', y: 6 },
-    { x: '16:00', y: 4 },
-    { x: '17:00', y: 5 }
-];
-const dataTestSet5 = [
-    { x: '8:00', y: 2 },
-    { x: '9:00', y: 2 },
-    { x: '10:00', y: 3 },
-    { x: '11:00', y: 4 },
-    { x: '12:00', y: 5 },
-    { x: '13:00', y: 1 },
-    { x: '14:00', y: 3 },
-    { x: '15:00', y: 4 },
-    { x: '16:00', y: 4 },
-    { x: '17:00', y: 7 }
-];
 type GraphData = {
     x: string;
     y: number;
@@ -64,31 +17,85 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     const [data, setData] = useState<GraphData[][]>();
     useEffect(() => {
         async function getData() {
-            const res: IaggregatedHoursWithoutEnergy[] = await window.api.getAggregatedHours();
-            const days: GraphData[][] = await prepareData(res);
+            const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
+            const days: any = await prepareData(res);
             setData(days);
             if (days !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();
     });
 
-    function prepareData(objct: any) {
+    function prepareData(objectHours: any) {
         const days = [];
-        for (let keyDay in objct) {
-            const day = [];
-            let count = 0;
-            for (let keyTime in objct[keyDay]) {
-                if (count === 0) day.push({ x: '8:00', y: objct[keyDay][keyTime] }); //since first time has no info on productivity
+        const allKeys = Object.keys(objectHours);
+        const enumWeekdays = Object.keys(weekdays);
 
-                const tempObj = { x: keyTime, y: objct[keyDay][keyTime] };
-                day.push(tempObj);
-                count++;
+        let count = 0;
+        if (allKeys.length !== 0) {
+            //check if object is not empty
+
+            for (let keyDay of enumWeekdays) {
+                const day = [];
+                count = 0;
+                if (allKeys.includes(keyDay)) {
+                    for (let keyTime in objectHours[keyDay]) {
+                        count++;
+                        const [hour, minute] = keyTime.split(':');
+                        if (count < parseInt(hour)) {
+                            const completedData = completeData(count, parseInt(hour));
+                            day.push(...completedData);
+                        } else {
+                            const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
+                            day.push(tempObj);
+                        }
+                    }
+                } else {
+                    const completedData = completeData(0, 24);
+                    day.push(...completedData);
+                }
+                const final = { [keyDay]: day };
+                days.push(final);
             }
-            day.push({ x: '', y: 7 }); // to make sure scale max is 7
-            days.push(day);
+        } else {
+            enumWeekdays.forEach((weekday) => {
+                const emptyDay = completeData(0, 24);
+                const final = { [weekday]: emptyDay };
+                days.push(final);
+            });
         }
         return days;
     }
+
+    function completeData(count: number, hour: number) {
+        const filler = [];
+        while (count < hour) {
+            let time = count < 10 ? `0${count}:00` : `${count}:00`;
+            const tempObj = { x: time, y: 0 };
+            filler.push(tempObj);
+            count++;
+        }
+        return filler;
+    }
+    /*
+    function completeAndRetrieveData() {
+        let result;
+        if (data !== undefined) {
+            if (data.length < 7) result = [...data, ...placeholderData.slice(data.length)];
+            else result = [...data];
+        } else result = placeholderData;
+        return result;
+    }*/
+
+    function returnGraphs() {
+        if (data !== undefined) {
+            return data.map((data) => (
+                <div className="overlap-day-box overflow-hidden ">
+                    <ProductivityGraph showAnimation={props.showAnimation} data={data[Object.keys(data)[0]]} />
+                </div>
+            ));
+        }
+    }
+
     return (
         <div className={`${props.className}` + ' click-through opacity-10 h-full w-full '}>
             <div className="w-full overlap-header"></div>
@@ -96,23 +103,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 ''
             ) : (
                 <div className="flex overlap-main overflow-hidden">
-                    <div className="overlap-day-box"></div>
-                    <div className="overlap-day-box overflow-hidden ">
-                        <ProductivityGraph showAnimation={props.showAnimation} data={data![0]} />
-                    </div>
-                    <div className="overlap-day-box overflow-hidden">
-                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet2} />
-                    </div>
-                    <div className="overlap-day-box overflow-hidden">
-                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet3} />
-                    </div>
-                    <div className="overlap-day-box overflow-hidden">
-                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet4} />
-                    </div>
-                    <div className="overlap-day-box overflow-hidden">
-                        <ProductivityGraph showAnimation={props.showAnimation} data={dataTestSet5} />
-                    </div>
-                    <div className="overlap-day-box "></div>
+                    <>{returnGraphs()}</>
                 </div>
             )}
         </div>

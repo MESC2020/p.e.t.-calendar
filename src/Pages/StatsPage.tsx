@@ -9,6 +9,16 @@ export interface ItotalAvg {
     [measurement: string]: number;
 }
 
+const placeholderData: IaggregatedWeekdays[] = [
+    { MO: { productive: 0, energy: 0 } },
+    { TU: { productive: 0, energy: 0 } },
+    { WE: { productive: 0, energy: 0 } },
+    { TH: { productive: 0, energy: 0 } },
+    { FR: { productive: 0, energy: 0 } },
+    { SA: { productive: 0, energy: 0 } },
+    { SO: { productive: 0, energy: 0 } }
+];
+
 const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<IaggregatedWeekdays[]>();
@@ -36,10 +46,20 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
 
             count++;
         }
+        if (data.length === 0) count = 1;
         return {
             [measurement.productive]: Math.round((sumProductive / count) * 10) / 10,
             [measurement.energy]: Math.round((sumEnergy / count) * 10) / 10
         };
+    }
+
+    function completeAndRetrieveData() {
+        let result;
+        if (data !== undefined) {
+            if (data.length < 7) result = [...data, ...placeholderData.slice(data.length)];
+            else result = [...data];
+        } else result = placeholderData;
+        return result;
     }
 
     return (
@@ -58,7 +78,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                     </div>
                     <div className="w-1/2">
                         <StatsBox text="Self-assessed Productivity & Energy" className="box-stretched">
-                            <VictoryLineChart data={data} />
+                            <VictoryLineChart data={completeAndRetrieveData()} />
                         </StatsBox>
                     </div>
                 </div>

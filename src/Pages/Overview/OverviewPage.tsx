@@ -317,10 +317,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     plugins={[timeGridPlugin, interactionPlugin]}
                                     initialView="timeGridWeek"
                                     allDaySlot={false}
-                                    slotMinTime="08:00:00"
-                                    slotMaxTime="17:00:00"
+                                    slotMinTime="0:00:00"
+                                    slotMaxTime="23:59:59"
                                     nowIndicator={true}
-                                    height="800px"
+                                    height="1600px"
                                     contentHeight="100px"
                                     expandRows={true}
                                     editable={true}

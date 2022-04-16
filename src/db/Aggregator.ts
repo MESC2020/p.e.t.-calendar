@@ -3,6 +3,16 @@ export enum measurement {
     energy = 'energy'
 }
 
+export enum weekdays {
+    Monday = 'Monday',
+    Tuesday = 'Tuesday',
+    Wednesday = 'Wednesday',
+    Thursday = 'Thursday',
+    Friday = 'Friday',
+    Saturday = 'Saturday',
+    Sunday = 'Sunday'
+}
+
 export class Aggregator {
     dbManager: any;
     constructor(dbMgr: any) {
@@ -34,7 +44,6 @@ export class Aggregator {
     }
     //used for graphs in the calendar
     aggregatingHours(includeEnergy: boolean = false) {
-        const today = new Date();
         const db = this.dbManager.db;
         const sql = `SELECT day, time, AVG(productive)${includeEnergy ? ',AVG(energy) ' : ' '}FROM Report GROUP BY day, time ORDER BY time ASC`;
         console.log(sql);
@@ -46,10 +55,8 @@ export class Aggregator {
                         throw err;
                     }
                     const objc: aggregatedHours = {};
-                    console.log(rows);
                     rows.forEach((row: any) => {
                         objc[row.day] = { ...objc[row.day], [row.time]: includeEnergy ? { productive: row['AVG(productive)'], energy: row['AVG(energy)'] } : row['AVG(productive)'] };
-                        console.log(objc);
                     });
                     resolve(objc);
                 });
