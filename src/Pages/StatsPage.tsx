@@ -40,6 +40,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
         let sumProductive = 0;
         let sumEnergy = 0;
         let count = 0;
+        console.log(data);
         for (let day of data) {
             sumProductive = sumProductive + day[Object.keys(day)[0]][measurement.productive];
             sumEnergy = sumEnergy + day[Object.keys(day)[0]][measurement.energy];

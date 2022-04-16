@@ -19,6 +19,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         async function getData() {
             const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
             const days: any = await prepareData(res);
+            console.log(days);
             setData(days);
             if (days !== undefined) setIsLoading(!isLoading);
         }
@@ -29,36 +30,47 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         const days = [];
         const allKeys = Object.keys(objectHours);
         const enumWeekdays = Object.keys(weekdays);
+        const sizeObjectHours = allKeys.length;
 
         let count = 0;
+        //check if object is not empty
         if (allKeys.length !== 0) {
-            //check if object is not empty
-
+            //go through each weekday
             for (let keyDay of enumWeekdays) {
                 const day = [];
                 count = 0;
+                //if that weekday has data
                 if (allKeys.includes(keyDay)) {
                     for (let keyTime in objectHours[keyDay]) {
-                        count++;
                         const [hour, minute] = keyTime.split(':');
+                        //if there are times skipped - filled them up with "00:00"
                         if (count < parseInt(hour)) {
-                            const completedData = completeData(count, parseInt(hour));
+                            const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
+                            const ifNotMidnightReached = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1 && keyTime !== '24:00';
+                            const completedData = completeData(count, parseInt(hour), ifNotMidnightReached, tempObj);
+                            count = parseInt(hour);
+
                             day.push(...completedData);
                         } else {
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
                             day.push(tempObj);
                         }
+                        count++;
                     }
-                } else {
-                    const completedData = completeData(0, 24);
+                }
+                //if that weekday has no data (fill it up completely with "00:00")
+                else {
+                    const completedData = completeData(0, 25, false);
                     day.push(...completedData);
                 }
                 const final = { [keyDay]: day };
                 days.push(final);
             }
-        } else {
+        }
+        //if the complete object is empty, fill the whole week with "00:00"
+        else {
             enumWeekdays.forEach((weekday) => {
-                const emptyDay = completeData(0, 24);
+                const emptyDay = completeData(0, 25, false);
                 const final = { [weekday]: emptyDay };
                 days.push(final);
             });
@@ -66,13 +78,25 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         return days;
     }
 
-    function completeData(count: number, hour: number) {
+    function completeData(count: number, hour: number, midnightNotReached: boolean, temp?: any) {
         const filler = [];
-        while (count < hour) {
-            let time = count < 10 ? `0${count}:00` : `${count}:00`;
-            const tempObj = { x: time, y: 0 };
-            filler.push(tempObj);
-            count++;
+        let loop = true;
+        let tempAlreadyAdded = false;
+        while (loop) {
+            while (count < hour) {
+                let time = count < 10 ? `0${count}:00` : `${count}:00`;
+                const tempObj = { x: time, y: 0 };
+                filler.push(tempObj);
+                count++;
+            }
+            if (temp !== undefined && !tempAlreadyAdded) {
+                filler.push(temp);
+                tempAlreadyAdded = true;
+            }
+            if (midnightNotReached && hour != 25) {
+                count++;
+                hour = 25;
+            } else loop = false;
         }
         return filler;
     }
