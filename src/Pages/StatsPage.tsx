@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import StatsBox from '../components/charts/StatsBox';
 import VictoryLineChart from '../components/charts/VictoryLineChart';
 import VictoryPieChart from '../components/charts/VictoryPieChart';
+import { measurement } from '../db/Aggregator';
 
 export interface IStatsPageProps {}
 export interface ItotalAvg {

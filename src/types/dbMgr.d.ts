@@ -24,11 +24,6 @@ declare global {
     }
 
     type aggregatedHours = IaggregatedHoursWithoutEnergy | IaggregatedHoursWithEnergy;
-
-    enum measurement {
-        productive = 'productive',
-        energy = 'energy'
-    }
     interface IaggregatedWeekdays {
         [day: string]: { [measurement: string]: number };
     }

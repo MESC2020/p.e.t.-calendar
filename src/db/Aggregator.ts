@@ -1,3 +1,8 @@
+export enum measurement {
+    productive = 'productive',
+    energy = 'energy'
+}
+
 export class Aggregator {
     dbManager: any;
     constructor(dbMgr: any) {
