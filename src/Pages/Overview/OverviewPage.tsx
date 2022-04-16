@@ -334,6 +334,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     eventLeave={handleExternalEventLeave}
                                     eventClick={handleLeftclick}
                                     snapDuration={'00:15:00'}
+                                    businessHours={{
+                                        daysOfWeek: [1, 2, 3, 4, 5],
+                                        startTime: '08:00',
+                                        endTime: '18:00'
+                                    }}
+                                    firstDay={1} //Monday
                                 />
                             </div>
                             {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
