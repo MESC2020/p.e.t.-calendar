@@ -20,7 +20,7 @@ export class Aggregator {
     }
     //Used for stats
     async aggregatingWeekdays(): Promise<IaggregatedWeekdays[]> {
-        const weekdays: any = await this.aggregatingHours(true);
+        const weekdays: any = await this.aggregatingHours(true); //any as type: IaggregatedHoursWithEnergy
         console.log(weekdays);
         let count = 0;
         let sumProductive = 0;
@@ -46,7 +46,6 @@ export class Aggregator {
     aggregatingHours(includeEnergy: boolean = false) {
         const db = this.dbManager.db;
         const sql = `SELECT day, time, AVG(productive)${includeEnergy ? ',AVG(energy) ' : ' '}FROM Report GROUP BY day, time ORDER BY time ASC`;
-        console.log(sql);
         let result;
         if (db !== undefined) {
             result = new Promise((resolve, reject) => {

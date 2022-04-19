@@ -21,6 +21,8 @@ type Window = {
   close(): any;
   loadFile(path: any): any;
   webContents: any;
+  show(): any;
+  hide(): any;
 };
 
 let popupWindow: Window;
@@ -45,8 +47,7 @@ function createPopupWindow(width: any, height: any) {
   });
   Menu.setApplicationMenu(null);
   popupWindow.loadURL("http://localhost:3000/#/report");
-  //popupWindow.loadURL(path.join(__dirname, "../index.html#report"));
-  popupWindow.webContents.openDevTools();
+  //popupWindow.webContents.openDevTools();
 }
 
 function createWindow(width: any, height: any) {
@@ -64,7 +65,7 @@ function createWindow(width: any, height: any) {
   //mainWindow.loadURL("http://localhost:3000");
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
@@ -76,9 +77,9 @@ app.whenReady().then(() => {
   installExtension(REACT_DEVELOPER_TOOLS)
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));
-
+  infinitePopUpLoop(width, height);
   createWindow(width, height);
-  createPopupWindow(width, height);
+  //createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
   app.on("activate", function () {
@@ -87,6 +88,16 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow(width, height);
   });
 });
+
+function infinitePopUpLoop(width: any, height: any) {
+  setInterval(() => {
+    if (popupWindow === undefined || popupWindow === null)
+      createPopupWindow(width, height);
+    else if (popupWindow) popupWindow.hide();
+    popupWindow.show();
+    //createPopupWindow(width, height);
+  }, 1 * 60 * 1000);
+}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -118,14 +129,12 @@ ipcMain.on("delete-events", (event: any, args: any) => {
 
 //report handlers
 ipcMain.on("close-popup", (event: any, args: any) => {
-  console.log(args);
-  console.log("here in closing");
   if (args.value) popupWindow.close();
 });
 
 ipcMain.on("save-report", (event: any, args: any) => {
-  console.log("in saving report");
-  //dbManager.saveReport(args);
+  dbManager.saveReport(args);
+  popupWindow.close();
 });
 
 ipcMain.handle("get-aggregated-hours", async (event: any, args: any) => {

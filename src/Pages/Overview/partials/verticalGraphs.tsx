@@ -7,6 +7,14 @@ export interface IVerticalGraphProps {
     showAnimation: boolean;
 }
 
+interface IpreparedData {
+    [day: string]: [value: GraphData[]];
+}
+
+type WeekdayWithHours = {
+    [day: string]: GraphData[];
+};
+
 type GraphData = {
     x: string;
     y: number;
@@ -14,29 +22,30 @@ type GraphData = {
 
 const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
-    const [data, setData] = useState<GraphData[][]>();
+    const [data, setData] = useState<WeekdayWithHours[]>();
     useEffect(() => {
         async function getData() {
             const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
-            const days: any = await prepareData(res);
+            const days: WeekdayWithHours[] = await prepareData(res);
+            console.log(days);
+
             setData(days);
             if (days !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();
     });
 
-    function prepareData(objectHours: any) {
-        const days = [];
+    function prepareData(objectHours: IaggregatedHoursWithoutEnergy) {
+        const days: WeekdayWithHours[] = [];
         const allKeys = Object.keys(objectHours);
         const enumWeekdays = Object.keys(weekdays);
-        const sizeObjectHours = allKeys.length;
 
         let count = 0;
         //check if object is not empty
         if (allKeys.length !== 0) {
             //go through each weekday
             for (let keyDay of enumWeekdays) {
-                const day = [];
+                const day: GraphData[] = [];
                 count = 0;
                 //if that weekday has data
                 if (allKeys.includes(keyDay)) {
@@ -74,10 +83,11 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 days.push(final);
             });
         }
+        console.log(days);
         return days;
     }
 
-    function completeData(count: number, hour: number, midnightNotReached: boolean, temp?: any) {
+    function completeData(count: number, hour: number, midnightNotReached: boolean, temp?: GraphData) {
         const filler = [];
         let loop = true;
         let tempAlreadyAdded = false;
@@ -99,15 +109,6 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         }
         return filler;
     }
-    /*
-    function completeAndRetrieveData() {
-        let result;
-        if (data !== undefined) {
-            if (data.length < 7) result = [...data, ...placeholderData.slice(data.length)];
-            else result = [...data];
-        } else result = placeholderData;
-        return result;
-    }*/
 
     function returnGraphs() {
         if (data !== undefined) {

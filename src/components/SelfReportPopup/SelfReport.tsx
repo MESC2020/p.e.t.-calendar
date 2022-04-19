@@ -36,11 +36,30 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
                     energy: true
                 };
             });
-        setProductivityAssessment(result);
+        setEnergyAssessment(result);
+    };
+    const convertTime = (time: string) => {
+        let resultedTime = time;
+        const [hour, minute] = time.split(':');
+        const THRESHOLD_MINUTE: number = 30;
+        if (parseInt(minute) <= THRESHOLD_MINUTE) {
+            resultedTime = `${hour}:00`;
+        } else {
+            const newHour: number = parseInt(hour) + 1;
+            resultedTime = newHour < 10 ? `0${newHour}:00` : `${newHour}:00`;
+        }
+        return resultedTime;
     };
 
     const handleConfirm = () => {
-        window.api.saveReport();
+        const today = new Date();
+        const report: ReportObject = { timestamp: '', productive: 0, energy: 0, day: '', time: '' };
+        report.timestamp = today.toISOString();
+        report.day = today.toLocaleString('en-us', { weekday: 'long' }); //getDay() returns only number, this return weekday
+        report.time = convertTime(today.toLocaleTimeString('en-de', { hour: '2-digit', minute: '2-digit' }));
+        report.productive = productivityAssessment;
+        report.energy = energyAssessment;
+        window.api.saveReport([report]);
     };
     return (
         <div style={{ width: 400, height: 300 }} className="bg-red-100">
@@ -49,7 +68,6 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
                 <Button
                     disabled={!userInteracted.productive || !userInteracted.energy}
                     onClick={() => {
-                        console.log('confirming');
                         handleConfirm();
                     }}
                     className={'ml-5'}

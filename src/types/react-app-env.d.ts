@@ -10,6 +10,8 @@ declare global {
         timestamp: string;
         productive: number;
         energy: number;
+        day: string;
+        time: string;
     };
 
     type EventObject = {
