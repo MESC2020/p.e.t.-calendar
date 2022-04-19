@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { HashRouter, Route, Routes as Switch } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Route, Routes as Switch } from 'react-router-dom';
 import SelfReport from './components/SelfReportPopup/SelfReport';
 import OverviewPage from './Pages/Overview/OverviewPage';
 import StatsPage from './Pages/StatsPage';

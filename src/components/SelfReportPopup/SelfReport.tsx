@@ -40,7 +40,7 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
     };
 
     const handleConfirm = () => {
-        window.api.closePopup({ close: true });
+        window.api.saveReport();
     };
     return (
         <div style={{ width: 400, height: 300 }} className="bg-red-100">
@@ -49,6 +49,7 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
                 <Button
                     disabled={!userInteracted.productive || !userInteracted.energy}
                     onClick={() => {
+                        console.log('confirming');
                         handleConfirm();
                     }}
                     className={'ml-5'}

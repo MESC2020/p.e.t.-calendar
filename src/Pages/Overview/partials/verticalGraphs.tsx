@@ -19,7 +19,6 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         async function getData() {
             const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
             const days: any = await prepareData(res);
-            console.log(days);
             setData(days);
             if (days !== undefined) setIsLoading(!isLoading);
         }

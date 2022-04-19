@@ -59,6 +59,7 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
                     max={7}
                     value={value}
                     onChange={(event: any, newValue: any) => {
+                        console.log('sliding');
                         handleChange(event.target.value);
                     }}
                     valueLabelDisplay="auto"

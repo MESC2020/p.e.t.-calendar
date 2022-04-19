@@ -20,6 +20,7 @@ type Window = {
   maximaze(): any;
   close(): any;
   loadFile(path: any): any;
+  webContents: any;
 };
 
 let popupWindow: Window;
@@ -38,14 +39,14 @@ function createPopupWindow(width: any, height: any) {
     y: height - 300,
 
     webPreferences: {
-      webPreferences: {
-        contextIsolation: true,
-        //preload: path.join(__dirname, "/preload.js"),
-      },
+      contextIsolation: true,
+      preload: path.join(__dirname, "/preload.js"),
     },
   });
   Menu.setApplicationMenu(null);
-  popupWindow.loadURL("http://localhost:3000/report"); //loadURL(`file://${__dirname}/app.html#/report`);
+  popupWindow.loadURL("http://localhost:3000/#/report");
+  //popupWindow.loadURL(path.join(__dirname, "../index.html#report"));
+  popupWindow.webContents.openDevTools();
 }
 
 function createWindow(width: any, height: any) {
@@ -59,18 +60,11 @@ function createWindow(width: any, height: any) {
       preload: path.join(__dirname, "/preload.js"),
     },
   });
-  if (app.isPackaged) {
-    mainWindow.loadFile(path.join(__dirname, "../index.html"));
-  } else {
-    mainWindow.loadURL("http://localhost:3000");
-  }
-
-  // and load the index.html of the app.
-  //mainWindow.loadFile('index.html')
-  //mainWindow.loadFile(path.join(__dirname,'index.html'));
+  mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  //mainWindow.loadURL("http://localhost:3000");
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
@@ -84,7 +78,7 @@ app.whenReady().then(() => {
     .catch((err) => console.log("An error occurred: ", err));
 
   createWindow(width, height);
-  //createPopupWindow(width, height);
+  createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
   app.on("activate", function () {
@@ -130,7 +124,8 @@ ipcMain.on("close-popup", (event: any, args: any) => {
 });
 
 ipcMain.on("save-report", (event: any, args: any) => {
-  dbManager.saveReport(args);
+  console.log("in saving report");
+  //dbManager.saveReport(args);
 });
 
 ipcMain.handle("get-aggregated-hours", async (event: any, args: any) => {

@@ -2,6 +2,7 @@ const { ipcRenderer, contextBridge } = require("electron");
 //ipcRenderer: sends signals that can be caught with ipcMain in electron.ts
 //contextBridge: bridge between React and Electron
 
+console.log("hiiiii in prelooooad");
 contextBridge.exposeInMainWorld("api", {
   // Receive Methods
   testReceive: (callback: any) =>
