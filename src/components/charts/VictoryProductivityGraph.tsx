@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { transform } from 'typescript';
 import { VictoryArea, VictoryChart, VictoryLegend, VictoryLine, VictoryScatter, VictoryTheme } from 'victory';
 
-export interface ITestChartProps {
+export interface IProductivityGraphProps {
     data?: DataObject[];
     showAnimation: boolean;
 }
@@ -11,12 +11,12 @@ type DataObject = {
     x: string;
     y: number;
 };
-const TestChart: React.FunctionComponent<ITestChartProps> = (props) => {
+const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (props) => {
     return (
         // 163.41 * 700
         // viewBox = <min-x> <min-y> <width> <height>
-        <svg className="" width={800} height={262} viewBox="0 0 800 262" transform="rotate(90), translate(220,320)">
-            <VictoryChart theme={VictoryTheme.material} horizontal={false} standalone={false} width={800} height={262}>
+        <svg className="" width={1560} height={262} transform="rotate(90), translate(600,700)">
+            <VictoryChart theme={VictoryTheme.material} domain={{ y: [0, 7] }} horizontal={false} standalone={false} width={1605} height={262}>
                 <VictoryArea
                     style={{
                         data: {
@@ -40,4 +40,4 @@ const TestChart: React.FunctionComponent<ITestChartProps> = (props) => {
     );
 };
 
-export default TestChart;
+export default ProductivityGraph;

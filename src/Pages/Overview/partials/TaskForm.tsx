@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
-import RangeSlider from './RangeSlider';
+import { Mode } from '../OverviewPage';
+import RangeSlider from '../../../views/partials/RangeSlider';
+import TimeSelector from '../../../views/partials/TimeSelector';
 
 export interface ITaskFormProps {
     className?: string;
@@ -10,11 +12,45 @@ export interface ITaskFormProps {
     name?: any;
     display: any;
     onChange: any;
+    data: EventObject;
+    onDelete: any;
+    callback: any;
 }
-
+const STANDARD_DURATION = '02:00';
+const STANDARD_DEMAND = 5;
 const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
-    const [deadlineToggle, setDeadlineToggle] = useState(false);
-    const [externalEvent, setExternalEvent] = useState({ id: 'test', title: '', backgroundColor: '#74AAEB', textColor: 'white', classNames: ['demand'], deadline: '' });
+    //to display duration
+    const timeDifference = () => {
+        const startHour = parseInt(props.data.start!.charAt(11) + props.data.start!.charAt(12));
+        const startMinute = parseInt(props.data.start!.charAt(14) + props.data.start!.charAt(15));
+        const endHour = parseInt(props.data.end!.charAt(11) + props.data.end!.charAt(12));
+        const endMinute = parseInt(props.data.end!.charAt(14) + props.data.end!.charAt(15));
+        const difHour = (endHour - startHour) * 60; //in minutes
+        const difMinute = endMinute - startMinute;
+        const result = (difHour + difMinute) / 60;
+        const format = difMinute === 0 ? formatNumber(result) : formatNumber(Math.floor(result), (parseInt(result.toString().split('.')[1]) * 60).toString());
+
+        return format;
+    };
+
+    const formatNumber = (hour: number, minute: string = '00') => {
+        return hour >= 10 ? `${hour}:${minute}` : `0${hour}:${minute}`;
+    };
+
+    const showDeadlineOrNot = props.data.deadline ? true : false;
+    const [deadlineToggle, setDeadlineToggle] = useState(showDeadlineOrNot);
+    const defaultDemand = props.data.classNames.length !== 0 ? parseInt(props.data.classNames[1].slice(-1)) : STANDARD_DEMAND;
+    const [externalEvent, setExternalEvent] = useState({
+        id: props.data.id ? props.data.id : undefined,
+        title: props.data.title.length !== 0 ? props.data.title : '',
+        backgroundColor: '#74AAEB',
+        textColor: 'white',
+        classNames: props.data.classNames.length !== 0 ? props.data.classNames : ['demand', `demand-${STANDARD_DEMAND}`],
+        deadline: props.data.deadline ? props.data.deadline : undefined,
+        start: props.data.start ? props.data.start : undefined,
+        end: props.data.end ? props.data.end : undefined,
+        duration: props.data.start ? timeDifference() : props.data.duration ? props.data.duration : STANDARD_DURATION
+    });
     const today = new Date();
 
     useEffect(() => {});
@@ -24,30 +60,52 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     };
 
     const handleChangeToggle = () => {
+        if (deadlineToggle) handleExternalEvent('deadline', undefined);
         setDeadlineToggle(!deadlineToggle);
     };
 
     const handleConfirmation = () => {
+        if (props.data.id) props.callback(emptyEventObject);
         props.onChange(externalEvent);
         props.display();
     };
 
-    const handleChangeDemand = (demand: number) => {
-        const currentClassNames = externalEvent.classNames;
-        currentClassNames.length > 1 ? currentClassNames.splice(1, 1, 'demand-' + demand) : currentClassNames.push('demand-' + demand);
+    const handleCancle = () => {
+        if (props.data.id) props.callback(emptyEventObject);
+        props.display();
+    };
+
+    const closeAndDelete = () => {
+        const event: EventObject = props.data;
+        props.onDelete(event, Mode.deleting); //delete
+        props.callback(emptyEventObject);
+        props.display(); // close popup
+    };
+    function updateClassList(demand: any) {
+        const currentClassNames = [...externalEvent.classNames];
+        let arrayChanged: boolean = false;
+
+        for (let index = 0; index < currentClassNames.length; index++) {
+            if (currentClassNames[index].includes('demand-')) {
+                currentClassNames[index] = currentClassNames[index].slice(0, -1) + demand;
+                arrayChanged = true;
+                break;
+            }
+        }
+        if (!arrayChanged) currentClassNames.push(`demand-${demand}`);
         setExternalEvent((state) => {
             return {
                 ...state,
                 classNames: currentClassNames
             };
         });
-    };
+    }
 
     return (
         <>
             <div id="popup" className={'card flex flex-col p-5 w-3/4 h-3/4 relative z-30' + ' ' + props.className}>
                 <div className="flex justify-center">
-                    <h1 className="font-bold text-3xl mb-2">Create Task</h1>
+                    <h1 className="font-bold text-3xl mb-2">{props.data.id ? 'Edit Task' : 'Create Task'}</h1>
                 </div>
                 <input
                     className={'block ml-10 mr-10'}
@@ -61,12 +119,16 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
                 <div className="ml-10 mt-4 mr-10">
                     <p>How demanding will this task be?</p>
-                    <RangeSlider onChange={handleChangeDemand} />
+                    <RangeSlider textColorWhite={false} standardDemand={defaultDemand} onChange={updateClassList} />
                 </div>
                 <div className="flex mt-4 ml-10 gap-x-4">
+                    <div className="flex flex-col">
+                        <p>Duration (h/m)</p>
+                        <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.duration} onChange={handleExternalEvent} />
+                    </div>
                     <div className="">
                         <p>Deadline?</p>
-                        <SwitchButton onChange={handleChangeToggle} defaultMode={false} />
+                        <SwitchButton onChange={handleChangeToggle} defaultMode={showDeadlineOrNot} />
                     </div>
                     <div className="mt-2">
                         {deadlineToggle ? (
@@ -88,16 +150,26 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 </div>
                 <Button
                     backgroundColor="#01E68A"
-                    disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline?.length == 0)}
+                    disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
                     onClick={handleConfirmation}
                     className={'w-1/6 block mr-auto ml-auto'}
                 >
-                    Confirm
+                    Save
                 </Button>
 
-                <Button disabled={false} onClick={props.display} className={'ml-auto mt-auto'}>
-                    Cancel
-                </Button>
+                <div className="mt-auto flex gap-x-80">
+                    {props.data.id ? (
+                        <Button disabled={false} onClick={closeAndDelete} className={'mr-auto mt-auto'}>
+                            Delete
+                        </Button>
+                    ) : (
+                        ''
+                    )}
+
+                    <Button disabled={false} onClick={handleCancle} className={'ml-auto mt-auto'}>
+                        Cancel
+                    </Button>
+                </div>
             </div>
         </>
     );

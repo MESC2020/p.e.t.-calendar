@@ -1,47 +1,90 @@
 // main entry point for electron
 
 import { dbMgr } from "../src/db/dbMgr";
+import { Aggregator } from "../src/db/Aggregator";
+
+//dev toole extension
+import installExtension, {
+  REACT_DEVELOPER_TOOLS,
+} from "electron-devtools-installer";
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
 const path = require("path");
 let dbManager: dbMgr;
+let aggregator: Aggregator;
 
-function createWindow() {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+type Window = {
+  minimize(): any;
+  loadURL(url: string): any;
+  maximaze(): any;
+  close(): any;
+  loadFile(path: any): any;
+  webContents: any;
+};
+
+let popupWindow: Window;
+
+function createPopupWindow(width: any, height: any) {
+  popupWindow = new BrowserWindow({
+    frame: false,
+    resizable: false,
+    movable: false,
+    focusable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true, //this might be unnecessary since in win, this is already applied when focusable: false
+    height: 300,
+    width: 400,
+    x: width - 400, //to get it into the right bottom corner
+    y: height - 300,
+
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, "/preload.js"),
     },
   });
-  if (app.isPackaged) {
-    mainWindow.loadFile(path.join(__dirname, "../index.html"));
-  } else {
-    mainWindow.loadURL("http://localhost:3000");
-  }
+  Menu.setApplicationMenu(null);
+  popupWindow.loadURL("http://localhost:3000/#/report");
+  //popupWindow.loadURL(path.join(__dirname, "../index.html#report"));
+  popupWindow.webContents.openDevTools();
+}
 
-  // and load the index.html of the app.
-  //mainWindow.loadFile('index.html')
-  //mainWindow.loadFile(path.join(__dirname,'index.html'));
+function createWindow(width: any, height: any) {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: width,
+    height: height,
+    fullscreen: false,
+    webPreferences: {
+      contextIsolation: true,
+      preload: path.join(__dirname, "/preload.js"),
+    },
+  });
+  mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  //mainWindow.loadURL("http://localhost:3000");
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow();
+  const mainScreen = screen.getPrimaryDisplay();
+  const { width, height } = mainScreen.workAreaSize;
+  installExtension(REACT_DEVELOPER_TOOLS)
+    .then((name) => console.log(`Added Extension:  ${name}`))
+    .catch((err) => console.log("An error occurred: ", err));
+
+  createWindow(width, height);
+  createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(width, height);
   });
 });
 
@@ -55,10 +98,42 @@ app.on("window-all-closed", function () {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
-ipcMain.handle("get-names", async (event: any, args: any) => {
-  const results = dbManager.getAllData("family");
+//events handlers
+ipcMain.handle("get-all-events", async (event: any, args: any) => {
+  const results = await dbManager.getAllData("Events");
   return results;
+});
+
+ipcMain.handle("save-events", async (event: any, args: any) => {
+  return await dbManager.saveEvents(args);
+});
+
+ipcMain.on("update-events", (event: any, args: any) => {
+  dbManager.updateEvents(args);
+});
+
+ipcMain.on("delete-events", (event: any, args: any) => {
+  dbManager.deleteEvents(args);
+});
+
+//report handlers
+ipcMain.on("close-popup", (event: any, args: any) => {
+  console.log(args);
+  console.log("here in closing");
+  if (args.value) popupWindow.close();
+});
+
+ipcMain.on("save-report", (event: any, args: any) => {
+  console.log("in saving report");
+  //dbManager.saveReport(args);
+});
+
+ipcMain.handle("get-aggregated-hours", async (event: any, args: any) => {
+  aggregator = new Aggregator(dbManager);
+  return await aggregator.aggregatingHours();
+});
+
+ipcMain.handle("get-aggregated-weekdays", async (event: any, args: any) => {
+  aggregator = new Aggregator(dbManager);
+  return await aggregator.aggregatingWeekdays();
 });

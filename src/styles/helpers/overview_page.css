@@ -1,6 +1,6 @@
 .container-overview {
     width: 1200px;
-    height: 800px;
+    height: 1600px;
     position: relative;
 }
 
@@ -16,7 +16,7 @@
     margin-bottom: 3.4em;
 }
 .overlap-main {
-    height: 700px;
+    height: 1500px;
     width: 1144px;
     position: absolute;
     right: 0px;

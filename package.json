@@ -25,6 +25,7 @@
     "cross-env": "^7.0.3",
     "electron-builder-squirrel-windows": "^23.0.3",
     "postcss": "^8.4.7",
+    "rc-time-picker": "^3.7.3",
     "react": "^17.0.2",
     "react-chartjs-2": "^4.0.1",
     "react-dom": "^17.0.2",
@@ -95,9 +96,9 @@
     ]
   },
   "devDependencies": {
-    "@faker-js/faker": "^6.0.0-beta.0",
     "@types/jquery": "^3.5.14",
     "electron": "^17.1.0",
-    "electron-builder": "^22.14.13"
+    "electron-builder": "^22.14.13",
+    "electron-devtools-installer": "^3.2.0"
   }
 }
