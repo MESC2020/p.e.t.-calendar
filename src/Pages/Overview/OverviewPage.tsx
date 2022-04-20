@@ -314,7 +314,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             <p className="mr-2">Demanding Level</p>
                             <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
                         </div>
-                        <div className="container-overview overflow-hidden">
+                        <div className="container-overview">
                             <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
                                 <FullCalendar
                                     ref={calendarRef}

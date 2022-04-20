@@ -53,7 +53,9 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     });
     const today = new Date();
 
-    useEffect(() => {});
+    useEffect(() => {
+        addOrRemoveNoScroll(true);
+    });
 
     const handleExternalEvent = (key: string, value: any) => {
         setExternalEvent({ ...externalEvent, [key]: value });
@@ -72,6 +74,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleCancle = () => {
         if (props.data.id) props.callback(emptyEventObject);
+        addOrRemoveNoScroll(false);
         props.display();
     };
 
@@ -99,6 +102,14 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 classNames: currentClassNames
             };
         });
+    }
+    //prevent background scrolling when task popup is open
+    function addOrRemoveNoScroll(addProperty: boolean) {
+        const root = document.querySelector('body');
+        if (addProperty) root!.style.overflow = 'hidden';
+        else {
+            root!.style.overflow = 'scroll';
+        }
     }
 
     return (

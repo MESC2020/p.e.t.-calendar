@@ -3,7 +3,7 @@
     min-height: 6vh;
     position: sticky;
     width: 100vw;
-    z-index: 9999999;
+    z-index: 3;
 }
 .main {
 }
