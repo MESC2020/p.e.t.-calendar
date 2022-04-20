@@ -23,6 +23,7 @@ type Window = {
   webContents: any;
   show(): any;
   hide(): any;
+  on(eventListening: string, func: any): any;
 };
 
 let popupWindow: Window;
@@ -48,6 +49,19 @@ function createPopupWindow(width: any, height: any) {
   Menu.setApplicationMenu(null);
   popupWindow.loadURL("http://localhost:3000/#/report");
   //popupWindow.webContents.openDevTools();
+  popupWindow.on("closed", (event: any) => {
+    //win = null
+    console.log(event);
+    event.preventDefault();
+    popupWindow.hide();
+  });
+
+  popupWindow.on("close", (event: any) => {
+    //win = null
+    console.log(event);
+    event.preventDefault();
+    popupWindow.hide();
+  });
 }
 
 function createWindow(width: any, height: any) {
@@ -61,8 +75,8 @@ function createWindow(width: any, height: any) {
       preload: path.join(__dirname, "/preload.js"),
     },
   });
-  mainWindow.loadFile(path.join(__dirname, "../index.html"));
-  //mainWindow.loadURL("http://localhost:3000");
+  //mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  mainWindow.loadURL("http://localhost:3000");
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -74,7 +88,9 @@ function createWindow(width: any, height: any) {
 app.whenReady().then(() => {
   const mainScreen = screen.getPrimaryDisplay();
   const { width, height } = mainScreen.workAreaSize;
-  installExtension(REACT_DEVELOPER_TOOLS)
+  installExtension(REACT_DEVELOPER_TOOLS, {
+    loadExtensionOptions: { allowFileAccess: true },
+  })
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));
   infinitePopUpLoop(width, height);
@@ -93,10 +109,10 @@ function infinitePopUpLoop(width: any, height: any) {
   setInterval(() => {
     if (popupWindow === undefined || popupWindow === null)
       createPopupWindow(width, height);
-    else if (popupWindow) popupWindow.hide();
+    else if (popupWindow) popupWindow.close();
     popupWindow.show();
     //createPopupWindow(width, height);
-  }, 1 * 60 * 1000);
+  }, 60 * 60 * 1000);
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common

@@ -288,24 +288,28 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             {isLoading || isUpdating ? (
                 ''
             ) : (
-                <div className="flex">
-                    <div className="flex flex-grow flex-col max-height bg-slate-100 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
-                        {state.externalEvents.map((event) => (
-                            <ExternalEvent onClick={handleLeftclick} event={event} />
-                        ))}
-                        <Button
-                            color={'white'}
-                            backgroundColor={'#1e2b3'}
-                            disabled={false}
-                            onClick={() => {
-                                openTaskMenu();
-                            }}
-                            className={'mr-auto ml-auto mt-auto'}
-                        >
-                            Add Task
-                        </Button>
+                <div className="flex mr-5 mb-5">
+                    <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5">
+                        <div>
+                            <Button
+                                color={'white'}
+                                backgroundColor={'#1e2b3'}
+                                disabled={false}
+                                onClick={() => {
+                                    openTaskMenu();
+                                }}
+                                className={'mt-20 ml-auto mr-auto'}
+                            >
+                                Add Task
+                            </Button>
+                        </div>
+                        <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-52 mt-2 h-1/2 relative p-2">
+                            {state.externalEvents.map((event) => (
+                                <ExternalEvent onClick={handleLeftclick} event={event} />
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex pl-60 flex-col">
                         <div className="flex justify-end">
                             <p className="mr-2">Demanding Level</p>
                             <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />

@@ -21,12 +21,11 @@ export class Aggregator {
     //Used for stats
     async aggregatingWeekdays(): Promise<IaggregatedWeekdays[]> {
         const weekdays: any = await this.aggregatingHours(true); //any as type: IaggregatedHoursWithEnergy
-        console.log(weekdays);
         let count = 0;
         let sumProductive = 0;
         let sumEnergy = 0;
 
-        const avgWeekdays: IaggregatedWeekdays[] = [];
+        let avgWeekdays: any = {};
 
         for (let day in weekdays) {
             for (let time in weekdays[day]) {
@@ -34,12 +33,13 @@ export class Aggregator {
                 sumEnergy = sumEnergy + weekdays[day][time][measurement.energy];
                 count++;
             }
-            const objc: IaggregatedWeekdays = { [day]: { [measurement.productive]: sumProductive / count, [measurement.energy]: sumEnergy / count } };
-            avgWeekdays.push(objc);
+            const current = { [day]: { [measurement.productive]: sumProductive / count, [measurement.energy]: sumEnergy / count } };
+            avgWeekdays = { ...avgWeekdays, ...current };
             sumProductive = 0;
             sumEnergy = 0;
             count = 0;
         }
+        console.log(avgWeekdays);
         return avgWeekdays;
     }
     //used for graphs in the calendar

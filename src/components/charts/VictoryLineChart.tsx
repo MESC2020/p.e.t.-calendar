@@ -1,29 +1,26 @@
 import React from 'react';
 import { VictoryChart, VictoryLegend, VictoryLine, VictoryTheme } from 'victory';
-import { measurement } from '../../db/Aggregator';
+import { measurement, weekdays } from '../../db/Aggregator';
 export interface IVictoryLineChartProps {
-    data: IaggregatedWeekdays[] | undefined;
+    data: IaggregatedWeekdays;
+    width?: any;
+    height?: any;
 }
 
 const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props) => {
-    function retrieveData(measure: measurement) {
+    function transformDataToArray(measure: measurement) {
         const weekData: any = [];
-        const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        let weekdayIndex = 0;
         if (props.data !== undefined) {
-            props.data.forEach((data) => {
-                const key = Object.keys(data)[0];
-                const day = { x: weekdays[weekdayIndex], y: data[key][measure] };
+            for (let weekday in weekdays) {
+                const day = { x: weekday, y: props.data[weekday][measure] };
                 weekData.push(day);
-
-                weekdayIndex++;
-            });
+            }
         }
         return weekData;
     }
     return (
         <>
-            <VictoryChart width={500} theme={VictoryTheme.material} domain={{ y: [0, 7] }}>
+            <VictoryChart width={props.width ? props.width : 500} height={props.height ? props.height : 500} theme={VictoryTheme.material} domain={{ y: [0, 7] }}>
                 <VictoryLegend
                     x={150}
                     y={20}
@@ -44,7 +41,7 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                         duration: 2000,
                         onLoad: { duration: 1500 }
                     }}
-                    data={retrieveData(measurement.productive)}
+                    data={transformDataToArray(measurement.productive)}
                 />
                 <VictoryLine
                     style={{
@@ -55,7 +52,7 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                         duration: 2000,
                         onLoad: { duration: 1500 }
                     }}
-                    data={retrieveData(measurement.energy)}
+                    data={transformDataToArray(measurement.energy)}
                 />
             </VictoryChart>
         </>

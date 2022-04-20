@@ -27,7 +27,6 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         async function getData() {
             const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
             const days: WeekdayWithHours[] = await prepareData(res);
-            console.log(days);
 
             setData(days);
             if (days !== undefined) setIsLoading(!isLoading);
@@ -50,18 +49,28 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 //if that weekday has data
                 if (allKeys.includes(keyDay)) {
                     for (let keyTime in objectHours[keyDay]) {
+                        const lastKeyTime: boolean = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1;
                         const [hour, minute] = keyTime.split(':');
                         //if there are times skipped - filled them up with "00:00"
                         if (count < parseInt(hour)) {
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
-                            const ifNotMidnightReached = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1 && keyTime !== '24:00';
+                            const ifNotMidnightReached = lastKeyTime && keyTime !== '24:00';
                             const completedData = completeData(count, parseInt(hour), ifNotMidnightReached, tempObj);
                             count = parseInt(hour);
+                            if (keyDay === weekdays.Wednesday) {
+                                console.log(day);
+                                console.log(keyTime);
+                            }
 
                             day.push(...completedData);
                         } else {
+                            console.log('heeere');
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
                             day.push(tempObj);
+                            if (lastKeyTime && day.length !== 25) {
+                                const completedData = completeData(count + 1, 25, false);
+                                day.push(...completedData);
+                            }
                         }
                         count++;
                     }
@@ -107,6 +116,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 hour = 25;
             } else loop = false;
         }
+
         return filler;
     }
 
