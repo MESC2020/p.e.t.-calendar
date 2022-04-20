@@ -39,7 +39,6 @@ export class Aggregator {
             sumEnergy = 0;
             count = 0;
         }
-        console.log(avgWeekdays);
         return avgWeekdays;
     }
     //used for graphs in the calendar

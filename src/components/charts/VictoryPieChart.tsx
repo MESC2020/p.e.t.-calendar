@@ -33,7 +33,7 @@ const VictoryPieChart: React.FunctionComponent<IVictoryPieChartProps> = (props) 
                 innerRadius={68}
                 labelRadius={100}
                 style={{ labels: { fontSize: 20, fill: 'white' } }}
-                colorScale={['white', 'navy']}
+                colorScale={['white', '#3b83f6']}
             />
             <VictoryLabel textAnchor="middle" style={{ fontSize: 60 }} x={200} y={200} text={`${props.data}${props.inPrecent ? '%' : ''}`} />
         </svg>

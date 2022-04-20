@@ -98,8 +98,6 @@ export class dbMgr {
                 const data = [report.timestamp, report.productive, report.energy, report.day, report.time];
 
                 const sql = `INSERT INTO Report ${valuesToChange} VALUES${placeholders}`;
-                console.log(sql);
-
                 this.db.run(sql, data, (err: error) => {
                     if (err) {
                         return console.log(err.message);
@@ -110,7 +108,6 @@ export class dbMgr {
     }
 
     saveEvents(data: EventObject[]) {
-        console.log('Start saving...');
         if (this.db != undefined) {
             for (let event of data) {
                 // Event is not yet stored
@@ -132,7 +129,6 @@ export class dbMgr {
                     } else valuesToChange = valuesToChange + ')';
 
                     const sql = `INSERT INTO Events ${valuesToChange} VALUES(?,?${placeholders}`;
-                    console.log(sql);
 
                     this.db.run(sql, data, (err: error) => {
                         if (err) {

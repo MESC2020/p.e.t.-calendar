@@ -28,13 +28,13 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                     gutter={50}
                     style={{ border: { stroke: '' } }}
                     data={[
-                        { name: 'Energy', symbol: { fill: '#2C9EE6' } },
-                        { name: 'Productivity', symbol: { fill: '#c43a31' } }
+                        { name: 'Energy', symbol: { fill: '#F56853' } },
+                        { name: 'Productivity', symbol: { fill: '#3b83f6' } }
                     ]}
                 />
                 <VictoryLine
                     style={{
-                        data: { stroke: '#c43a31' },
+                        data: { stroke: '#3b83f6' },
                         parent: { border: '1px solid #ccc' }
                     }}
                     data={transformDataToArray(measurement.productive)}
@@ -44,7 +44,7 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                 />
                 <VictoryLine
                     style={{
-                        data: { stroke: '#2C9EE6' },
+                        data: { stroke: '#F56853' },
                         parent: { border: '1px solid #ccc' }
                     }}
                     data={transformDataToArray(measurement.energy)}
