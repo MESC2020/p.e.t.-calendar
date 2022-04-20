@@ -1,13 +1,9 @@
 .navbar {
     @apply justify-center flex;
+    min-height: 6vh;
+    position: sticky;
+    width: 100vw;
+    z-index: 9999999;
 }
-
-.navbar + .main {
-    @apply mt-28 overflow-x-hidden;
-    margin-top: var(--navbar-height);
-    min-height: calc(100vh - var(--navbar-height));
-}
-
 .main {
-    @apply flex justify-center;
 }

@@ -37,22 +37,20 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                         data: { stroke: '#c43a31' },
                         parent: { border: '1px solid #ccc' }
                     }}
-                    animate={{
-                        duration: 2000,
-                        onLoad: { duration: 1500 }
-                    }}
                     data={transformDataToArray(measurement.productive)}
+                    animate={{
+                        duration: 2000
+                    }}
                 />
                 <VictoryLine
                     style={{
                         data: { stroke: '#2C9EE6' },
                         parent: { border: '1px solid #ccc' }
                     }}
-                    animate={{
-                        duration: 2000,
-                        onLoad: { duration: 1500 }
-                    }}
                     data={transformDataToArray(measurement.energy)}
+                    animate={{
+                        duration: 4000
+                    }}
                 />
             </VictoryChart>
         </>

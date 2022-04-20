@@ -149,18 +149,24 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     </div>
                 </div>
                 <Button
-                    backgroundColor="#01E68A"
+                    backgroundColor="#00B36B"
                     disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
                     onClick={handleConfirmation}
                     className={'w-1/6 block mr-auto ml-auto'}
                 >
-                    Save
+                    <div className="flex justify-center">
+                        {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/save.png'} />}
+                        Save
+                    </div>
                 </Button>
 
                 <div className="mt-auto flex gap-x-80">
                     {props.data.id ? (
-                        <Button disabled={false} onClick={closeAndDelete} className={'mr-auto mt-auto'}>
-                            Delete
+                        <Button disabled={false} onClick={closeAndDelete} backgroundColor={'#F56853'} className={'mr-auto mt-auto'}>
+                            <div className="flex">
+                                {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/trash.png'} />}
+                                Delete
+                            </div>
                         </Button>
                     ) : (
                         ''

@@ -22,7 +22,7 @@ const Navbar: React.FunctionComponent<INavbarProps> = (props) => {
     return (
         <>
             <div className="navbar pb-5 pt-5">
-                <div className="w-5/12 flex gap-x-20 justify-center ">
+                <div className="flex gap-x-20 justify-center ">
                     <Button disabled={status} isButtonPressed={isButtonPressed(OVERVIEW_PATH)} className="" onClick={() => navigate(OVERVIEW_PATH)}>
                         Overview
                     </Button>

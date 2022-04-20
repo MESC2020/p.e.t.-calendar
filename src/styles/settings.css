@@ -4,7 +4,7 @@
 
 :root {
     font-family: 'Montserrat', sans-serif;
-    --navbar-height: 3rem;
+    overflow-y: hidden;
 }
 input {
     border-width: 0.75px;
