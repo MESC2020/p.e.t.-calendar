@@ -75,11 +75,12 @@ function createWindow(width: any, height: any) {
       preload: path.join(__dirname, "/preload.js"),
     },
   });
-  //mainWindow.loadFile(path.join(__dirname, "../index.html"));
-  mainWindow.loadURL("http://localhost:3000");
+  mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  Menu.setApplicationMenu(null);
+  //mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
