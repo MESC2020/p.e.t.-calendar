@@ -96,11 +96,21 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function sortData(events: EventObject[]) {
+        const today = new Date().getDay();
         const eventsInCalendar: EventObject[] = [];
         const externalEvents: EventObject[] = [];
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
+            if(event.deadline !== undefined) {
+                const deadline = new Date(event.deadline).getDay()
+                let background;
+                console.log(today);
+                console.log(deadline)
+                if(deadline === today){newEvent.backgroundColor = "#F56853"
+                
+                }
+            }
             if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
             } else externalEvents.push(newEvent);
