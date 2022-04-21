@@ -68,6 +68,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleConfirmation = () => {
         if (props.data.id) props.callback(emptyEventObject);
+        addOrRemoveNoScroll(false);
         props.onChange(externalEvent);
         props.display();
     };
@@ -81,6 +82,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const closeAndDelete = () => {
         const event: EventObject = props.data;
         props.onDelete(event, Mode.deleting); //delete
+        addOrRemoveNoScroll(false);
         props.callback(emptyEventObject);
         props.display(); // close popup
     };

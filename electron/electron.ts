@@ -76,7 +76,7 @@ function createWindow(width: any, height: any) {
       preload: path.join(__dirname, "/preload.js"),
     },
   });
- // mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  // mainWindow.loadFile(path.join(__dirname, "../index.html"));
   Menu.setApplicationMenu(null);
   mainWindow.loadURL("http://localhost:3000"); //For dev only
 
@@ -90,7 +90,7 @@ function createWindow(width: any, height: any) {
 app.whenReady().then(() => {
   const mainScreen = screen.getPrimaryDisplay();
   const { width, height } = mainScreen.workAreaSize;
-   installExtension(REACT_DEVELOPER_TOOLS, {
+  installExtension(REACT_DEVELOPER_TOOLS, {
     loadExtensionOptions: { allowFileAccess: true },
   })
     .then((name) => console.log(`Added Extension:  ${name}`))
@@ -114,7 +114,7 @@ function infinitePopUpLoop(width: any, height: any) {
     else if (popupWindow) popupWindow.close();
     popupWindow.show();
     //createPopupWindow(width, height);
-  }, 60 * 60 * 1000);
+  }, 1 * 60 * 1000);
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common

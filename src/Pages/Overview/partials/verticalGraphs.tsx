@@ -57,14 +57,8 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                             const ifNotMidnightReached = lastKeyTime && keyTime !== '24:00';
                             const completedData = completeData(count, parseInt(hour), ifNotMidnightReached, tempObj);
                             count = parseInt(hour);
-                            if (keyDay === weekdays.Wednesday) {
-                                console.log(day);
-                                console.log(keyTime);
-                            }
-
                             day.push(...completedData);
                         } else {
-                            console.log('heeere');
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
                             day.push(tempObj);
                             if (lastKeyTime && day.length !== 25) {
@@ -92,7 +86,6 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 days.push(final);
             });
         }
-        console.log(days);
         return days;
     }
 

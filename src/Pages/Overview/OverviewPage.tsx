@@ -7,6 +7,8 @@ import ExternalEvent from './partials/ExternalEvent';
 import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
+import moment from 'moment';
+import { time } from 'console';
 
 export interface IOverviewPageProps {}
 
@@ -94,26 +96,37 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         });
         setIsUpdating(false);
     }
+    function calculateDeadline(toCompare: number, deadline: number, eventObject: EventObject) {
+        const sameDay = 24 * 60 * 60 * 1000;
+        const timeDifference = deadline - toCompare;
+        //if Deadline is on that day
+        if (timeDifference <= sameDay) {
+            //if there's still time
+            if (timeDifference! <= 0) eventObject.backgroundColor = '#F56853';
+            //if event is over deadline
+            else eventObject.backgroundColor = '#DE4047';
+        }
+    }
 
     function sortData(events: EventObject[]) {
-        const today = new Date().getDay();
+        const todayIsoString = moment().seconds(0).milliseconds(0).toISOString(); //instead of new Date to avoid seconds and milliseconds
+        const todayMilliseconds = new Date(todayIsoString).getTime();
         const eventsInCalendar: EventObject[] = [];
         const externalEvents: EventObject[] = [];
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
-            if(event.deadline !== undefined) {
-                const deadline = new Date(event.deadline).getDay()
-                let background;
-                console.log(today);
-                console.log(deadline)
-                if(deadline === today){newEvent.backgroundColor = "#F56853"
-                
-                }
+            if (event.end !== undefined && event.deadline !== undefined) {
+                const endDateMilliseconds = new Date(event.end).getTime();
+                const deadlineMilliseconds = new Date(event.deadline).getTime();
+                calculateDeadline(deadlineMilliseconds, endDateMilliseconds, newEvent);
             }
             if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
-            } else externalEvents.push(newEvent);
+            } else {
+                if (event.deadline !== undefined) calculateDeadline(todayMilliseconds, new Date(event.deadline).getTime(), newEvent);
+                externalEvents.push(newEvent);
+            }
         });
         if (eventsInCalendar.length !== 0 || externalEvents.length !== 0)
             setState(() => {
@@ -289,6 +302,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             };
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
+        if (event.end !== undefined && event.deadline !== undefined) {
+            const endDateMilliseconds = new Date(event.end).getTime();
+            const deadlineMilliseconds = new Date(event.deadline).getTime();
+            calculateDeadline(deadlineMilliseconds, endDateMilliseconds, event);
+        }
 
         return event;
     }
