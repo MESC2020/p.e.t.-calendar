@@ -12,6 +12,11 @@ import { time } from 'console';
 
 export interface IOverviewPageProps {}
 
+enum colorPalettes {
+    deadlineWarning = '#F56853',
+    deadlineTooLate = '#DE4047'
+}
+
 interface State {
     externalEvents: EventObject[];
     events: EventObject[];
@@ -97,14 +102,14 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         setIsUpdating(false);
     }
     function calculateDeadline(toCompare: number, deadline: number, eventObject: EventObject) {
-        const sameDay = 24 * 60 * 60 * 1000;
+        const sameDay = 23 * 60 * 60 * 1000;
         const timeDifference = deadline - toCompare;
         //if Deadline is on that day
         if (timeDifference <= sameDay) {
+            //if  event is over deadline
+            if (timeDifference! <= 0) eventObject.backgroundColor = colorPalettes.deadlineTooLate;
             //if there's still time
-            if (timeDifference! <= 0) eventObject.backgroundColor = '#F56853';
-            //if event is over deadline
-            else eventObject.backgroundColor = '#DE4047';
+            else eventObject.backgroundColor = colorPalettes.deadlineWarning;
         }
     }
 
@@ -303,12 +308,46 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
         if (event.end !== undefined && event.deadline !== undefined) {
-            const endDateMilliseconds = new Date(event.end).getTime();
-            const deadlineMilliseconds = new Date(event.deadline).getTime();
-            calculateDeadline(deadlineMilliseconds, endDateMilliseconds, event);
+            const endDateMilliseconds = new Date(event.end);
+            const deadlineMilliseconds = new Date(event.deadline);
+            calculateDeadline(endDateMilliseconds.getTime(), deadlineMilliseconds.getTime(), event);
         }
 
         return event;
+    }
+
+    function handleEventContent(arg: any) {
+        let timeLeft;
+        if (arg.event.extendedProps.deadline) {
+            const endDateHours = new Date(arg.event.end).getTime();
+            const deadlineHours = new Date(arg.event.extendedProps.deadline).getTime();
+            timeLeft = deadlineHours - endDateHours;
+            timeLeft = new Date(timeLeft).getHours();
+        }
+
+        if (arg.event.backgroundColor === colorPalettes.deadlineWarning) {
+            const newDiv = document.createElement('div');
+
+            const text = `${arg.event.title}:` + ' Deadline in ' + `${timeLeft}${timeLeft !== 1 ? 'hrs' : 'hr'}`;
+            const newContent = document.createTextNode(text);
+
+            newDiv.appendChild(newContent);
+            return {
+                domNodes: [newDiv]
+            };
+        }
+        if (arg.event.backgroundColor === colorPalettes.deadlineTooLate) {
+            const newDiv = document.createElement('div');
+
+            const text = `${arg.event.title}: ` + 'Passed Deadline';
+            const newContent = document.createTextNode(text);
+
+            newDiv.appendChild(newContent);
+            return {
+                domNodes: [newDiv]
+            };
+        }
+        return;
     }
 
     return (
@@ -360,6 +399,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                         droppable={true}
                                         forceEventDuration={false}
                                         events={state.events as EventSourceInput}
+                                        eventContent={handleEventContent}
                                         eventDragStart={handleDragStart}
                                         eventDragStop={handleDragStop}
                                         eventDrop={handleDrop}

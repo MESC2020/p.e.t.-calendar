@@ -114,7 +114,7 @@ function infinitePopUpLoop(width: any, height: any) {
     else if (popupWindow) popupWindow.close();
     popupWindow.show();
     //createPopupWindow(width, height);
-  }, 1 * 60 * 1000);
+  }, 60 * 60 * 1000);
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
