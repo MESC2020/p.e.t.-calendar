@@ -309,60 +309,62 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             ))}
                         </div>
                     </div>
-                    <div className="flex pl-60 flex-col">
-                        <div className="flex justify-end">
-                            <p className="mr-2">Demanding Level</p>
-                            <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
-                        </div>
-                        <div className="container-overview">
-                            <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
-                                <FullCalendar
-                                    ref={calendarRef}
-                                    plugins={[timeGridPlugin, interactionPlugin]}
-                                    initialView="timeGridWeek"
-                                    allDaySlot={false}
-                                    slotMinTime="0:00:00"
-                                    slotMaxTime="23:59:59"
-                                    nowIndicator={true}
-                                    height="1600px"
-                                    contentHeight="100px"
-                                    expandRows={true}
-                                    editable={true}
-                                    droppable={true}
-                                    forceEventDuration={false}
-                                    events={state.events as EventSourceInput}
-                                    eventDragStart={handleDragStart}
-                                    eventDragStop={handleDragStop}
-                                    eventDrop={handleDrop}
-                                    eventReceive={handleEventReceive}
-                                    eventLeave={handleExternalEventLeave}
-                                    eventClick={handleLeftclick}
-                                    snapDuration={'00:15:00'}
-                                    businessHours={{
-                                        daysOfWeek: [1, 2, 3, 4, 5],
-                                        startTime: '08:00',
-                                        endTime: '18:00'
-                                    }}
-                                    firstDay={1} //Monday
-                                />
+                    <div className="w-full justify-center">
+                        <div className="flex pl-60 flex-col">
+                            <div className="flex justify-end">
+                                <p className="mr-2">Demanding Level</p>
+                                <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
                             </div>
-                            {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
-                            <div id="overlay" className="">
-                                {displayTaskForm ? (
-                                    <TaskForm
-                                        className="mt-10 ml-14"
-                                        onChange={handleNewOrEditEvent}
-                                        display={() => {
-                                            document!.getElementById('overlay')!.style.display = 'none';
-                                            setDisplayTaskForm(!displayTaskForm);
+                            <div className="container-overview">
+                                <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                                    <FullCalendar
+                                        ref={calendarRef}
+                                        plugins={[timeGridPlugin, interactionPlugin]}
+                                        initialView="timeGridWeek"
+                                        allDaySlot={false}
+                                        slotMinTime="0:00:00"
+                                        slotMaxTime="23:59:59"
+                                        nowIndicator={true}
+                                        height="1600px"
+                                        contentHeight="100px"
+                                        expandRows={true}
+                                        editable={true}
+                                        droppable={true}
+                                        forceEventDuration={false}
+                                        events={state.events as EventSourceInput}
+                                        eventDragStart={handleDragStart}
+                                        eventDragStop={handleDragStop}
+                                        eventDrop={handleDrop}
+                                        eventReceive={handleEventReceive}
+                                        eventLeave={handleExternalEventLeave}
+                                        eventClick={handleLeftclick}
+                                        snapDuration={'00:15:00'}
+                                        businessHours={{
+                                            daysOfWeek: [1, 2, 3, 4, 5],
+                                            startTime: '08:00',
+                                            endTime: '18:00'
                                         }}
-                                        data={currentEvent}
-                                        onDelete={editEventsInCalendar}
-                                        callback={setCurrentEvent}
+                                        firstDay={1} //Monday
                                     />
-                                ) : (
-                                    ''
-                                )}
+                                </div>
+                                {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
+                                <div id="overlay" className="">
+                                    {displayTaskForm ? (
+                                        <TaskForm
+                                            className="mt-10 ml-14"
+                                            onChange={handleNewOrEditEvent}
+                                            display={() => {
+                                                document!.getElementById('overlay')!.style.display = 'none';
+                                                setDisplayTaskForm(!displayTaskForm);
+                                            }}
+                                            data={currentEvent}
+                                            onDelete={editEventsInCalendar}
+                                            callback={setCurrentEvent}
+                                        />
+                                    ) : (
+                                        ''
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
