@@ -288,7 +288,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             {isLoading || isUpdating ? (
                 ''
             ) : (
-                <div className="flex mr-5 mb-5">
+                <div className="flex mr-5 mb-5 min-size">
                     <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5">
                         <div>
                             <Button
@@ -309,7 +309,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             ))}
                         </div>
                     </div>
-                    <div className="w-full justify-center">
+                    <div className="w-full flex justify-center">
                         <div className="flex pl-60 flex-col">
                             <div className="flex justify-end">
                                 <p className="mr-2">Demanding Level</p>

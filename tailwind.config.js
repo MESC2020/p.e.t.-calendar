@@ -3,7 +3,12 @@ module.exports = {
   content: ["./src/**/*.tsx", "./public/index.html"],
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+   
+    extend: {
+      screens: {
+        'cal': '1420px',
+      },
+    },
   },
   variants: {
     extend: {},

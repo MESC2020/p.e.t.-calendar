@@ -3,6 +3,9 @@
     height: 1600px;
     position: relative;
 }
+.min-size{
+    min-width: 1420px;
+}
 
 .box {
     width: 100%;
