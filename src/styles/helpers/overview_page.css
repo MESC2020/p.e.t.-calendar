@@ -3,6 +3,9 @@
     height: 1600px;
     position: relative;
 }
+.min-size{
+    min-width: 1420px;
+}
 
 .box {
     width: 100%;
@@ -56,6 +59,10 @@
 }
 
 .max-height {
-    max-height: 800px;
+    max-height: 600px;
     overflow-y: scroll;
+}
+
+.min-height {
+    min-height: 200px;
 }

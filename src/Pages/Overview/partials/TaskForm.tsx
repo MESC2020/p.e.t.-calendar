@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
-import { Mode } from '../OverviewPage';
+import { colorPalettes, Mode } from '../OverviewPage';
 import RangeSlider from '../../../views/partials/RangeSlider';
 import TimeSelector from '../../../views/partials/TimeSelector';
+import moment from 'moment';
 
 export interface ITaskFormProps {
     className?: string;
@@ -15,6 +16,7 @@ export interface ITaskFormProps {
     data: EventObject;
     onDelete: any;
     callback: any;
+    onDeadline: any;
 }
 const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
@@ -43,7 +45,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const [externalEvent, setExternalEvent] = useState({
         id: props.data.id ? props.data.id : undefined,
         title: props.data.title.length !== 0 ? props.data.title : '',
-        backgroundColor: '#74AAEB',
+        backgroundColor: props.data.backgroundColor ? props.data.backgroundColor : colorPalettes.calendarBlue,
         textColor: 'white',
         classNames: props.data.classNames.length !== 0 ? props.data.classNames : ['demand', `demand-${STANDARD_DEMAND}`],
         deadline: props.data.deadline ? props.data.deadline : undefined,
@@ -51,33 +53,47 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         end: props.data.end ? props.data.end : undefined,
         duration: props.data.start ? timeDifference() : props.data.duration ? props.data.duration : STANDARD_DURATION
     });
-    const today = new Date();
+    const today = moment().minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
+    const placeholder = moment().add(1, 'days').minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
 
-    useEffect(() => {});
+    useEffect(() => {
+        addOrRemoveNoScroll(true);
+    });
 
-    const handleExternalEvent = (key: string, value: any) => {
+    const handleExternalEvent = async (key: string, value: any) => {
         setExternalEvent({ ...externalEvent, [key]: value });
     };
 
     const handleChangeToggle = () => {
-        if (deadlineToggle) handleExternalEvent('deadline', undefined);
+        //turn off toggle
+        if (deadlineToggle) {
+            handleExternalEvent('deadline', undefined);
+        }
+
         setDeadlineToggle(!deadlineToggle);
     };
 
     const handleConfirmation = () => {
+        const copyEvent = { ...externalEvent };
+        props.onDeadline(copyEvent);
+        setExternalEvent({ ...copyEvent });
         if (props.data.id) props.callback(emptyEventObject);
+        addOrRemoveNoScroll(false);
+
         props.onChange(externalEvent);
         props.display();
     };
 
     const handleCancle = () => {
         if (props.data.id) props.callback(emptyEventObject);
+        addOrRemoveNoScroll(false);
         props.display();
     };
 
     const closeAndDelete = () => {
         const event: EventObject = props.data;
         props.onDelete(event, Mode.deleting); //delete
+        addOrRemoveNoScroll(false);
         props.callback(emptyEventObject);
         props.display(); // close popup
     };
@@ -99,6 +115,14 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 classNames: currentClassNames
             };
         });
+    }
+    //prevent background scrolling when task popup is open
+    function addOrRemoveNoScroll(addProperty: boolean) {
+        const root = document.querySelector('body');
+        if (addProperty) root!.style.overflow = 'hidden';
+        else {
+            root!.style.overflow = 'scroll';
+        }
     }
 
     return (
@@ -134,14 +158,14 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                         {deadlineToggle ? (
                             <input
                                 className={'block w-full'}
-                                placeholder={`${today}`}
                                 type={'datetime-local'}
                                 onFocus={props.onFocus}
                                 onChange={(e) => {
                                     handleExternalEvent('deadline', e.target.value);
                                 }}
                                 min={`${today}`}
-                                value={externalEvent.deadline}
+                                step={60 * 15}
+                                value={externalEvent.deadline ? externalEvent.deadline : placeholder}
                             ></input>
                         ) : (
                             ''
@@ -149,18 +173,24 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     </div>
                 </div>
                 <Button
-                    backgroundColor="#01E68A"
+                    backgroundColor="#00B36B"
                     disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
                     onClick={handleConfirmation}
                     className={'w-1/6 block mr-auto ml-auto'}
                 >
-                    Save
+                    <div className="flex justify-center">
+                        {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/save.png'} />}
+                        Save
+                    </div>
                 </Button>
 
                 <div className="mt-auto flex gap-x-80">
                     {props.data.id ? (
-                        <Button disabled={false} onClick={closeAndDelete} className={'mr-auto mt-auto'}>
-                            Delete
+                        <Button disabled={false} onClick={closeAndDelete} backgroundColor={'#F56853'} className={'mr-auto mt-auto'}>
+                            <div className="flex">
+                                {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/trash.png'} />}
+                                Delete
+                            </div>
                         </Button>
                     ) : (
                         ''

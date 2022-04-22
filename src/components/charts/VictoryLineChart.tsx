@@ -1,29 +1,26 @@
 import React from 'react';
 import { VictoryChart, VictoryLegend, VictoryLine, VictoryTheme } from 'victory';
-import { measurement } from '../../db/Aggregator';
+import { measurement, weekdays } from '../../db/Aggregator';
 export interface IVictoryLineChartProps {
-    data: IaggregatedWeekdays[] | undefined;
+    data: IaggregatedWeekdays;
+    width?: any;
+    height?: any;
 }
 
 const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props) => {
-    function retrieveData(measure: measurement) {
+    function transformDataToArray(measure: measurement) {
         const weekData: any = [];
-        const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        let weekdayIndex = 0;
         if (props.data !== undefined) {
-            props.data.forEach((data) => {
-                const key = Object.keys(data)[0];
-                const day = { x: weekdays[weekdayIndex], y: data[key][measure] };
+            for (let weekday in weekdays) {
+                const day = { x: weekday, y: props.data[weekday][measure] };
                 weekData.push(day);
-
-                weekdayIndex++;
-            });
+            }
         }
         return weekData;
     }
     return (
         <>
-            <VictoryChart width={500} theme={VictoryTheme.material} domain={{ y: [0, 7] }}>
+            <VictoryChart width={props.width ? props.width : 500} height={props.height ? props.height : 500} theme={VictoryTheme.material} domain={{ y: [0, 7] }}>
                 <VictoryLegend
                     x={150}
                     y={20}
@@ -31,31 +28,29 @@ const VictoryLineChart: React.FunctionComponent<IVictoryLineChartProps> = (props
                     gutter={50}
                     style={{ border: { stroke: '' } }}
                     data={[
-                        { name: 'Energy', symbol: { fill: '#2C9EE6' } },
-                        { name: 'Productivity', symbol: { fill: '#c43a31' } }
+                        { name: 'Energy', symbol: { fill: '#F56853' } },
+                        { name: 'Productivity', symbol: { fill: '#3b83f6' } }
                     ]}
                 />
                 <VictoryLine
                     style={{
-                        data: { stroke: '#c43a31' },
+                        data: { stroke: '#3b83f6' },
                         parent: { border: '1px solid #ccc' }
                     }}
+                    data={transformDataToArray(measurement.productive)}
                     animate={{
-                        duration: 2000,
-                        onLoad: { duration: 1500 }
+                        duration: 2000
                     }}
-                    data={retrieveData(measurement.productive)}
                 />
                 <VictoryLine
                     style={{
-                        data: { stroke: '#2C9EE6' },
+                        data: { stroke: '#F56853' },
                         parent: { border: '1px solid #ccc' }
                     }}
+                    data={transformDataToArray(measurement.energy)}
                     animate={{
-                        duration: 2000,
-                        onLoad: { duration: 1500 }
+                        duration: 4000
                     }}
-                    data={retrieveData(measurement.energy)}
                 />
             </VictoryChart>
         </>

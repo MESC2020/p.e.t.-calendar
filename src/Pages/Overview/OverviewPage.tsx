@@ -7,8 +7,17 @@ import ExternalEvent from './partials/ExternalEvent';
 import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
+import moment from 'moment';
 
 export interface IOverviewPageProps {}
+
+export enum colorPalettes {
+    deadlineWarning = '#F56853',
+    deadlineWarningStroke = '#DE6C40',
+    deadlineTooLate = '#DE4047',
+    deadlineTooLateStroke = '#AB3238',
+    calendarBlue = '#3788d8'
+}
 
 interface State {
     externalEvents: EventObject[];
@@ -94,6 +103,47 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         });
         setIsUpdating(false);
     }
+    function calculateDeadline(eventObject: EventObject) {
+        const sameDay = 23 * 60 * 60 * 1000;
+        let toCompare;
+        //Event is in external pool - thus has no date yet - compare deadline with today
+        if (eventObject?.end === undefined && eventObject?.deadline !== undefined && eventObject.deadline !== null) {
+            const todayIsoString = moment().seconds(0).milliseconds(0).toISOString(); //instead of new Date to avoid seconds and milliseconds
+            toCompare = new Date(todayIsoString).getTime();
+        }
+
+        //Event is in calendar - thus has a date - compare deadline with end date
+        else if (eventObject.end !== undefined && eventObject.deadline !== undefined && eventObject.deadline !== null) {
+            toCompare = new Date(eventObject.end).getTime();
+        }
+
+        //Event has no deadline
+        else {
+            eventObject.backgroundColor = colorPalettes.calendarBlue;
+            eventObject.borderColor = colorPalettes.calendarBlue;
+        }
+
+        //calculate if Deadline is close or has passed
+        if (toCompare !== undefined && eventObject.deadline !== undefined && eventObject.deadline !== null) {
+            const deadline = new Date(eventObject.deadline).getTime();
+            const timeDifference = deadline - toCompare;
+            //Deadline is close
+            if (timeDifference <= sameDay && timeDifference > 0) {
+                eventObject.backgroundColor = colorPalettes.deadlineWarning;
+                eventObject.borderColor = colorPalettes.deadlineWarning;
+            }
+            //Deadline is passed
+            else if (timeDifference <= sameDay && timeDifference <= 0) {
+                eventObject.backgroundColor = colorPalettes.deadlineTooLate;
+                eventObject.borderColor = colorPalettes.deadlineTooLate;
+            }
+            //still enought time
+            else {
+                eventObject.backgroundColor = colorPalettes.calendarBlue;
+                eventObject.borderColor = colorPalettes.calendarBlue;
+            }
+        }
+    }
 
     function sortData(events: EventObject[]) {
         const eventsInCalendar: EventObject[] = [];
@@ -101,9 +151,14 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
+
+            calculateDeadline(newEvent);
+
             if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
-            } else externalEvents.push(newEvent);
+            } else if (event.deadline !== undefined) {
+                externalEvents.push(newEvent);
+            }
         });
         if (eventsInCalendar.length !== 0 || externalEvents.length !== 0)
             setState(() => {
@@ -279,8 +334,44 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             };
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
+        calculateDeadline(event);
 
         return event;
+    }
+
+    /*
+       Content injection - add deadline information if necessary
+    */
+    function handleEventContent(arg: any) {
+        let timeLeft;
+        if (arg.event.extendedProps.deadline) {
+            const endDateHours = new Date(arg.event.end).getTime();
+            const deadlineHours = new Date(arg.event.extendedProps.deadline).getTime();
+            timeLeft = deadlineHours - endDateHours;
+            timeLeft = new Date(timeLeft).getHours();
+        }
+
+        if (arg.event.backgroundColor === colorPalettes.deadlineWarning) {
+            const newDiv = document.createElement('div');
+            const text = `${arg.event.title}:` + ' Deadline in ' + `${timeLeft}${timeLeft !== 1 ? 'hrs' : 'hr'}`;
+            const newContent = document.createTextNode(text);
+            newDiv.appendChild(newContent);
+            newDiv.style.overflow = 'hidden';
+            return {
+                domNodes: [newDiv]
+            };
+        }
+        if (arg.event.backgroundColor === colorPalettes.deadlineTooLate) {
+            const newDiv = document.createElement('div');
+            const text = `${arg.event.title}: ` + 'Passed Deadline';
+            const newContent = document.createTextNode(text);
+            newDiv.appendChild(newContent);
+            newDiv.style.overflow = 'hidden';
+            return {
+                domNodes: [newDiv]
+            };
+        }
+        return;
     }
 
     return (
@@ -288,77 +379,85 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             {isLoading || isUpdating ? (
                 ''
             ) : (
-                <div className="flex">
-                    <div className="flex flex-grow flex-col max-height bg-slate-100 border-2 rounded-lg w-52 mr-10 top-9 h-1/2 relative p-2">
-                        {state.externalEvents.map((event) => (
-                            <ExternalEvent onClick={handleLeftclick} event={event} />
-                        ))}
-                        <Button
-                            color={'white'}
-                            backgroundColor={'#1e2b3'}
-                            disabled={false}
-                            onClick={() => {
-                                openTaskMenu();
-                            }}
-                            className={'mr-auto ml-auto mt-auto'}
-                        >
-                            Add Task
-                        </Button>
-                    </div>
-                    <div className="flex flex-col">
-                        <div className="flex justify-end">
-                            <p className="mr-2">Demanding Level</p>
-                            <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                <div className="flex mr-5 mb-5 min-size">
+                    <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5">
+                        <div>
+                            <Button
+                                color={'white'}
+                                backgroundColor={'#1e2b3'}
+                                disabled={false}
+                                onClick={() => {
+                                    openTaskMenu();
+                                }}
+                                className={'mt-20 ml-auto mr-auto'}
+                            >
+                                Add Task
+                            </Button>
                         </div>
-                        <div className="container-overview overflow-hidden">
-                            <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
-                                <FullCalendar
-                                    ref={calendarRef}
-                                    plugins={[timeGridPlugin, interactionPlugin]}
-                                    initialView="timeGridWeek"
-                                    allDaySlot={false}
-                                    slotMinTime="0:00:00"
-                                    slotMaxTime="23:59:59"
-                                    nowIndicator={true}
-                                    height="1600px"
-                                    contentHeight="100px"
-                                    expandRows={true}
-                                    editable={true}
-                                    droppable={true}
-                                    forceEventDuration={false}
-                                    events={state.events as EventSourceInput}
-                                    eventDragStart={handleDragStart}
-                                    eventDragStop={handleDragStop}
-                                    eventDrop={handleDrop}
-                                    eventReceive={handleEventReceive}
-                                    eventLeave={handleExternalEventLeave}
-                                    eventClick={handleLeftclick}
-                                    snapDuration={'00:15:00'}
-                                    businessHours={{
-                                        daysOfWeek: [1, 2, 3, 4, 5],
-                                        startTime: '08:00',
-                                        endTime: '18:00'
-                                    }}
-                                    firstDay={1} //Monday
-                                />
+                        <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-52 mt-2 h-1/2 relative p-2">
+                            {state.externalEvents.map((event) => (
+                                <ExternalEvent onClick={handleLeftclick} event={event} />
+                            ))}
+                        </div>
+                    </div>
+                    <div className="w-full flex justify-center">
+                        <div className="flex pl-60 flex-col">
+                            <div className="flex justify-end">
+                                <p className="mr-2">Demanding Level</p>
+                                <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
                             </div>
-                            {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
-                            <div id="overlay" className="">
-                                {displayTaskForm ? (
-                                    <TaskForm
-                                        className="mt-10 ml-14"
-                                        onChange={handleNewOrEditEvent}
-                                        display={() => {
-                                            document!.getElementById('overlay')!.style.display = 'none';
-                                            setDisplayTaskForm(!displayTaskForm);
+                            <div className="container-overview">
+                                <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                                    <FullCalendar
+                                        ref={calendarRef}
+                                        plugins={[timeGridPlugin, interactionPlugin]}
+                                        initialView="timeGridWeek"
+                                        allDaySlot={false}
+                                        slotMinTime="0:00:00"
+                                        slotMaxTime="23:59:59"
+                                        nowIndicator={true}
+                                        height="1600px"
+                                        contentHeight="100px"
+                                        expandRows={true}
+                                        editable={true}
+                                        droppable={true}
+                                        forceEventDuration={false}
+                                        events={state.events as EventSourceInput}
+                                        eventContent={handleEventContent}
+                                        eventDragStart={handleDragStart}
+                                        eventDragStop={handleDragStop}
+                                        eventDrop={handleDrop}
+                                        eventReceive={handleEventReceive}
+                                        eventLeave={handleExternalEventLeave}
+                                        eventClick={handleLeftclick}
+                                        snapDuration={'00:15:00'}
+                                        businessHours={{
+                                            daysOfWeek: [1, 2, 3, 4, 5],
+                                            startTime: '08:00',
+                                            endTime: '18:00'
                                         }}
-                                        data={currentEvent}
-                                        onDelete={editEventsInCalendar}
-                                        callback={setCurrentEvent}
+                                        firstDay={1} //Monday
                                     />
-                                ) : (
-                                    ''
-                                )}
+                                </div>
+                                {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
+                                <div id="overlay" className="">
+                                    {displayTaskForm ? (
+                                        <TaskForm
+                                            className="mt-10 ml-14"
+                                            onChange={handleNewOrEditEvent}
+                                            display={() => {
+                                                document!.getElementById('overlay')!.style.display = 'none';
+                                                setDisplayTaskForm(!displayTaskForm);
+                                            }}
+                                            onDeadline={calculateDeadline}
+                                            data={currentEvent}
+                                            onDelete={editEventsInCalendar}
+                                            callback={setCurrentEvent}
+                                        />
+                                    ) : (
+                                        ''
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -23,7 +23,7 @@ const VictoryPieChart: React.FunctionComponent<IVictoryPieChartProps> = (props) 
         }, 3); // Setting the data that we want to display
     }, []);
     return (
-        <svg className="relative w-full" viewBox="0 0 400 400">
+        <svg className="" viewBox="0 0 400 400">
             <VictoryPie
                 animate={{ easing: 'exp' }}
                 standalone={false}
@@ -33,7 +33,7 @@ const VictoryPieChart: React.FunctionComponent<IVictoryPieChartProps> = (props) 
                 innerRadius={68}
                 labelRadius={100}
                 style={{ labels: { fontSize: 20, fill: 'white' } }}
-                colorScale={['white', 'navy']}
+                colorScale={['white', '#3b83f6']}
             />
             <VictoryLabel textAnchor="middle" style={{ fontSize: 60 }} x={200} y={200} text={`${props.data}${props.inPrecent ? '%' : ''}`} />
         </svg>

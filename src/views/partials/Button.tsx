@@ -14,17 +14,18 @@ interface IbuttonProps {
     backgroundColor?: string;
     textColor?: string;
     id?: string;
+    isButtonPressed?: boolean;
 }
 
 export const Button = (props: IbuttonProps) => {
     return (
         <button
+            style={{ background: props.backgroundColor ? props.backgroundColor : '#2c3e50' }}
             id={props?.id}
             disabled={props.disabled}
             onClick={props.onClick}
-            background-color={props.backgroundColor ? props.backgroundColor : '#2c3e50'}
             color={props.textColor ? props.textColor : 'white'}
-            className={(props.fullWidth ? 'w-full' : '') + ' focus:ring-blue-500 ' + (props.className ?? '')}
+            className={(props.isButtonPressed ? 'ring-blue-500 ring-2 ring-offset-2 ' : '') + (props.fullWidth ? 'w-full' : '') + ' focus:ring-blue-500 ' + (props.className ?? '')}
         >
             {props.children}
         </button>

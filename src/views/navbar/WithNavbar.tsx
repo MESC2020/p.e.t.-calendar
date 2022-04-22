@@ -8,7 +8,9 @@ const WithNavbar: React.FunctionComponent<IWithNavbarProps> = (props) => {
     return (
         <>
             <Navbar />
-            <Outlet />
+            <div className="main">
+                <Outlet />
+            </div>
         </>
     );
 };

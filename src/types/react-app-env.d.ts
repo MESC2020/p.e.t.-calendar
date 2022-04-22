@@ -10,6 +10,8 @@ declare global {
         timestamp: string;
         productive: number;
         energy: number;
+        day: string;
+        time: string;
     };
 
     type EventObject = {
@@ -20,6 +22,7 @@ declare global {
         deadline: string | undefined;
         classNames: string[];
         backgroundColor?: string;
+        borderColor?: string;
         textColor?: string;
         demand?: number;
         duration?: string;

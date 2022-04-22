@@ -7,6 +7,14 @@ export interface IVerticalGraphProps {
     showAnimation: boolean;
 }
 
+interface IpreparedData {
+    [day: string]: [value: GraphData[]];
+}
+
+type WeekdayWithHours = {
+    [day: string]: GraphData[];
+};
+
 type GraphData = {
     x: string;
     y: number;
@@ -14,45 +22,49 @@ type GraphData = {
 
 const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
-    const [data, setData] = useState<GraphData[][]>();
+    const [data, setData] = useState<WeekdayWithHours[]>();
     useEffect(() => {
         async function getData() {
             const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
-            const days: any = await prepareData(res);
+            const days: WeekdayWithHours[] = await prepareData(res);
+
             setData(days);
             if (days !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();
     });
 
-    function prepareData(objectHours: any) {
-        const days = [];
+    function prepareData(objectHours: IaggregatedHoursWithoutEnergy) {
+        const days: WeekdayWithHours[] = [];
         const allKeys = Object.keys(objectHours);
         const enumWeekdays = Object.keys(weekdays);
-        const sizeObjectHours = allKeys.length;
 
         let count = 0;
         //check if object is not empty
         if (allKeys.length !== 0) {
             //go through each weekday
             for (let keyDay of enumWeekdays) {
-                const day = [];
+                const day: GraphData[] = [];
                 count = 0;
                 //if that weekday has data
                 if (allKeys.includes(keyDay)) {
                     for (let keyTime in objectHours[keyDay]) {
+                        const lastKeyTime: boolean = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1;
                         const [hour, minute] = keyTime.split(':');
                         //if there are times skipped - filled them up with "00:00"
                         if (count < parseInt(hour)) {
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
-                            const ifNotMidnightReached = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1 && keyTime !== '24:00';
+                            const ifNotMidnightReached = lastKeyTime && keyTime !== '24:00';
                             const completedData = completeData(count, parseInt(hour), ifNotMidnightReached, tempObj);
                             count = parseInt(hour);
-
                             day.push(...completedData);
                         } else {
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
                             day.push(tempObj);
+                            if (lastKeyTime && day.length !== 25) {
+                                const completedData = completeData(count + 1, 25, false);
+                                day.push(...completedData);
+                            }
                         }
                         count++;
                     }
@@ -77,7 +89,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         return days;
     }
 
-    function completeData(count: number, hour: number, midnightNotReached: boolean, temp?: any) {
+    function completeData(count: number, hour: number, midnightNotReached: boolean, temp?: GraphData) {
         const filler = [];
         let loop = true;
         let tempAlreadyAdded = false;
@@ -97,17 +109,9 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 hour = 25;
             } else loop = false;
         }
+
         return filler;
     }
-    /*
-    function completeAndRetrieveData() {
-        let result;
-        if (data !== undefined) {
-            if (data.length < 7) result = [...data, ...placeholderData.slice(data.length)];
-            else result = [...data];
-        } else result = placeholderData;
-        return result;
-    }*/
 
     function returnGraphs() {
         if (data !== undefined) {

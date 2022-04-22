@@ -1,5 +1,6 @@
 import { Draggable } from '@fullcalendar/interaction';
 import React, { memo, useEffect, useRef } from 'react';
+import { colorPalettes } from '../OverviewPage';
 
 export interface IExternalEventProps {
     event: any;
@@ -11,6 +12,7 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
     let textColor = props.event?.textColor || 'white';
 
     useEffect(() => {
+        console.log(props.event.backgroundColor);
         if (elRef.current != null) {
             let draggable = new Draggable(elRef.current, {
                 eventData: function () {
@@ -22,6 +24,17 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
             return () => draggable.destroy();
         }
     });
+    function displayDeadlineText() {
+        const todayTime = new Date().getTime();
+        const deadlineTime = new Date(props.event.deadline).getTime();
+        let timeLeft = deadlineTime - todayTime;
+        timeLeft = new Date(timeLeft).getHours();
+        if (props.event.backgroundColor === colorPalettes.deadlineWarning) {
+            return `Deadline in ${timeLeft} ${timeLeft > 1 ? 'hrs' : 'hr'}`;
+        } else if (props.event.backgroundColor === colorPalettes.deadlineTooLate) {
+            return `Passed Deadline`;
+        }
+    }
 
     return (
         <div
@@ -41,6 +54,7 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
             <div className="fc-event-main">
                 <div>
                     <strong style={{ color: textColor }}>{props.event.title}</strong>
+                    <p>{props.event.deadline ? displayDeadlineText() : ''}</p>
                 </div>
             </div>
         </div>
