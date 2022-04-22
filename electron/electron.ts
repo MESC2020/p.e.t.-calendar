@@ -52,14 +52,13 @@ function createPopupWindow(width: any, height: any) {
   //popupWindow.webContents.openDevTools();
   popupWindow.on("closed", (event: any) => {
     //win = null
-    console.log(event);
     event.preventDefault();
     popupWindow.hide();
   });
 
   popupWindow.on("close", (event: any) => {
     //win = null
-    console.log(event);
+
     event.preventDefault();
     popupWindow.hide();
   });
