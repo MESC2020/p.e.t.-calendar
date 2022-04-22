@@ -45,7 +45,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const [externalEvent, setExternalEvent] = useState({
         id: props.data.id ? props.data.id : undefined,
         title: props.data.title.length !== 0 ? props.data.title : '',
-        backgroundColor: '#74AAEB',
+        backgroundColor: props.data.backgroundColor ? props.data.backgroundColor : colorPalettes.calendarBlue,
         textColor: 'white',
         classNames: props.data.classNames.length !== 0 ? props.data.classNames : ['demand', `demand-${STANDARD_DEMAND}`],
         deadline: props.data.deadline ? props.data.deadline : undefined,
@@ -53,37 +53,33 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         end: props.data.end ? props.data.end : undefined,
         duration: props.data.start ? timeDifference() : props.data.duration ? props.data.duration : STANDARD_DURATION
     });
-    const today = new Date();
+    const today = moment().minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
+    const placeholder = moment().add(1, 'days').minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
 
     useEffect(() => {
         addOrRemoveNoScroll(true);
     });
 
     const handleExternalEvent = async (key: string, value: any) => {
-        if (key === 'deadline') {
-            const todayIsoString = moment().seconds(0).milliseconds(0).toISOString();
-            const todayMilliseconds = new Date(todayIsoString).getTime();
-            const deadlineMilliseconds = new Date(value).getTime();
-            const result = props.onDeadline(todayMilliseconds, deadlineMilliseconds);
-            console.log(todayMilliseconds);
-            console.log(deadlineMilliseconds);
-            setExternalEvent({ ...externalEvent, backgroundColor: result, deadline: value });
-        } else setExternalEvent({ ...externalEvent, [key]: value });
+        setExternalEvent({ ...externalEvent, [key]: value });
     };
 
     const handleChangeToggle = () => {
         //turn off toggle
         if (deadlineToggle) {
             handleExternalEvent('deadline', undefined);
-            handleExternalEvent('backgroundColor', colorPalettes.externalCalendarBlue);
         }
 
         setDeadlineToggle(!deadlineToggle);
     };
 
     const handleConfirmation = () => {
+        const copyEvent = { ...externalEvent };
+        props.onDeadline(copyEvent);
+        setExternalEvent({ ...copyEvent });
         if (props.data.id) props.callback(emptyEventObject);
         addOrRemoveNoScroll(false);
+
         props.onChange(externalEvent);
         props.display();
     };
@@ -162,14 +158,14 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                         {deadlineToggle ? (
                             <input
                                 className={'block w-full'}
-                                placeholder={`${today}`}
                                 type={'datetime-local'}
                                 onFocus={props.onFocus}
                                 onChange={(e) => {
                                     handleExternalEvent('deadline', e.target.value);
                                 }}
                                 min={`${today}`}
-                                value={externalEvent.deadline}
+                                step={60 * 15}
+                                value={externalEvent.deadline ? externalEvent.deadline : placeholder}
                             ></input>
                         ) : (
                             ''

@@ -16,7 +16,7 @@ export enum colorPalettes {
     deadlineWarningStroke = '#DE6C40',
     deadlineTooLate = '#DE4047',
     deadlineTooLateStroke = '#AB3238',
-    externalCalendarBlue = "#74AAEB'"
+    calendarBlue = '#3788d8'
 }
 
 interface State {
@@ -103,42 +103,60 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         });
         setIsUpdating(false);
     }
-    function calculateDeadline(toCompare: number, deadline: number, eventObject?: EventObject) {
+    function calculateDeadline(eventObject: EventObject) {
         const sameDay = 23 * 60 * 60 * 1000;
-        const timeDifference = deadline - toCompare;
-        //if Deadline is on that day
-        if (timeDifference <= sameDay) {
-            //if  event is over deadline
-            if (timeDifference! <= 0) {
-                if (eventObject !== undefined) {
-                    eventObject.backgroundColor = colorPalettes.deadlineTooLate;
-                    eventObject.borderColor = colorPalettes.deadlineTooLateStroke;
-                } else return colorPalettes.deadlineTooLate;
-            } //if there's still time
-            else if (eventObject !== undefined) {
+        let toCompare;
+        //Event is in external pool - thus has no date yet - compare deadline with today
+        if (eventObject?.end === undefined && eventObject?.deadline !== undefined && eventObject.deadline !== null) {
+            const todayIsoString = moment().seconds(0).milliseconds(0).toISOString(); //instead of new Date to avoid seconds and milliseconds
+            toCompare = new Date(todayIsoString).getTime();
+        }
+
+        //Event is in calendar - thus has a date - compare deadline with end date
+        else if (eventObject.end !== undefined && eventObject.deadline !== undefined && eventObject.deadline !== null) {
+            toCompare = new Date(eventObject.end).getTime();
+        }
+
+        //Event has no deadline
+        else {
+            eventObject.backgroundColor = colorPalettes.calendarBlue;
+            eventObject.borderColor = colorPalettes.calendarBlue;
+        }
+
+        //calculate if Deadline is close or has passed
+        if (toCompare !== undefined && eventObject.deadline !== undefined && eventObject.deadline !== null) {
+            const deadline = new Date(eventObject.deadline).getTime();
+            const timeDifference = deadline - toCompare;
+            //Deadline is close
+            if (timeDifference <= sameDay && timeDifference > 0) {
                 eventObject.backgroundColor = colorPalettes.deadlineWarning;
-                eventObject.borderColor = colorPalettes.deadlineWarningStroke;
-            } else return colorPalettes.deadlineWarning;
+                eventObject.borderColor = colorPalettes.deadlineWarning;
+            }
+            //Deadline is passed
+            else if (timeDifference <= sameDay && timeDifference <= 0) {
+                eventObject.backgroundColor = colorPalettes.deadlineTooLate;
+                eventObject.borderColor = colorPalettes.deadlineTooLate;
+            }
+            //still enought time
+            else {
+                eventObject.backgroundColor = colorPalettes.calendarBlue;
+                eventObject.borderColor = colorPalettes.calendarBlue;
+            }
         }
     }
 
     function sortData(events: EventObject[]) {
-        const todayIsoString = moment().seconds(0).milliseconds(0).toISOString(); //instead of new Date to avoid seconds and milliseconds
-        const todayMilliseconds = new Date(todayIsoString).getTime();
         const eventsInCalendar: EventObject[] = [];
         const externalEvents: EventObject[] = [];
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
-            if (event.end !== undefined && event.deadline !== undefined) {
-                const endDateMilliseconds = new Date(event.end).getTime();
-                const deadlineMilliseconds = new Date(event.deadline).getTime();
-                calculateDeadline(deadlineMilliseconds, endDateMilliseconds, newEvent);
-            }
+
+            calculateDeadline(newEvent);
+
             if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
-            } else {
-                if (event.deadline !== undefined) calculateDeadline(todayMilliseconds, new Date(event.deadline).getTime(), newEvent);
+            } else if (event.deadline !== undefined) {
                 externalEvents.push(newEvent);
             }
         });
@@ -316,11 +334,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             };
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
-        if (event.end !== undefined && event.deadline !== undefined) {
-            const endDateMilliseconds = new Date(event.end);
-            const deadlineMilliseconds = new Date(event.deadline);
-            calculateDeadline(endDateMilliseconds.getTime(), deadlineMilliseconds.getTime(), event);
-        }
+        calculateDeadline(event);
 
         return event;
     }
