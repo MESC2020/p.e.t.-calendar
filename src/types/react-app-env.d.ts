@@ -22,6 +22,7 @@ declare global {
         deadline: string | undefined;
         classNames: string[];
         backgroundColor?: string;
+        borderColor?: string;
         textColor?: string;
         demand?: number;
         duration?: string;

@@ -8,13 +8,15 @@ import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
 import moment from 'moment';
-import { time } from 'console';
 
 export interface IOverviewPageProps {}
 
-enum colorPalettes {
+export enum colorPalettes {
     deadlineWarning = '#F56853',
-    deadlineTooLate = '#DE4047'
+    deadlineWarningStroke = '#DE6C40',
+    deadlineTooLate = '#DE4047',
+    deadlineTooLateStroke = '#AB3238',
+    externalCalendarBlue = "#74AAEB'"
 }
 
 interface State {
@@ -101,15 +103,22 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         });
         setIsUpdating(false);
     }
-    function calculateDeadline(toCompare: number, deadline: number, eventObject: EventObject) {
+    function calculateDeadline(toCompare: number, deadline: number, eventObject?: EventObject) {
         const sameDay = 23 * 60 * 60 * 1000;
         const timeDifference = deadline - toCompare;
         //if Deadline is on that day
         if (timeDifference <= sameDay) {
             //if  event is over deadline
-            if (timeDifference! <= 0) eventObject.backgroundColor = colorPalettes.deadlineTooLate;
-            //if there's still time
-            else eventObject.backgroundColor = colorPalettes.deadlineWarning;
+            if (timeDifference! <= 0) {
+                if (eventObject !== undefined) {
+                    eventObject.backgroundColor = colorPalettes.deadlineTooLate;
+                    eventObject.borderColor = colorPalettes.deadlineTooLateStroke;
+                } else return colorPalettes.deadlineTooLate;
+            } //if there's still time
+            else if (eventObject !== undefined) {
+                eventObject.backgroundColor = colorPalettes.deadlineWarning;
+                eventObject.borderColor = colorPalettes.deadlineWarningStroke;
+            } else return colorPalettes.deadlineWarning;
         }
     }
 
@@ -316,6 +325,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         return event;
     }
 
+    /*
+       Content injection - add deadline information if necessary
+    */
     function handleEventContent(arg: any) {
         let timeLeft;
         if (arg.event.extendedProps.deadline) {
@@ -327,22 +339,20 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
         if (arg.event.backgroundColor === colorPalettes.deadlineWarning) {
             const newDiv = document.createElement('div');
-
             const text = `${arg.event.title}:` + ' Deadline in ' + `${timeLeft}${timeLeft !== 1 ? 'hrs' : 'hr'}`;
             const newContent = document.createTextNode(text);
-
             newDiv.appendChild(newContent);
+            newDiv.style.overflow = 'hidden';
             return {
                 domNodes: [newDiv]
             };
         }
         if (arg.event.backgroundColor === colorPalettes.deadlineTooLate) {
             const newDiv = document.createElement('div');
-
             const text = `${arg.event.title}: ` + 'Passed Deadline';
             const newContent = document.createTextNode(text);
-
             newDiv.appendChild(newContent);
+            newDiv.style.overflow = 'hidden';
             return {
                 domNodes: [newDiv]
             };
@@ -425,6 +435,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                                 document!.getElementById('overlay')!.style.display = 'none';
                                                 setDisplayTaskForm(!displayTaskForm);
                                             }}
+                                            onDeadline={calculateDeadline}
                                             data={currentEvent}
                                             onDelete={editEventsInCalendar}
                                             callback={setCurrentEvent}

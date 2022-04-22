@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import SwitchButton from '../../../views/partials/switchButton';
-import { Mode } from '../OverviewPage';
+import { colorPalettes, Mode } from '../OverviewPage';
 import RangeSlider from '../../../views/partials/RangeSlider';
 import TimeSelector from '../../../views/partials/TimeSelector';
+import moment from 'moment';
 
 export interface ITaskFormProps {
     className?: string;
@@ -15,6 +16,7 @@ export interface ITaskFormProps {
     data: EventObject;
     onDelete: any;
     callback: any;
+    onDeadline: any;
 }
 const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
@@ -57,12 +59,22 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         addOrRemoveNoScroll(true);
     });
 
-    const handleExternalEvent = (key: string, value: any) => {
-        setExternalEvent({ ...externalEvent, [key]: value });
+    const handleExternalEvent = async (key: string, value: any) => {
+        if (key === 'deadline') {
+            const todayIsoString = moment().seconds(0).milliseconds(0).toISOString();
+            const todayMilliseconds = new Date(todayIsoString).getTime();
+            const result = props.onDeadline(todayMilliseconds, new Date(externalEvent!.deadline!).getTime());
+            setExternalEvent({ ...externalEvent, backgroundColor: result, deadline: value });
+        } else setExternalEvent({ ...externalEvent, [key]: value });
     };
 
     const handleChangeToggle = () => {
-        if (deadlineToggle) handleExternalEvent('deadline', undefined);
+        //turn off toggle
+        if (deadlineToggle) {
+            handleExternalEvent('deadline', undefined);
+            handleExternalEvent('backgroundColor', colorPalettes.externalCalendarBlue);
+        }
+
         setDeadlineToggle(!deadlineToggle);
     };
 
