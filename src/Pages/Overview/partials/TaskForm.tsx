@@ -63,7 +63,10 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         if (key === 'deadline') {
             const todayIsoString = moment().seconds(0).milliseconds(0).toISOString();
             const todayMilliseconds = new Date(todayIsoString).getTime();
-            const result = props.onDeadline(todayMilliseconds, new Date(externalEvent!.deadline!).getTime());
+            const deadlineMilliseconds = new Date(value).getTime();
+            const result = props.onDeadline(todayMilliseconds, deadlineMilliseconds);
+            console.log(todayMilliseconds);
+            console.log(deadlineMilliseconds);
             setExternalEvent({ ...externalEvent, backgroundColor: result, deadline: value });
         } else setExternalEvent({ ...externalEvent, [key]: value });
     };
