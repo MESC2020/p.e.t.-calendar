@@ -21,13 +21,10 @@ class App extends Component {
         return (
             <HashRouter>
                 <Switch>
-                    <Route element={<WithNavbar />}>
-                        <Route path="/" element={<OverviewPage />} />
-                        <Route path="/stats" element={<StatsPage />} />
-                    </Route>
-                    <Route element={<WithoutNavbar />}>
-                        <Route path="/report" element={<SelfReport />} />
-                    </Route>
+                    <Route path="/" element={<OverviewPage />} />
+                    <Route path="/stats" element={<StatsPage />} />
+
+                    <Route path="/report" element={<SelfReport />} />
                 </Switch>
             </HashRouter>
         );

@@ -4,7 +4,6 @@ import { dbMgr } from "../src/db/dbMgr";
 import { Aggregator } from "../src/db/Aggregator";
 
 //dev toole extension
-
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
@@ -25,9 +24,29 @@ type Window = {
   show(): any;
   hide(): any;
   on(eventListening: string, func: any): any;
+  destroy(): any;
 };
 
 let popupWindow: Window;
+
+const isDev = require("electron-is-dev");
+const { URL } = require("url");
+
+// Define React App dev and prod base paths
+const devBasePath = "http://localhost:3000/";
+const prodBasePath = `file://${path.join(__dirname, "../index.html")}`;
+
+const constructAppPath = (hashRoute = "") => {
+  const basePath = isDev ? devBasePath : prodBasePath;
+  console.log(basePath);
+  const appPath = new URL(basePath);
+
+  // Add hash route to base url if provided
+  if (hashRoute) appPath.hash = hashRoute;
+
+  // Return the constructed url
+  return appPath.href;
+};
 
 function createPopupWindow(width: any, height: any) {
   popupWindow = new BrowserWindow({
@@ -48,13 +67,10 @@ function createPopupWindow(width: any, height: any) {
     },
   });
   Menu.setApplicationMenu(null);
-  popupWindow.loadURL("http://localhost:3000/#/report");
+  //popupWindow.loadURL("http://localhost:3000/#/report");
+  popupWindow.loadURL(constructAppPath("/report/"));
+  //popupWindow.loadFile(path.join(__dirname, "../index.html#report"));
   //popupWindow.webContents.openDevTools();
-  popupWindow.on("closed", (event: any) => {
-    //win = null
-    event.preventDefault();
-    popupWindow.hide();
-  });
 
   popupWindow.on("close", (event: any) => {
     //win = null
@@ -75,12 +91,17 @@ function createWindow(width: any, height: any) {
       preload: path.join(__dirname, "/preload.js"),
     },
   });
-  // mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  mainWindow.loadURL(constructAppPath());
+  //mainWindow.loadFile(path.join(__dirname, "../index.html"));
   Menu.setApplicationMenu(null);
-  mainWindow.loadURL("http://localhost:3000"); //For dev only
+  // mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
+
+  mainWindow.on("close", (event: any) => {
+    popupWindow.destroy();
+  });
 }
 
 // This method will be called when Electron has finished
@@ -94,6 +115,7 @@ app.whenReady().then(() => {
   })
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));
+
   infinitePopUpLoop(width, height);
   createWindow(width, height);
   //createPopupWindow(width, height);
@@ -119,6 +141,7 @@ function infinitePopUpLoop(width: any, height: any) {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
+
 app.on("window-all-closed", function () {
   if (process.platform !== "darwin") {
     dbManager.closeDb();
