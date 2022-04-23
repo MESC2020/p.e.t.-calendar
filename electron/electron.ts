@@ -2,6 +2,7 @@
 
 import { dbMgr } from "../src/db/dbMgr";
 import { Aggregator } from "../src/db/Aggregator";
+import { PlanGenerator } from "../src/db/PlanGenerator";
 
 //dev toole extension
 import installExtension, {
@@ -97,10 +98,10 @@ function createWindow(width: any, height: any) {
   // mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   mainWindow.on("close", (event: any) => {
-    popupWindow.destroy();
+    if (popupWindow) popupWindow.destroy();
   });
 }
 
@@ -165,6 +166,14 @@ ipcMain.on("update-events", (event: any, args: any) => {
 
 ipcMain.on("delete-events", (event: any, args: any) => {
   dbManager.deleteEvents(args);
+});
+ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
+  if (aggregator === undefined) aggregator = new Aggregator(dbManager);
+  const planner = new PlanGenerator(args, aggregator);
+
+  return await planner.generateAvaiableSlots();
+  //
+  //return await aggregator.createFullWeekHourBundle();
 });
 
 //report handlers

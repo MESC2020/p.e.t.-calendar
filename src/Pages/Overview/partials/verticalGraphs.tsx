@@ -124,7 +124,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     }
 
     return (
-        <div className={`${props.className}` + ' click-through opacity-10 h-full w-full '}>
+        <div className={`${props.className}` + ' click-through opacity-20 h-full w-full '}>
             <div className="w-full overlap-header"></div>
             {isLoading ? (
                 ''

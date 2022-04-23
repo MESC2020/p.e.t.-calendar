@@ -13,7 +13,7 @@ export enum weekdays {
     Sunday = 'Sunday'
 }
 
-type WeekdayWithHours = {
+export type WeekdayWithHours = {
     [day: string]: GraphData[];
 };
 

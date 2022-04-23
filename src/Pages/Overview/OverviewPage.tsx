@@ -8,6 +8,7 @@ import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
 import moment from 'moment';
+import { PlanGenerator } from '../../db/PlanGenerator';
 
 export interface IOverviewPageProps {}
 
@@ -103,7 +104,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         });
         setIsUpdating(false);
     }
-    function calculateDeadline(eventObject: EventObject) {
+    async function calculateDeadline(eventObject: EventObject) {
+        const planner = window.api.getProposedPlan(state.externalEvents);
+        console.log(planner);
         const sameDay = 23 * 60 * 60 * 1000;
         let toCompare;
         //Event is in external pool - thus has no date yet - compare deadline with today

@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("api", {
   deleteEvents: (args: any) => ipcRenderer.send("delete-events", args),
   updateEvents: (args: any) => ipcRenderer.send("update-events", args),
   getAllEvents: (args: any) => ipcRenderer.invoke("get-all-events", args),
+  getProposedPlan: (args: any) => ipcRenderer.invoke("get-proposed-plan", args),
 
   //report handling
   closePopup: (args: any) => ipcRenderer.send("close-popup", args),

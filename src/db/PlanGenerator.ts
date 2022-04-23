@@ -1,20 +1,31 @@
-import moment from 'moment';
-import { Aggregator, weekdays } from '../../../db/Aggregator';
-import { dbMgr } from '../../../db/dbMgr';
-
+import { Aggregator, weekdays, WeekdayWithHours } from './Aggregator';
+import { dbMgr } from './dbMgr';
+const moment = require('moment');
 enum demandLevel {
-    one = 1,
-    two = 2,
-    three = 3,
-    four = 4,
-    five = 5,
-    six = 6,
-    seven = 7,
-    none = 0
+    one = '1',
+    two = '2',
+    three = '3',
+    four = '4',
+    five = '5',
+    six = '6',
+    seven = '7',
+    none = '0'
 }
+
 interface IsortedDemand {
     [demandLevel: number]: EventObject[];
 }
+
+interface IcategorizeProductivity {
+    [weekday: string]: timeProductivityCategory[];
+}
+
+type timeProductivityCategory = {
+    from: string;
+    end: string;
+    totalDuration: number;
+    avgPro: number;
+};
 
 export class PlanGenerator {
     aggregator: Aggregator;
@@ -22,22 +33,22 @@ export class PlanGenerator {
     externTasks: EventObject[];
     sortedByDemand: IsortedDemand = {};
     sortedByDeadlineAndDemand: EventObject[] = [];
+    timeWeekData: any;
 
-    constructor(externalTasks: EventObject[]) {
+    constructor(externalTasks: EventObject[], aggregator: Aggregator) {
         this.externTasks = externalTasks;
-        const dbManager = new dbMgr();
-        this.aggregator = new Aggregator(dbManager);
+        this.aggregator = aggregator;
     }
 
     sortTasks() {
         if (this.externTasks.length !== 0) {
             const demandLevels = Object.keys(demandLevel);
             this.externTasks.forEach((event) => {
-                let demandLevelArray = [];
+                let demandLevelArray: EventObject[] = [];
                 const currentDemandLevel = event.demand;
                 const key = currentDemandLevel ? demandLevels[currentDemandLevel - 1] : demandLevels[demandLevels.length - 1];
                 const hasDeadline = event.deadline !== undefined;
-                const ifCatNotExisting = hasDeadline ? this.sortedByDeadlineAndDemand[key] === undefined : this.sortedByDemand[key] === undefined;
+                const ifCatNotExisting = hasDeadline ? this.sortedByDeadlineAndDemand[parseInt(key)] === undefined : this.sortedByDemand[parseInt(key)] === undefined;
 
                 //DemandLevel category not existing yet
                 if (currentDemandLevel !== undefined && ifCatNotExisting) {
@@ -45,17 +56,17 @@ export class PlanGenerator {
                 }
                 //DemandLevel category exists already
                 else if (currentDemandLevel !== undefined) {
-                    demandLevelArray = hasDeadline ? this.sortedByDeadlineAndDemand : this.sortedByDemand[key];
+                    demandLevelArray = hasDeadline ? this.sortedByDeadlineAndDemand : this.sortedByDemand[parseInt(key)];
                     if (hasDeadline) {
                         //sort with splice
                         for (let index = 0; index < demandLevelArray.length; index++) {
                             const newEventTime = new Date(event.deadline as string).getTime();
-                            const existingEventTime = new Date(demandLevelArray[index].deadline).getTime();
+                            const existingEventTime = new Date(demandLevelArray[index].deadline as string).getTime();
                             if (newEventTime < existingEventTime) {
                                 demandLevelArray.splice(index, 0, event);
                                 break;
                             }
-                            if (newEventTime === existingEventTime && (event!.demand as number) > demandLevelArray[index].demand) {
+                            if (newEventTime === existingEventTime && (event!.demand as number) > (demandLevelArray[index].demand as number)) {
                                 demandLevelArray.splice(index, 0, event);
                                 break;
                             }
@@ -129,8 +140,41 @@ export class PlanGenerator {
         }
     }
 
-    private generateAvaiableSlots() {
-        let data: any;
+    async generateAvaiableSlots() {
+        let data: any = await this.aggregator.createFullWeekHourBundle(); //WeekdayWithHours[]
+        const result: IcategorizeProductivity = {};
+        const ABBERATION = 0.5;
+        //go through every weekday
+        for (let weekdayObject of data) {
+            let lastTimeProductivity;
+            const weekday = Object.keys(weekdayObject)[0];
+            //go through every time
+            for (let timeProdObject of weekdayObject[weekday]) {
+                const time = timeProdObject.x;
+                const currentTimeProductivity = timeProdObject.y;
+                //at the beginning of the loop (first time-category to store)
+                if (lastTimeProductivity === undefined) lastTimeProductivity = { time: `${time}`, prodLevel: currentTimeProductivity, duration: 1 };
+                //if next time's productivity is in similiar to the last time's productivity (based on the abberation)
+                else if (lastTimeProductivity.prodLevel - currentTimeProductivity <= 0 + ABBERATION && lastTimeProductivity.prodLevel - currentTimeProductivity >= 0 - ABBERATION) {
+                    lastTimeProductivity.prodLevel = (lastTimeProductivity.prodLevel * lastTimeProductivity.duration + currentTimeProductivity) / (lastTimeProductivity.duration + 1);
+                    lastTimeProductivity.duration++;
+                }
+                //if next time's productivity is too far away - create new time-category and store the last one
+                else {
+                    const objToPush = {
+                        from: lastTimeProductivity.time,
+                        end: `${time}`,
+                        totalDuration: lastTimeProductivity.duration,
+                        avgPro: lastTimeProductivity.prodLevel
+                    };
+
+                    if (result[weekday] !== undefined) result[weekday].push(objToPush);
+                    else result[weekday] = [objToPush];
+                    lastTimeProductivity = { time: `${time}`, prodLevel: currentTimeProductivity, duration: 1 };
+                }
+            }
+        }
+        console.log(result);
     }
 
     private getWeek() {
