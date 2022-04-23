@@ -155,11 +155,11 @@ ipcMain.on("save-report", (event: any, args: any) => {
 });
 
 ipcMain.handle("get-aggregated-hours", async (event: any, args: any) => {
-  aggregator = new Aggregator(dbManager);
+  if (aggregator === undefined) aggregator = new Aggregator(dbManager);
   return await aggregator.aggregatingHours();
 });
 
 ipcMain.handle("get-aggregated-weekdays", async (event: any, args: any) => {
-  aggregator = new Aggregator(dbManager);
+  if (aggregator === undefined) aggregator = new Aggregator(dbManager);
   return await aggregator.aggregatingWeekdays();
 });
