@@ -31,6 +31,12 @@ interface IcategorizeProductivity {
     [weekday: string]: timeProductivityCategory[];
 }
 
+type resultObject = {
+    weekday: string;
+    score: number;
+    result: timeProductivityCategory[];
+};
+
 type timeProductivityCategory = {
     from: string;
     end: string;
@@ -132,8 +138,8 @@ export class PlanGenerator {
                         console.log('before slot assignment');
                         console.log(availableSlots);
                         console.log(event);
-                        //if event was assigned - deleted it out of sorted object
-                        if (this.findFit(deadline, event, weekStart, availableSlots)) this.sortedByDeadlineAndDemand[demandLevel].splice(this.sortedByDeadlineAndDemand[demandLevel].indexOf(event), 1);
+                        //if event was assigned - delete it out of sorted object
+                        if (this.findFit(event, weekStart, availableSlots)) this.sortedByDeadlineAndDemand[demandLevel].splice(this.sortedByDeadlineAndDemand[demandLevel].indexOf(event), 1);
                         console.log('after slot assignment');
                         console.log(availableSlots);
 
@@ -150,11 +156,12 @@ export class PlanGenerator {
         return this.packAndReturnEvents();
     }
 
-    private findFit(deadline: Date, event: EventObject, weekStart: Date, availableSlots: any): boolean {
+    private findFit(event: EventObject, weekStart: Date, availableSlots: any): boolean {
+        const deadline = new Date(event.deadline as string);
         const deadlineDay = deadline.toLocaleString('en-us', { weekday: 'long' });
         //const deadlineHour = parseInt(deadline.toLocaleTimeString('en-de', { hour: '2-digit' }));
-        const eventDuration = event.duration; //TODO duration missing in database (even necessary???)
-        const [eventDurationHours, eventDurationMinutes] = eventDuration!.split(':');
+        const roundedEventDuration = event.duration; //TODO duration missing in database (even necessary???)
+        const [eventDurationHours, eventDurationMinutes] = roundedEventDuration!.split(':');
         const roundHours = parseInt(eventDurationHours) + (parseInt(eventDurationMinutes) >= 30 ? 1 : 0);
 
         let proposals: proposals = {};
@@ -169,15 +176,15 @@ export class PlanGenerator {
                     //analyze productivity between timeCategory and event
                     for (let comparison of Object.values(comparisonTypes)) {
                         const productivityEvaluation = this.formulaResolver(timeCategory.avgPro, event.demand as number, comparison);
-
                         if (productivityEvaluation === undefined) continue;
+
                         //analyze duration between timeCategory and event
                         for (let comparison of Object.values(comparisonTypes)) {
                             //.filter((x) => typeof x === 'string')
                             const durationEvaluation = this.formulaResolver(timeCategory.totalDuration, roundHours, comparison);
-                            const weekDayIsoString = this.formWeekdayBackToIsoDate(weekday, weekStart);
 
                             if (durationEvaluation === undefined) continue;
+
                             //storing proposal
                             const propose = `${productivityEvaluation}:${durationEvaluation}`;
                             if (proposals[propose] === undefined) proposals[propose] = { [weekday]: [timeCategory] };
@@ -212,9 +219,10 @@ export class PlanGenerator {
             `${comparisonTypesRating.BAD}:${comparisonTypesRating.OK}`,
             `${comparisonTypesRating.BAD}:${comparisonTypesRating.BAD}`
         ];
-        let finalPick = {
+        let finalPick: resultObject = {
             weekday: '' as string,
-            result: {} as timeProductivityCategory
+            score: 0 as number,
+            result: [] as timeProductivityCategory[]
         };
         if (Object.keys(proposals).length > 0) {
             const MAX_COMPARISONS = 15;
@@ -223,39 +231,45 @@ export class PlanGenerator {
                 if (counterComparisons > MAX_COMPARISONS) break;
                 if (proposals[ratingCombination] !== undefined) {
                     const weekdays = Object.keys(proposals[ratingCombination]);
+
                     // GOOD:OK/BAD  or  OK/BAD:GOOD  or  OK/BAD:OK/BAD
                     if (ratingCombination.includes(comparisonTypesRating.OK) || ratingCombination.includes(comparisonTypesRating.BAD)) {
                         for (let weekday of weekdays) {
-                            let tempFinal = {
+                            let tempFinal: resultObject = {
                                 weekday: `${weekday}`,
-                                result: {} as timeProductivityCategory
+                                score: 0 as number,
+                                result: [] as timeProductivityCategory[]
                             };
                             for (let timeCategory of proposals[ratingCombination][weekday]) {
                                 const potentialOne = timeCategory;
-                                if (Object.keys(tempFinal.result).length !== 0) {
-                                    tempFinal.result = this.compareProposals(tempFinal.result, potentialOne, event.demand as number, roundHours);
-                                    counterComparisons++;
-                                } else tempFinal.result = potentialOne;
-                            }
-                            if (Object.keys(finalPick.result).length !== 0) {
-                                finalPick.weekday;
-                                finalPick.result = this.compareProposals(finalPick.result, tempFinal.result as timeProductivityCategory, event.demand as number, roundHours);
+
+                                const tempResult = this.compareProposals(tempFinal.result, potentialOne, event.demand as number, roundHours, availableSlots);
+                                if (tempFinal.score < tempResult.score) {
+                                    tempFinal.result = tempResult.result;
+                                    tempFinal.score = tempResult.score;
+                                }
                                 counterComparisons++;
-                            } else finalPick = tempFinal;
+                            }
+
+                            if (finalPick.score < tempFinal.score) {
+                                finalPick = tempFinal;
+                                counterComparisons++;
+                            }
                         }
                     }
 
                     // GOOD:GOOD
                     else {
                         finalPick.weekday = weekdays[0];
-                        finalPick.result = proposals[ratingCombination][weekdays[0]][0]; //pick first weekday, and first available time slot
+                        finalPick.score = 100000;
+                        finalPick.result.push(proposals[ratingCombination][weekdays[0]][0]); //pick first weekday, and first available time slot
                         break;
                     }
                 }
             }
         }
 
-        if (Object.keys(finalPick.result).length !== 0) {
+        if (finalPick.result.length !== 0) {
             this.takeSlot(availableSlots, this.formWeekdayBackToIsoDate(finalPick.weekday, weekStart), finalPick.result, event);
             this.assignedEvents.push(event);
             return true;
@@ -347,37 +361,63 @@ export class PlanGenerator {
         }
     }
 
-    private takeSlot(availableSlots: any, weekday: string, timeCategory: any, event: EventObject) {
+    private takeSlot(availableSlots: any, weekday: string, timeCategories: timeProductivityCategory[], event: EventObject) {
         const weekdayDate = new Date(weekday);
         const weekdayString = weekdayDate.toLocaleString('en-us', { weekday: 'long' });
         const weekdayMilliseconds = weekdayDate.getTime();
-        const hour = parseInt(timeCategory.from.split(':')[0]);
-        const start = weekdayMilliseconds + hour * 60 * 60 * 1000;
         const [durationHour, durationMinute] = event.duration!.split(':');
         const roundedDurationHour = parseInt(durationHour) + (parseInt(durationMinute) >= 30 ? 1 : 0);
+        let hourFromOriginal;
+        let hourEndOriginal;
+        for (let timeCat of timeCategories) {
+            //the first timeCat is either the only result or the original (all the others are either before or afterwards timewise)
+            if (timeCategories.indexOf(timeCat) === 0) {
+                hourFromOriginal = parseInt(timeCat.from.split(':')[0]);
+                hourEndOriginal = parseInt(timeCat.end.split(':')[0]);
+            } else {
+                let hourFrom = parseInt(timeCat.from.split(':')[0]);
+                let hourEnd = parseInt(timeCat.end.split(':')[0]);
+                //time backwards
+                if (hourFrom < (hourFromOriginal as number) && hourEnd === hourFromOriginal) {
+                    hourFromOriginal = (hourEndOriginal as number) - roundedDurationHour;
+                }
+                //time forwards
+                else if (hourFrom > (hourFromOriginal as number) && hourFrom === hourEndOriginal) {
+                    hourEndOriginal = (hourFromOriginal as unknown as number) + roundedDurationHour;
+                }
+            }
+        }
+
+        const start = weekdayMilliseconds + (hourFromOriginal as number) * 60 * 60 * 1000;
 
         const end = start + parseInt(durationHour) * 60 * 60 * 1000 + parseInt(durationMinute) * 60 * 1000;
 
         //update event
         (event.start = new Date(start).toISOString()), (event.end = new Date(end).toISOString());
 
-        const index = availableSlots[weekdayString].indexOf(timeCategory);
+        //const index = availableSlots[weekdayString].indexOf(timeCategory);
         let timeCatsArray: any[] = availableSlots[weekdayString];
 
         //delete slot
-        if (timeCategory.totalDuration === roundedDurationHour) timeCatsArray.splice(index, 1);
-        else if (timeCategory.totalDuration < roundedDurationHour) {
-            //unknown behavior
-        }
-        //update Slot
-        else {
-            const [fromHour, fromMinute] = timeCategory.from.split(':');
-            const updatedHour = parseInt(fromHour) + roundedDurationHour;
-            const formatUpdatedHour = updatedHour < 10 ? `0${updatedHour}:00` : `${updatedHour}:00`;
-            const updatedTimeCat = { ...timeCategory, from: formatUpdatedHour, totalDuration: timeCategory.totalDuration - roundedDurationHour };
-            timeCatsArray.splice(index, 1, updatedTimeCat);
-        }
-        availableSlots[weekdayString] = timeCatsArray;
+    }
+    private updateAvalaibleSlots(timeCategories: timeProductivityCategory[], availableSlotsWeekday: timeProductivityCategory[], roundedDurationHour: number) {
+        /*
+for(let timeCategory of timeCategories){
+    
+if (timeCategory.totalDuration === roundedDurationHour) timeCatsArray.splice(index, 1);
+else if (timeCategory.totalDuration < roundedDurationHour) {
+    //unknown behavior
+}
+//update Slot
+else {
+    const [fromHour, fromMinute] = timeCategory.from.split(':');
+    const updatedHour = parseInt(fromHour) + roundedDurationHour;
+    const formatUpdatedHour = updatedHour < 10 ? `0${updatedHour}:00` : `${updatedHour}:00`;
+    const updatedTimeCat = { ...timeCategory, from: formatUpdatedHour, totalDuration: timeCategory.totalDuration - roundedDurationHour };
+    timeCatsArray.splice(index, 1, updatedTimeCat);
+}
+availableSlots[weekdayString] = timeCatsArray;
+    }*/
     }
 
     private formWeekdayBackToIsoDate(weekday: string, weekStart: Date) {
@@ -393,24 +433,140 @@ export class PlanGenerator {
         else return weekStart.toISOString();
     }
 
-    private compareProposals(previousPicked: timeProductivityCategory, potentialOne: timeProductivityCategory, eventDemand: number, eventDuration: number) {
-        let previousScore = 0;
+    private compareProposals(previous: any, potentialOne: timeProductivityCategory, eventDemand: number, roundedEventDuration: number, availableSlots: IcategorizeProductivity) {
+        const weekday: weekdays = previous.weekday;
         let potentialScore = 0;
-        let winnerOfProdComparison = '';
+        const values = [Math.abs(eventDemand - potentialOne.avgPro), Math.abs(roundedEventDuration - potentialOne.totalDuration)];
+        potentialScore = potentialScore + this.rateTimeCategory(values);
+        let result;
 
-        if (Math.abs(eventDemand - previousPicked.avgPro) < Math.abs(eventDemand - potentialOne.avgPro)) {
-            previousScore++;
-            winnerOfProdComparison = 'previous';
-        } else {
-            potentialScore++;
-            winnerOfProdComparison = 'potential';
+        //when there's not enough time with this option
+        if (potentialOne.totalDuration < roundedEventDuration) {
+            result = this.checkForMoreTime(potentialOne, eventDemand, roundedEventDuration, availableSlots[weekday]);
+            result.score = result.score + potentialScore;
         }
-        if (Math.abs(eventDuration - previousPicked.totalDuration) < Math.abs(eventDuration - potentialOne.totalDuration)) previousScore++;
-        else potentialScore++;
-        if (previousScore < potentialScore && previousScore !== potentialScore) return previousPicked;
-        if (previousScore! < potentialScore && previousScore !== potentialScore) return potentialOne;
-        else if (winnerOfProdComparison === 'previous') return previousPicked;
-        else return potentialOne;
+        //if there's enough time
+        else {
+            result = { score: potentialScore + 10, result: [potentialOne] };
+        }
+        return result;
+    }
+    private checkForMoreTime(
+        potentialOne: timeProductivityCategory,
+        eventDemand: number,
+        roundedEventDuration: number,
+        availableSlotsInWeekday: timeProductivityCategory[]
+    ): { score: number; result: timeProductivityCategory[] } {
+        const currentTimeCatIndex = availableSlotsInWeekday.indexOf(potentialOne);
+        const MULTIPLE_TIME_SLOTS_PENALTY = -4;
+        let summedUpTime = potentialOne.totalDuration;
+        let indexForward = currentTimeCatIndex;
+        let indexBackwards = currentTimeCatIndex;
+        let result = [potentialOne];
+        let totalScore = 0;
+
+        let continueWithBefore = true;
+        let continueWithForward = true;
+        let hardLockBefore = false;
+        let hardLockForward = false;
+
+        let timeCatBefore;
+        let timeCatBeforePreviously;
+        let [hourBefore, minuteBefore] = ['', ''];
+        let [hourBeforePreviously, minuteBeforePreviously] = ['', ''];
+
+        let timeCatForwardPreviously;
+        let timeCatForward;
+        let [hourForward, minuteForward] = ['', ''];
+        let [hourForwardPreviously, minuteForwardPriviously] = ['', ''];
+
+        let timeBefore;
+        let timeForward;
+        let prodBefore;
+        let prodForward;
+        //go back/forward as much as needed
+        while (summedUpTime < roundedEventDuration && (continueWithBefore || continueWithForward) && (!hardLockBefore || !hardLockForward)) {
+            //set up values for going backwards in time
+            if (continueWithBefore && indexBackwards - 1 >= 0) {
+                timeCatBefore = availableSlotsInWeekday[indexBackwards - 1];
+                timeCatBeforePreviously = availableSlotsInWeekday[indexBackwards];
+                [hourBefore, minuteBefore] = timeCatBefore.end.split(':');
+                [hourBeforePreviously, minuteBeforePreviously] = timeCatBeforePreviously.from.split(':');
+                timeBefore = timeCatBefore.totalDuration;
+                prodBefore = timeCatBefore.avgPro;
+            } else continueWithBefore = false;
+
+            //set up values for going forwards in time
+            if (continueWithForward && indexForward + 1 < availableSlotsInWeekday.length) {
+                timeCatForwardPreviously = availableSlotsInWeekday[indexForward];
+                timeCatForward = availableSlotsInWeekday[indexForward + 1];
+                [hourForward, minuteForward] = timeCatForward.from.split(':');
+                [hourForwardPreviously, minuteForwardPriviously] = timeCatForwardPreviously.end.split(':');
+                timeForward = timeCatForward.totalDuration;
+                prodForward = timeCatForward.avgPro;
+            } else continueWithForward = false;
+
+            //check if there's no time gap
+            if (!hardLockBefore && parseInt(hourBefore) !== parseInt(hourBeforePreviously)) hardLockBefore = true;
+            if (!hardLockForward && parseInt(hourForward) !== parseInt(hourForwardPreviously)) hardLockForward = true;
+
+            //decide if forward or backwards is better option
+            if (prodBefore !== undefined && prodForward !== undefined && timeBefore !== undefined && timeForward !== undefined && !hardLockBefore && !hardLockForward) {
+                if (Math.abs(eventDemand - prodBefore) < Math.abs(eventDemand - prodForward)) {
+                    totalScore = totalScore + this.rateTimeCategory([Math.abs(eventDemand - prodBefore)]) + MULTIPLE_TIME_SLOTS_PENALTY;
+                    continueWithForward = false;
+                    continueWithBefore = true;
+                    summedUpTime = summedUpTime + timeBefore;
+                    result.push(timeCatBefore as timeProductivityCategory);
+                } else {
+                    totalScore = totalScore + this.rateTimeCategory([Math.abs(eventDemand - prodForward)]) + MULTIPLE_TIME_SLOTS_PENALTY;
+                    continueWithForward = true;
+                    continueWithBefore = false;
+                    summedUpTime = summedUpTime + timeForward;
+                    result.push(timeCatForward as timeProductivityCategory);
+                }
+            } else if (prodBefore !== undefined && timeBefore !== undefined && !hardLockBefore) {
+                totalScore = totalScore + this.rateTimeCategory([Math.abs(eventDemand - prodBefore)]) + MULTIPLE_TIME_SLOTS_PENALTY;
+                continueWithForward = false;
+                summedUpTime = summedUpTime + timeBefore;
+            } else if (prodForward !== undefined && timeForward !== undefined && !hardLockForward) {
+                totalScore = totalScore + this.rateTimeCategory([Math.abs(eventDemand - prodForward)]) + MULTIPLE_TIME_SLOTS_PENALTY;
+                continueWithBefore = false;
+                summedUpTime = summedUpTime + timeForward;
+            }
+        }
+        if (summedUpTime < roundedEventDuration) totalScore = totalScore - 10000;
+        else if (result.length <= 2) totalScore = totalScore + 3;
+        return { score: totalScore, result: result };
+    }
+
+    private rateTimeCategory(values: number[]) {
+        let potentialScore = 0;
+        for (let value of values) {
+            switch (value) {
+                case 0.1:
+                    potentialScore = potentialScore + 5;
+                    break;
+                case 0.5:
+                    potentialScore = potentialScore + 4;
+                    break;
+                case 1:
+                    potentialScore = potentialScore + 3;
+                    break;
+                case 1.5:
+                    potentialScore = potentialScore + 2;
+                    break;
+                case 2:
+                    potentialScore = potentialScore + 1;
+                    break;
+                default:
+                    if (value > 0.1 && value < 0.5) potentialScore = potentialScore + 4.5;
+                    if (value > 0.5 && value < 1) potentialScore = potentialScore + 3.5;
+                    if (value > 1 && value < 1.5) potentialScore = potentialScore + 2.5;
+                    if (value > 1.5 && value < 2) potentialScore = potentialScore + 1.5;
+            }
+        }
+        return potentialScore;
     }
 
     private packAndReturnEvents(): EventObject[] {
@@ -435,3 +591,30 @@ export class PlanGenerator {
         return assignedEvents;
     }
 }
+
+/*
+private compareProposals(previous: any, potentialOne: timeProductivityCategory, eventDemand: number, roundedEventDuration: number, availableSlots: IcategorizeProductivity) {
+        const weekday: weekdays = previous.weekday;
+        const previousPicked: timeProductivityCategory = previous.result;
+        let previousScore = 0;
+        let potentialScore = 0;
+        let winnerOfProdComparison = '';
+
+        if (Math.abs(eventDemand - previousPicked.avgPro) < Math.abs(eventDemand - potentialOne.avgPro)) {
+            previousScore++;
+            winnerOfProdComparison = 'previous';
+        } else {
+            potentialScore++;
+            winnerOfProdComparison = 'potential';
+        }
+
+        if()
+
+        if (Math.abs(roundedEventDuration - previousPicked.totalDuration) < Math.abs(roundedEventDuration - potentialOne.totalDuration)) previousScore++;
+        else potentialScore++;
+        if (previousScore < potentialScore && previousScore !== potentialScore) return previousPicked;
+        if (previousScore > potentialScore && previousScore !== potentialScore) return potentialOne;
+        else if (winnerOfProdComparison === 'previous') return previousPicked;
+        else return potentialOne;
+    }
+*/
