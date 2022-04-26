@@ -29,6 +29,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
             const days: WeekdayWithHours[] = await prepareData(res);
 
             setData(days);
+            console.log(data);
             if (days !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();

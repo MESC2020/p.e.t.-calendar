@@ -66,34 +66,36 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         return id;
     }
 
-    async function editEventsInCalendar(event: EventObject, mode: Mode) {
+    async function editEventsInCalendar(event: EventObject | EventObject[], mode: Mode) {
         const eventsInCalendar: EventObject[] = state.events;
         const externalEvents: EventObject[] = state.externalEvents;
         let alreadyChanged = false;
+        const toEdit = Array.isArray(event) ? event : [event]; //make it an array, in case it's not one
 
-        for (let eventCalendar of eventsInCalendar) {
-            if (eventCalendar.id === event.id) {
-                let index = eventsInCalendar.indexOf(eventCalendar);
-                if (mode === Mode.updating) eventsInCalendar.splice(index, 1, event);
-                else eventsInCalendar.splice(eventsInCalendar.indexOf(eventCalendar), 1);
-                alreadyChanged = true;
-                break;
-            }
-        }
-        if (!alreadyChanged) {
-            for (let externalEvent of externalEvents) {
-                if (externalEvent.id === event.id) {
-                    let index = externalEvents.indexOf(externalEvent);
-                    if (mode === Mode.updating) externalEvents.splice(index, 1, event);
-                    else externalEvents.splice(externalEvents.indexOf(externalEvent), 1);
+        for (let event of toEdit) {
+            for (let eventCalendar of eventsInCalendar) {
+                if (eventCalendar.id === event.id) {
+                    let index = eventsInCalendar.indexOf(eventCalendar);
+                    if (mode === Mode.updating) eventsInCalendar.splice(index, 1, event);
+                    else eventsInCalendar.splice(eventsInCalendar.indexOf(eventCalendar), 1);
+                    alreadyChanged = true;
                     break;
                 }
             }
+            if (!alreadyChanged) {
+                for (let externalEvent of externalEvents) {
+                    if (externalEvent.id === event.id) {
+                        let index = externalEvents.indexOf(externalEvent);
+                        if (mode === Mode.updating) externalEvents.splice(index, 1, event);
+                        else externalEvents.splice(externalEvents.indexOf(externalEvent), 1);
+                        break;
+                    }
+                }
+            }
+            if (mode === Mode.dragAndDrop) eventsInCalendar.push(event);
         }
-        if (mode === Mode.dragAndDrop) eventsInCalendar.push(event);
-
-        if (mode === Mode.deleting) window.api.deleteEvents([event]);
-        else window.api.updateEvents([event]);
+        if (mode === Mode.deleting) window.api.deleteEvents(event);
+        else window.api.updateEvents(event);
 
         await setIsUpdating(true);
         setState(() => {
@@ -105,8 +107,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         setIsUpdating(false);
     }
     async function calculateDeadline(eventObject: EventObject) {
-        const planner = window.api.getProposedPlan(state.externalEvents);
-        console.log(planner);
         const sameDay = 23 * 60 * 60 * 1000;
         let toCompare;
         //Event is in external pool - thus has no date yet - compare deadline with today
@@ -173,13 +173,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     async function updateData(arg: any, mode: Mode) {
-        let currentEvent: EventObject = fcEventToReactEvent(arg);
+        const toEdit = Array.isArray(arg) ? arg : [arg]; //make an array
+        let formatedEdit: EventObject[] = [];
+        toEdit.forEach((event) => {
+            let currentEvent: EventObject = fcEventToReactEvent(event);
+            formatedEdit.push(currentEvent);
+        });
+
         if (!flags.demandToggle) {
             setFlags((flags) => {
                 return { ...flags, showAnimation: false };
             });
         }
-        await editEventsInCalendar(currentEvent, mode); //update and forcing refresh of component "FullCalendar"
+        await editEventsInCalendar(formatedEdit, mode); //update and forcing refresh of component "FullCalendar"
     }
 
     function handlingResizeOfEvents() {
@@ -296,6 +302,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     */
     async function handleNewOrEditEvent(eventInWork: EventObject) {
         //if already existing
+        console.log(eventInWork);
         if (eventInWork.id !== undefined) updateData(eventInWork, Mode.updating);
         //otherwise create new Task
         else {
@@ -303,6 +310,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const id = await saveData([eventInWork]);
             eventInWork.id = id.value;
             currentExternalEvents.push(eventInWork);
+            console.log(currentExternalEvents);
 
             setState((state) => {
                 return {
@@ -333,7 +341,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 deadline: arg.event.extendedProps.deadline,
                 start: arg.event.startStr,
                 end: arg.event.endStr,
-                classNames: arg.event.classNames
+                classNames: arg.event.classNames,
+                duration: arg.event.extendedProps?.duration
             };
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
@@ -377,6 +386,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         return;
     }
 
+    async function autoAssignTasks() {
+        const assignedExternalEvents: EventObject[] = await window.api.getProposedPlan(state.externalEvents);
+        updateData(assignedExternalEvents, Mode.dragAndDrop);
+    }
+
     return (
         <>
             {isLoading || isUpdating ? (
@@ -395,6 +409,17 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 className={'mt-20 ml-auto mr-auto'}
                             >
                                 Add Task
+                            </Button>
+                            <Button
+                                color={'white'}
+                                backgroundColor={'#1e2b3'}
+                                disabled={false}
+                                onClick={() => {
+                                    autoAssignTasks();
+                                }}
+                                className={'mt-20 ml-auto mr-auto'}
+                            >
+                                Auto-Assign Tasks
                             </Button>
                         </div>
                         <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-52 mt-2 h-1/2 relative p-2">

@@ -79,10 +79,10 @@ export class Aggregator {
 
     async createFullWeekHourBundle() {
         const data: any = await this.aggregatingHours();
-        return this.filUp(data as IaggregatedHoursWithoutEnergy);
+        return this.fillUp(data as IaggregatedHoursWithoutEnergy);
     }
 
-    filUp(objectHours: IaggregatedHoursWithoutEnergy) {
+    fillUp(objectHours: IaggregatedHoursWithoutEnergy) {
         const days: WeekdayWithHours[] = [];
         const allKeys = Object.keys(objectHours);
         const enumWeekdays = Object.keys(weekdays);

@@ -30,7 +30,7 @@ export class dbMgr {
 
     createTable() {
         const tableQueries = [
-            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT)',
+            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT, duration TEXT)',
             'CREATE TABLE IF NOT EXISTS Report (timestamp text NOT NULL PRIMARY KEY, productive INTEGER NOT NULL, energy INTEGER NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL)'
             /*'CREATE TABLE IF NOT EXISTS Weekday (weekday TEXT NOT NULL PRIMARY KEY, avgProductive INTEGER NOT NULL, avgEnergy INTEGER NOT NULL)'*/
         ];
@@ -79,6 +79,10 @@ export class dbMgr {
                     valuesToChange = valuesToChange + ', start = ?, end = ?';
                     data.push(event.start, event.end);
                 }
+                if (event.duration) {
+                    valuesToChange = valuesToChange + ', duration = ?';
+                    data.push(event.duration);
+                }
                 data.push(event.id);
                 const sql = `UPDATE Events SET ${valuesToChange} WHERE id = ?`;
                 this.db.run(sql, data, (err: error) => {
@@ -123,9 +127,14 @@ export class dbMgr {
                         data.push(event.start, event.end);
                     }
                     if (event.deadline != undefined) {
-                        valuesToChange = valuesToChange + ', deadline)';
+                        valuesToChange = valuesToChange + ', deadline';
                         placeholders = ',?' + placeholders;
                         data.push(event.deadline);
+                    }
+                    if (event.duration != undefined) {
+                        valuesToChange = valuesToChange + ', duration)';
+                        placeholders = ',?' + placeholders;
+                        data.push(event.duration);
                     } else valuesToChange = valuesToChange + ')';
 
                     const sql = `INSERT INTO Events ${valuesToChange} VALUES(?,?${placeholders}`;

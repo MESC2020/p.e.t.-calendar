@@ -88,53 +88,51 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                 ''
             ) : (
                 <div className="h-full flex justify-center w-full min-size-stats">
-               
-                        <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
-                            <div id="cover" className="grid lg:grid-cols-2 grid-cols-1 grid-flow-row">
-                             <>
-                                    <div className="grid lg:grid-cols-2 grid-flow-row gap-x-5 m-3 gap-y-2 grid-cols-1">
-                                        <StatsBox text="Weekly avg. Productivity" className="box-squared ">
-                                            <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
-                                        </StatsBox>
-                                        <StatsBox text="Weekly avg. Energy" className="box-squared ">
-                                            <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
-                                        </StatsBox>{' '}
-                                        <StatsBox className="mr-8 w-full">
-                                            <div id="detail-information" className="overflow-hidden">
-                                                <div className="flex justify-between">
-                                                    <div className="flex">
-                                                        <div style={{ height: 35, width: 35 }}>
-                                                            <img src={process.env.PUBLIC_URL + '/someIcons/productive.png'} />
-                                                        </div>
-                                                        <p className="font-bold pl-1">Most productive weekday</p>
+                    <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
+                        <div id="cover" className="grid lg:grid-cols-2 grid-cols-1 grid-flow-row">
+                            <>
+                                <div className="grid lg:grid-cols-2 grid-flow-row gap-x-5 m-3 gap-y-2 grid-cols-1">
+                                    <StatsBox text="Weekly avg. Productivity" className="box-squared ">
+                                        <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
+                                    </StatsBox>
+                                    <StatsBox text="Weekly avg. Energy" className="box-squared ">
+                                        <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
+                                    </StatsBox>{' '}
+                                    <StatsBox className="mr-8 w-full">
+                                        <div id="detail-information" className="overflow-hidden">
+                                            <div className="flex justify-between">
+                                                <div className="flex">
+                                                    <div style={{ height: 35, width: 35 }}>
+                                                        <img src={process.env.PUBLIC_URL + '/someIcons/productive.png'} />
                                                     </div>
-                                                    <p className="pt-4" style={{ color: '#3b83f6' }}>
-                                                        {getHighestDay(measurement.productive)}
-                                                    </p>
+                                                    <p className="font-bold pl-1">Most productive weekday</p>
                                                 </div>
-                                                <div className="flex justify-between mt-2 ">
-                                                    <div className="flex">
-                                                        <div style={{ height: 35, width: 35 }}>
-                                                            <img src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
-                                                        </div>
-                                                        <p className="font-bold pl-1">Most energized weekday</p>
-                                                    </div>
-                                                    <p className="pt-4" style={{ color: '#3b83f6' }}>
-                                                        {getHighestDay(measurement.energy)}
-                                                    </p>
-                                                </div>
+                                                <p className="pt-4" style={{ color: '#3b83f6' }}>
+                                                    {getHighestDay(measurement.productive)}
+                                                </p>
                                             </div>
-                                        </StatsBox>
-                                    </div>
-                                </>
+                                            <div className="flex justify-between mt-2 ">
+                                                <div className="flex">
+                                                    <div style={{ height: 35, width: 35 }}>
+                                                        <img src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
+                                                    </div>
+                                                    <p className="font-bold pl-1">Most energized weekday</p>
+                                                </div>
+                                                <p className="pt-4" style={{ color: '#3b83f6' }}>
+                                                    {getHighestDay(measurement.energy)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </StatsBox>
+                                </div>
+                            </>
 
-                                <StatsBox text="Self-assessed Productivity & Energy" className="m-3">
-                                    <VictoryLineChart data={data!} />
-                                </StatsBox>
-                            </div>
+                            <StatsBox text="Self-assessed Productivity & Energy" className="m-3">
+                                <VictoryLineChart data={data!} />
+                            </StatsBox>
                         </div>
                     </div>
-              
+                </div>
             )}
         </>
     );
