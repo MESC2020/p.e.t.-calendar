@@ -94,8 +94,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             }
             if (mode === Mode.dragAndDrop) eventsInCalendar.push(event);
         }
-        if (mode === Mode.deleting) window.api.deleteEvents(event);
-        else window.api.updateEvents(event);
+        if (mode === Mode.deleting) window.api.deleteEvents(toEdit);
+        else window.api.updateEvents(toEdit);
 
         await setIsUpdating(true);
         setState(() => {

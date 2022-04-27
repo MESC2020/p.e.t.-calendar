@@ -52,8 +52,12 @@ export class dbMgr {
     }
 
     deleteEvents(data: EventObject[]) {
+        console.log('in delete');
         if (this.db != undefined) {
+            console.log('deleting');
+            console.log(data.length);
             for (let event of data) {
+                console.log(event);
                 if (event.id !== undefined) {
                     const sql = `DELETE FROM Events WHERE id = ?`;
                     this.db.run(sql, [event.id], (err: error) => {
