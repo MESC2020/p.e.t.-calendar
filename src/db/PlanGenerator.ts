@@ -424,7 +424,8 @@ export class PlanGenerator {
         const today = new Date();
         const d = today.getDay(); //get the current day
         const weekStart = today; //rewind to start day
-        const weekEnd = new Date(weekStart.getTime() + (7 - d) * 86400000 + 23 * 60 * 60 * 1000 + 59 * 60 * 1000); //add 6 days 23 hrs and 59 minutes
+        const weekStartMidnight = new Date(moment().hours(0).minutes(0).seconds(0).milliseconds(0).toISOString());
+        const weekEnd = new Date(weekStartMidnight.getTime() + (7 - d) * 86400000 + 23 * 60 * 60 * 1000 + 59 * 60 * 1000); //add 6 days 23 hrs and 59 minutes
         return [weekStart, weekEnd];
     }
 

@@ -8,8 +8,8 @@ import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
 import moment from 'moment';
-import { PlanGenerator } from '../../db/PlanGenerator';
 import AIpopup from './partials/AIpopup';
+import { display } from '@mui/system';
 
 export interface IOverviewPageProps {}
 
@@ -20,6 +20,8 @@ export enum colorPalettes {
     deadlineTooLateStroke = '#AB3238',
     calendarBlue = '#3788d8'
 }
+
+type aiPopupContent = { message: string; data: number | undefined; hasCancelButton: boolean; hasOkayButton: boolean; hasContinueButton: boolean };
 
 interface State {
     externalEvents: EventObject[];
@@ -33,6 +35,14 @@ export enum Mode {
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
     const [isUpdating, setIsUpdating] = useState(false);
+    const [autoAIislocked, setAutoAIislocked] = useState(true);
+    const [aiPopup, setAiPopup] = useState<aiPopupContent>({
+        message: '',
+        data: undefined,
+        hasCancelButton: false,
+        hasOkayButton: true,
+        hasContinueButton: false
+    });
 
     const [isLoading, setIsLoading] = useState(true);
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
@@ -304,7 +314,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     */
     async function handleNewOrEditEvent(eventInWork: EventObject) {
         //if already existing
-        console.log(eventInWork);
         if (eventInWork.id !== undefined) updateData(eventInWork, Mode.updating);
         //otherwise create new Task
         else {
@@ -312,7 +321,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const id = await saveData([eventInWork]);
             eventInWork.id = id.value;
             currentExternalEvents.push(eventInWork);
-            console.log(currentExternalEvents);
 
             setState((state) => {
                 return {
@@ -364,7 +372,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             timeLeft = deadlineHours - endDateHours;
             timeLeft = new Date(timeLeft).getHours();
         }
-        console.log(timeLeft);
 
         if (arg.event.backgroundColor === colorPalettes.deadlineWarning) {
             const newDiv = document.createElement('div');
@@ -388,9 +395,68 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
         return;
     }
+    function getWeek() {
+        const today = new Date();
+        const d = today.getDay(); //get the current day
+        const weekStart = today; //rewind to start day
+        const weekStartMidnight = new Date(moment().hours(0).minutes(0).seconds(0).milliseconds(0).toISOString());
+        const weekEnd = new Date(weekStartMidnight.getTime() + (7 - d) * 86400000 + 23 * 60 * 60 * 1000 + 59 * 60 * 1000); //add 6 days 23 hrs and 59 minutes
+        return [weekStart, weekEnd];
+    }
 
-    async function autoAssignTasks() {
-        const assignedExternalEvents: EventObject[] = await window.api.getProposedPlan(state.externalEvents);
+    async function getAffectedEventsInCaledar() {
+        const [weekStart, weekEnd] = getWeek();
+        const externalEvents: EventObject[] = [];
+        const events = state.events;
+
+        for (let event of state.events) {
+            if (new Date(event.start as string).getTime() > weekStart.getTime() && new Date(event.end as string).getTime() <= weekEnd.getTime()) {
+                event.start = undefined;
+                event.end = undefined;
+                externalEvents.push(event);
+                events.splice(events.indexOf(event), 1);
+            }
+        }
+        await setState((state) => {
+            return {
+                ...state,
+                events: events
+            };
+        });
+        return externalEvents;
+    }
+
+    function areEventsInCalendarEffected() {
+        const [weekStart, weekEnd] = getWeek();
+
+        for (let event of state.events) {
+            if (new Date(event.start as string).getTime() > weekStart.getTime() && new Date(event.end as string).getTime() <= weekEnd.getTime()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    async function autoAssignTasks(includeEventsInCalendar: boolean = false) {
+        let externalEvents = [...state.externalEvents];
+
+        //warning
+        if (areEventsInCalendarEffected()) {
+            if (includeEventsInCalendar) {
+                const toAddToExternal = await getAffectedEventsInCaledar();
+                externalEvents = [...externalEvents, ...toAddToExternal];
+            } else {
+                const popup = aiPopup;
+                popup.message = 'There are Tasks already schedulled in the current calendar week. This action will replan these tasks. Are you sure you want to continue?';
+                popup.hasCancelButton = true;
+                popup.hasContinueButton = true;
+                popup.hasOkayButton = false;
+                displayAIpopup(popup);
+                return;
+            }
+        }
+        const assignedExternalEvents: EventObject[] = await window.api.getProposedPlan(externalEvents);
+        console.log(assignedExternalEvents);
         const actuallyToUpdate: EventObject[] = [];
         assignedExternalEvents.forEach((event) => {
             if (event.start !== undefined && event.start !== null) {
@@ -399,11 +465,49 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         });
         await updateData(actuallyToUpdate, Mode.dragAndDrop);
         if (state.externalEvents.length > 0) {
-            document!.getElementById('overlay_AI')!.style.display = 'block';
-            setDisplayAutoAI(!displayAutoAI);
+            const aipopup: aiPopupContent = aiPopup;
+            aipopup.message = `Did not find appropriate Slot for ${state.externalEvents.length} tasks`;
+            aipopup.hasOkayButton = true;
+            aipopup.hasCancelButton = false;
+            aipopup.hasContinueButton = false;
+            displayAIpopup(aipopup);
+        }
+    }
+    function displayAIpopup(content: aiPopupContent) {
+        setAiPopup(content);
+        document!.getElementById('overlay_AI')!.style.display = 'block';
+        setDisplayAutoAI(true);
+    }
+
+    function unlockAI(unlock: boolean) {
+        if (unlock && autoAIislocked) {
+            setAutoAIislocked(!autoAIislocked);
+        } else if (!unlock && !autoAIislocked) {
+            setAutoAIislocked(!autoAIislocked);
         }
     }
 
+    function returnAIpopup() {
+        return (
+            <AIpopup
+                message={aiPopup.message}
+                hasCancelButton={aiPopup.hasCancelButton}
+                hasOkayButton={aiPopup.hasContinueButton}
+                hasContinueButton={aiPopup.hasContinueButton}
+                autoAssignTasks={autoAssignTasks}
+                className="mt-10 ml-14"
+                display={() => {
+                    document!.getElementById('overlay_AI')!.style.display = 'none';
+                    setDisplayAutoAI(false);
+                }}
+                data={state.externalEvents.length}
+            />
+        );
+    }
+
+    function handleEventResize(args: any) {
+        updateData(args, Mode.updating);
+    }
     return (
         <>
             {isLoading || isUpdating ? (
@@ -426,7 +530,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             <Button
                                 color={'white'}
                                 backgroundColor={'#46719C'}
-                                disabled={state.externalEvents.length === 0}
+                                disabled={autoAIislocked || state.externalEvents.length === 0}
                                 onClick={() => {
                                     autoAssignTasks();
                                 }}
@@ -470,6 +574,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                         eventDrop={handleDrop}
                                         eventReceive={handleEventReceive}
                                         eventLeave={handleExternalEventLeave}
+                                        eventResize={handleEventResize}
                                         eventClick={handleLeftclick}
                                         snapDuration={'00:15:00'}
                                         businessHours={{
@@ -480,7 +585,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                         firstDay={1} //Monday
                                     />
                                 </div>
-                                {flags.showGraphs ? <VerticalGraph showAnimation={flags.showAnimation} className="box z-20" /> : ''}
+                                {flags.showGraphs ? <VerticalGraph unlockAIbutton={unlockAI} showAnimation={flags.showAnimation} className="box z-20" /> : ''}
                                 <div id="overlay" className="">
                                     {displayTaskForm ? (
                                         <TaskForm
@@ -500,18 +605,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     )}
                                 </div>
                                 <div id="overlay_AI" className="">
-                                    {displayAutoAI ? (
-                                        <AIpopup
-                                            className="mt-10 ml-14"
-                                            display={() => {
-                                                document!.getElementById('overlay_AI')!.style.display = 'none';
-                                                setDisplayAutoAI(!displayAutoAI);
-                                            }}
-                                            data={state.externalEvents.length}
-                                        />
-                                    ) : (
-                                        ''
-                                    )}
+                                    {displayAutoAI ? returnAIpopup() : ''}
                                 </div>
                             </div>
                         </div>

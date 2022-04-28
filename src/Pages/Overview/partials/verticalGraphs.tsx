@@ -5,6 +5,7 @@ import { weekdays } from '../../../db/Aggregator';
 export interface IVerticalGraphProps {
     className?: string;
     showAnimation: boolean;
+    unlockAIbutton: any;
 }
 
 interface IpreparedData {
@@ -20,6 +21,8 @@ type GraphData = {
     y: number;
 };
 
+const THRESHOLD_TO_UNLOCK_AI = 16;
+
 const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<WeekdayWithHours[]>();
@@ -29,7 +32,6 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
             const days: WeekdayWithHours[] = await prepareData(res);
 
             setData(days);
-            console.log(data);
             if (days !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();
@@ -39,7 +41,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
         const days: WeekdayWithHours[] = [];
         const allKeys = Object.keys(objectHours);
         const enumWeekdays = Object.keys(weekdays);
-
+        let counterToUnlockAI = 0;
         let count = 0;
         //check if object is not empty
         if (allKeys.length !== 0) {
@@ -52,6 +54,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                     for (let keyTime in objectHours[keyDay]) {
                         const lastKeyTime: boolean = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1;
                         const [hour, minute] = keyTime.split(':');
+                        counterToUnlockAI++;
                         //if there are times skipped - filled them up with "00:00"
                         if (count < parseInt(hour)) {
                             const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
@@ -87,6 +90,11 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
                 days.push(final);
             });
         }
+
+        if (counterToUnlockAI >= THRESHOLD_TO_UNLOCK_AI) {
+            props.unlockAIbutton(true);
+        } else props.unlockAIbutton(false);
+
         return days;
     }
 

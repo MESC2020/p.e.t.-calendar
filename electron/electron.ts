@@ -170,6 +170,8 @@ ipcMain.on("delete-events", (event: any, args: any) => {
 ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
   if (aggregator === undefined) aggregator = new Aggregator(dbManager);
   const planner = new PlanGenerator(args, aggregator);
+  console.log("xxx");
+  for (let el of args) console.log(el);
   //console.log(await planner.generateAvaiableSlots());
   return planner.assignTasks();
 });

@@ -6,13 +6,24 @@ import RangeSlider from '../../../views/partials/RangeSlider';
 import TimeSelector from '../../../views/partials/TimeSelector';
 import moment from 'moment';
 
+enum buttonType {
+    cancel = 'cancel',
+    okay = 'okay',
+    continue = 'continue'
+}
+
 export interface IAIpopupProps {
     className?: string;
     onFocus?: any;
+    autoAssignTasks?: any;
 
     display: any;
 
     data: number;
+    message: string;
+    hasCancelButton: boolean;
+    hasContinueButton: boolean;
+    hasOkayButton: boolean;
 }
 const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
@@ -21,7 +32,8 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
     useEffect(() => {
         noScroll(true);
     });
-    const handleConfirmation = () => {
+    const handleConfirmation = (button: buttonType) => {
+        if (button === buttonType.continue) props.autoAssignTasks(true);
         props.display();
         noScroll(false);
     };
@@ -35,16 +47,56 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
         }
     }
 
-    return (
-        <>
-            <div id="popup" className={'card flex p-5 w-1/5 h-1/6 relative z-30' + ' ' + props.className}>
-                <div className="m-auto flex gap-x-1">
-                    <div className="mt-2">
-                        Did not find appropriate Slot for <strong>{props.data}</strong> tasks
-                    </div>
-                    <Button backgroundColor="" disabled={false} onClick={handleConfirmation} className={''}>
+    function returnButtons() {
+        if (props.hasCancelButton) {
+            return (
+                <div className="flex gap-x-2 justify-center">
+                    <Button
+                        backgroundColor="#648CB5"
+                        disabled={false}
+                        onClick={() => {
+                            handleConfirmation(buttonType.continue);
+                        }}
+                        className={''}
+                    >
+                        Continue
+                    </Button>
+
+                    <Button
+                        backgroundColor=""
+                        disabled={false}
+                        onClick={() => {
+                            handleConfirmation(buttonType.cancel);
+                        }}
+                        className={''}
+                    >
+                        Cancel
+                    </Button>
+                </div>
+            );
+        } else
+            return (
+                <div className="w-12 ">
+                    <Button
+                        backgroundColor=""
+                        disabled={false}
+                        onClick={() => {
+                            handleConfirmation(buttonType.okay);
+                        }}
+                        className={''}
+                    >
                         Okay
                     </Button>
+                </div>
+            );
+    }
+
+    return (
+        <>
+            <div id="popup" className={'card flex justify-center p-5 w-1/5 h-1/6 relative z-30' + ' ' + props.className}>
+                <div className="flex flex-col justify-center">
+                    <div className="mt-2 mb-2 text-justify ">{props.message}</div>
+                    <div className="flex justify-center">{returnButtons()}</div>
                 </div>
             </div>
         </>
