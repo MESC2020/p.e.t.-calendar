@@ -117,7 +117,7 @@ app.whenReady().then(() => {
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));
 
-  infinitePopUpLoop(width, height);
+  //infinitePopUpLoop(width, height);
   createWindow(width, height);
   //createPopupWindow(width, height);
   dbManager = new dbMgr();
@@ -170,6 +170,7 @@ ipcMain.on("delete-events", (event: any, args: any) => {
 ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
   if (aggregator === undefined) aggregator = new Aggregator(dbManager);
   const planner = new PlanGenerator(args, aggregator);
+  //console.log(await planner.generateAvaiableSlots());
   return planner.assignTasks();
 });
 

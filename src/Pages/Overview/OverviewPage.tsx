@@ -9,6 +9,7 @@ import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
 import moment from 'moment';
 import { PlanGenerator } from '../../db/PlanGenerator';
+import AIpopup from './partials/AIpopup';
 
 export interface IOverviewPageProps {}
 
@@ -35,6 +36,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
+    const [displayAutoAI, setDisplayAutoAI] = useState(false);
     const [flags, setFlags] = useState({
         showAnimation: true,
         demandToggle: true,
@@ -362,10 +364,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             timeLeft = deadlineHours - endDateHours;
             timeLeft = new Date(timeLeft).getHours();
         }
+        console.log(timeLeft);
 
         if (arg.event.backgroundColor === colorPalettes.deadlineWarning) {
             const newDiv = document.createElement('div');
-            const text = `${arg.event.title}:` + ' Deadline in ' + `${timeLeft}${timeLeft !== 1 ? 'hrs' : 'hr'}`;
+            const text = `${arg.event.title}:` + ' Deadline in ' + `${timeLeft === 0 ? 24 : timeLeft}${timeLeft !== 1 ? 'hrs' : 'hr'}`;
             const newContent = document.createTextNode(text);
             newDiv.appendChild(newContent);
             newDiv.style.overflow = 'hidden';
@@ -388,7 +391,17 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     async function autoAssignTasks() {
         const assignedExternalEvents: EventObject[] = await window.api.getProposedPlan(state.externalEvents);
-        updateData(assignedExternalEvents, Mode.dragAndDrop);
+        const actuallyToUpdate: EventObject[] = [];
+        assignedExternalEvents.forEach((event) => {
+            if (event.start !== undefined && event.start !== null) {
+                actuallyToUpdate.push(event);
+            }
+        });
+        await updateData(actuallyToUpdate, Mode.dragAndDrop);
+        if (state.externalEvents.length > 0) {
+            document!.getElementById('overlay_AI')!.style.display = 'block';
+            setDisplayAutoAI(!displayAutoAI);
+        }
     }
 
     return (
@@ -397,8 +410,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 ''
             ) : (
                 <div className="flex mr-5 mb-5 min-size">
-                    <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5">
-                        <div>
+                    <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5 mt-10">
+                        <div className="flex gap-x-2 ">
                             <Button
                                 color={'white'}
                                 backgroundColor={'#1e2b3'}
@@ -406,23 +419,23 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 onClick={() => {
                                     openTaskMenu();
                                 }}
-                                className={'mt-20 ml-auto mr-auto'}
+                                className={''}
                             >
                                 Add Task
                             </Button>
                             <Button
                                 color={'white'}
-                                backgroundColor={'#1e2b3'}
-                                disabled={false}
+                                backgroundColor={'#46719C'}
+                                disabled={state.externalEvents.length === 0}
                                 onClick={() => {
                                     autoAssignTasks();
                                 }}
-                                className={'mt-20 ml-auto mr-auto'}
+                                className={''}
                             >
                                 Auto-Assign Tasks
                             </Button>
                         </div>
-                        <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-52 mt-2 h-1/2 relative p-2">
+                        <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
                             {state.externalEvents.map((event) => (
                                 <ExternalEvent onClick={handleLeftclick} event={event} />
                             ))}
@@ -481,6 +494,20 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                             data={currentEvent}
                                             onDelete={editEventsInCalendar}
                                             callback={setCurrentEvent}
+                                        />
+                                    ) : (
+                                        ''
+                                    )}
+                                </div>
+                                <div id="overlay_AI" className="">
+                                    {displayAutoAI ? (
+                                        <AIpopup
+                                            className="mt-10 ml-14"
+                                            display={() => {
+                                                document!.getElementById('overlay_AI')!.style.display = 'none';
+                                                setDisplayAutoAI(!displayAutoAI);
+                                            }}
+                                            data={state.externalEvents.length}
                                         />
                                     ) : (
                                         ''
