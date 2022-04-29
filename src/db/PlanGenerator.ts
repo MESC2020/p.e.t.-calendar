@@ -66,8 +66,19 @@ export class PlanGenerator {
         FAVOR_PRODUCTIVITY: 2
     };
 
-    constructor(externalTasks: EventObject[], aggregator: Aggregator) {
-        this.externTasks = externalTasks;
+    constructor(permissionToIncludeEventsInCalendar: boolean, aggregator: Aggregator, allEvents: any) {
+        const [weekStart, weekEnd] = this.getWeek();
+        const tasksToAssign: EventObject[] = [];
+
+        allEvents.forEach((event: EventObject) => {
+            if (new Date(event.start as string).getTime() > weekStart.getTime() && new Date(event.end as string).getTime() <= weekEnd.getTime() && permissionToIncludeEventsInCalendar) {
+                tasksToAssign.push(event);
+            } else if (event.start === undefined || event.start === null) {
+                tasksToAssign.push(event);
+            }
+        });
+
+        this.externTasks = tasksToAssign;
         this.aggregator = aggregator;
         this.sortTasks();
     }
@@ -199,7 +210,7 @@ export class PlanGenerator {
             deadlineDay = deadline.toLocaleString('en-us', { weekday: 'long' });
         }
         //const deadlineHour = parseInt(deadline.toLocaleTimeString('en-de', { hour: '2-digit' }));
-        const eventDuration = event.duration; //TODO duration missing in database (even necessary???)
+        const eventDuration = event.durationTime; //TODO duration missing in database (even necessary???)
         const [eventDurationHours, eventDurationMinutes] = eventDuration!.split(':');
         const exactHours = parseInt(eventDurationHours) + parseInt(eventDurationMinutes) / 60;
 
@@ -458,7 +469,7 @@ export class PlanGenerator {
     private takeSlot(availableSlots: timeProductivityCategory[], ISOweekday: string, timeCategories: timeProductivityCategory[], event: EventObject) {
         const weekdayDate = new Date(ISOweekday);
         const weekdayMilliseconds = weekdayDate.getTime();
-        const [durationHour, durationMinute] = event.duration!.split(':');
+        const [durationHour, durationMinute] = event.durationTime!.split(':');
         const exactDurationHour = parseInt(durationHour) + parseInt(durationMinute) / 60;
         let hourFromOriginal;
         let hourEndOriginal;

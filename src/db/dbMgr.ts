@@ -73,19 +73,21 @@ export class dbMgr {
     updateEvents(data: EventObject[]) {
         if (this.db != undefined) {
             for (let event of data) {
+                console.log(event.durationTime);
                 let valuesToChange = 'title = ?, demand = ?, deadline = ?';
                 const demand = this.retrieveDemandLevel(event.classNames);
                 const data = [event.title, demand];
                 if (event.deadline != undefined) data.push(event.deadline);
                 else data.push(undefined);
 
-                if (event.start || event.start === undefined) {
+                if (event.start || event.start === undefined || event.start === null) {
                     valuesToChange = valuesToChange + ', start = ?, end = ?';
                     data.push(event.start, event.end);
                 }
-                if (event.duration) {
+                if (event.durationTime) {
+                    console.log('updating duration');
                     valuesToChange = valuesToChange + ', duration = ?';
-                    data.push(event.duration);
+                    data.push(event.durationTime);
                 }
                 data.push(event.id);
                 const sql = `UPDATE Events SET ${valuesToChange} WHERE id = ?`;
@@ -135,10 +137,10 @@ export class dbMgr {
                         placeholders = ',?' + placeholders;
                         data.push(event.deadline);
                     }
-                    if (event.duration != undefined) {
+                    if (event.durationTime != undefined) {
                         valuesToChange = valuesToChange + ', duration)';
                         placeholders = ',?' + placeholders;
-                        data.push(event.duration);
+                        data.push(event.durationTime);
                     } else valuesToChange = valuesToChange + ')';
 
                     const sql = `INSERT INTO Events ${valuesToChange} VALUES(?,?${placeholders}`;

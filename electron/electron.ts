@@ -5,9 +5,9 @@ import { Aggregator } from "../src/db/Aggregator";
 import { PlanGenerator } from "../src/db/PlanGenerator";
 
 //dev toole extension
-/*import installExtension, {
+import installExtension, {
   REACT_DEVELOPER_TOOLS,
-} from "electron-devtools-installer";*/
+} from "electron-devtools-installer";
 
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
@@ -97,7 +97,7 @@ function createWindow(width: any, height: any) {
   // mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   mainWindow.on("close", (event: any) => {
     if (popupWindow) popupWindow.destroy();
@@ -110,11 +110,11 @@ function createWindow(width: any, height: any) {
 app.whenReady().then(() => {
   const mainScreen = screen.getPrimaryDisplay();
   const { width, height } = mainScreen.workAreaSize;
-  /*installExtension(REACT_DEVELOPER_TOOLS, {
+  installExtension(REACT_DEVELOPER_TOOLS, {
     loadExtensionOptions: { allowFileAccess: true },
   })
     .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log("An error occurred: ", err));*/
+    .catch((err) => console.log("An error occurred: ", err));
 
   infinitePopUpLoop(width, height);
   createWindow(width, height);
@@ -168,11 +168,17 @@ ipcMain.on("delete-events", (event: any, args: any) => {
 });
 ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
   if (aggregator === undefined) aggregator = new Aggregator(dbManager);
-  const planner = new PlanGenerator(args, aggregator);
+  const planner = new PlanGenerator(
+    args,
+    aggregator,
+    await dbManager.getAllData("Events")
+  );
   console.log("xxx");
   for (let el of args) console.log(el);
   //console.log(await planner.generateAvaiableSlots());
-  const result = planner.assignTasks();
+  const result = await planner.assignTasks();
+  dbManager.updateEvents(result);
+  console.log("YYY");
   console.log(result);
   return result;
 });

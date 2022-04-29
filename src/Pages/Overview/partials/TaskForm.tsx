@@ -51,7 +51,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         deadline: props.data.deadline ? props.data.deadline : undefined,
         start: props.data.start ? props.data.start : undefined,
         end: props.data.end ? props.data.end : undefined,
-        duration: props.data.start ? timeDifference() : props.data.duration ? props.data.duration : STANDARD_DURATION
+        durationTime: props.data.durationTime ? props.data.durationTime : STANDARD_DURATION
     });
     const today = moment().minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
     const placeholder = moment().add(1, 'days').minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
@@ -125,6 +125,24 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         }
     }
 
+    function updateDurationAndEndDate(durationTime: string, endDate?: string) {
+        const newContent =
+            endDate !== undefined
+                ? {
+                      durationTime: durationTime,
+                      end: endDate
+                  }
+                : {
+                      durationTime: durationTime
+                  };
+        setExternalEvent((state) => {
+            return {
+                ...state,
+                ...newContent
+            };
+        });
+    }
+
     return (
         <>
             <div id="popup" className={'card flex flex-col p-5 w-3/4 h-3/4 relative z-30' + ' ' + props.className}>
@@ -148,7 +166,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 <div className="flex mt-4 ml-10 gap-x-4">
                     <div className="flex flex-col">
                         <p>Duration (h/m)</p>
-                        <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.duration} onChange={handleExternalEvent} />
+                        <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.durationTime} onChange={updateDurationAndEndDate} />
                     </div>
                     <div className="">
                         <p>Deadline?</p>

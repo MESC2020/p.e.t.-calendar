@@ -21,11 +21,11 @@ declare global {
         end: string | undefined;
         deadline: string | undefined;
         classNames: string[];
+        durationTime: string;
         backgroundColor?: string;
         borderColor?: string;
         textColor?: string;
         demand?: number;
-        duration?: string;
     };
 }
 export {};

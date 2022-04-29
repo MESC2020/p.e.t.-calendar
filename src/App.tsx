@@ -12,6 +12,7 @@ global.emptyEventObject = {
     deadline: undefined,
     start: undefined,
     end: undefined,
+    durationTime: '02:00',
     classNames: []
 };
 class App extends Component {
