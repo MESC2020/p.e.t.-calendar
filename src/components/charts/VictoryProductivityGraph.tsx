@@ -18,7 +18,7 @@ const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (pro
         <svg className="" width={1560} height={262} transform="rotate(90), translate(600,700)">
             <VictoryChart theme={VictoryTheme.material} domain={{ y: [0, 7] }} horizontal={false} standalone={false} width={1605} height={262}>
                 <VictoryArea
-                    interpolation={'monotoneX'}
+                    interpolation={'monotoneX'} //stepBefore
                     style={{
                         data: {
                             fill: '#c43a31',

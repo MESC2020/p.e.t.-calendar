@@ -81,3 +81,7 @@
 .min-height {
     min-height: 220px;
 }
+
+.min-size-statsPage {
+    min-width: 618px;
+}

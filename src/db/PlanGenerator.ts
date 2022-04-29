@@ -649,7 +649,8 @@ export class PlanGenerator {
                 [hourBeforePreviously, minuteBeforePreviously] = timeCatBeforePreviously.from.split(':');
                 timeBefore = timeCatBefore.totalDuration;
                 prodBefore = timeCatBefore.avgPro;
-            } else if (indexBackwards - 1 >= 0) {
+            } else if (indexBackwards - 1 < 0) {
+                console.log('setting hardlock to true');
                 continueWithBefore = false;
                 hardLockBefore = true;
             }
@@ -662,7 +663,7 @@ export class PlanGenerator {
                 [hourForwardPreviously, minuteForwardPriviously] = timeCatForwardPreviously.end.split(':');
                 timeForward = timeCatForward.totalDuration;
                 prodForward = timeCatForward.avgPro;
-            } else if (indexBackwards - 1 >= 0) {
+            } else if (indexBackwards - 1 < 0) {
                 continueWithForward = false;
                 hardLockForward = true;
             }
@@ -692,16 +693,22 @@ export class PlanGenerator {
                 totalScore = totalScore + this.rateTimeCategory([Math.abs(eventDemand - prodBefore)], rateCategoryMode.prod) + MULTIPLE_TIME_SLOTS_PENALTY;
                 if (prodBefore === 0) totalScore = totalScore - 10000;
                 continueWithForward = false;
-                summedUpTime = summedUpTime + timeBefore;
-                result.push(timeCatBefore as timeProductivityCategory);
+                if (!result.includes(timeCatForward as timeProductivityCategory)) {
+                    summedUpTime = summedUpTime + timeBefore;
+                    result.push(timeCatBefore as timeProductivityCategory);
+                }
             } else if (!hardLockForward && prodForward !== undefined && timeForward !== undefined) {
                 totalScore = totalScore + this.rateTimeCategory([Math.abs(eventDemand - prodForward)], rateCategoryMode.prod) + MULTIPLE_TIME_SLOTS_PENALTY;
                 if (prodForward === 0) totalScore = totalScore - 10000;
                 continueWithBefore = false;
-                summedUpTime = summedUpTime + timeForward;
-                result.push(timeCatForward as timeProductivityCategory);
+                if (!result.includes(timeCatForward as timeProductivityCategory)) {
+                    summedUpTime = summedUpTime + timeForward;
+                    result.push(timeCatForward as timeProductivityCategory);
+                }
             }
+            console.log(hardLockBefore);
             indexBackwards--;
+            console.log(indexBackwards);
             indexForward++;
         }
         console.log(`summed up time ${summedUpTime}`);

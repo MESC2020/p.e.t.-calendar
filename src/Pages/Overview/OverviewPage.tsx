@@ -30,7 +30,8 @@ interface State {
 export enum Mode {
     updating = 'updating',
     deleting = 'deleting',
-    dragAndDrop = 'dragAndDrop'
+    dragAndDrop = 'dragAndDrop',
+    assigning = 'assigning'
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
@@ -83,6 +84,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         const externalEvents: EventObject[] = state.externalEvents;
         let alreadyChanged = false;
         const toEdit = Array.isArray(event) ? event : [event]; //make it an array, in case it's not one
+        console.log(toEdit);
+        console.log(eventsInCalendar);
+        console.log(externalEvents);
 
         for (let event of toEdit) {
             for (let eventCalendar of eventsInCalendar) {
@@ -105,6 +109,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 }
             }
             if (mode === Mode.dragAndDrop) eventsInCalendar.push(event);
+            if (mode === Mode.assigning) {
+                if (event.start !== undefined && event.start !== null) {
+                    eventsInCalendar.push(event);
+                } else externalEvents.push(event);
+            }
         }
         if (mode === Mode.deleting) window.api.deleteEvents(toEdit);
         else window.api.updateEvents(toEdit);
@@ -404,25 +413,30 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         return [weekStart, weekEnd];
     }
 
-    async function getAffectedEventsInCaledar() {
+    function getAffectedEventsInCaledar() {
         const [weekStart, weekEnd] = getWeek();
         const externalEvents: EventObject[] = [];
-        const events = state.events;
+        const events = [...state.events];
+        const external = [...state.externalEvents];
 
-        for (let event of state.events) {
+        for (let event of events) {
             if (new Date(event.start as string).getTime() > weekStart.getTime() && new Date(event.end as string).getTime() <= weekEnd.getTime()) {
                 event.start = undefined;
                 event.end = undefined;
                 externalEvents.push(event);
-                events.splice(events.indexOf(event), 1);
+                // events.splice(events.indexOf(event), 1);
             }
         }
+        for (let event of external) {
+            externalEvents.push(event);
+        }
+        /*
         await setState((state) => {
             return {
                 ...state,
                 events: events
             };
-        });
+        });*/
         return externalEvents;
     }
 
@@ -443,8 +457,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         //warning
         if (areEventsInCalendarEffected()) {
             if (includeEventsInCalendar) {
-                const toAddToExternal = await getAffectedEventsInCaledar();
-                externalEvents = [...externalEvents, ...toAddToExternal];
+                //const toAddToExternal = getAffectedEventsInCaledar();
+                //externalEvents = toAddToExternal;
             } else {
                 const popup = aiPopup;
                 popup.message = 'There are Tasks already schedulled in the current calendar week. This action will replan these tasks. Are you sure you want to continue?';
@@ -456,17 +470,18 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             }
         }
         const assignedExternalEvents: EventObject[] = await window.api.getProposedPlan(externalEvents);
-        console.log(assignedExternalEvents);
         const actuallyToUpdate: EventObject[] = [];
+        /*
         assignedExternalEvents.forEach((event) => {
             if (event.start !== undefined && event.start !== null) {
                 actuallyToUpdate.push(event);
             }
-        });
-        await updateData(actuallyToUpdate, Mode.dragAndDrop);
+        });*/
+        await updateData(assignedExternalEvents, Mode.assigning);
         if (state.externalEvents.length > 0) {
             const aipopup: aiPopupContent = aiPopup;
-            aipopup.message = `Did not find appropriate Slot for ${state.externalEvents.length} tasks`;
+            const text = state.externalEvents.length > 1 ? `${state.externalEvents.length} tasks` : `${state.externalEvents.length} task`;
+            aipopup.message = [`Did not find appropriate Slot for `, `${text}`] as any;
             aipopup.hasOkayButton = true;
             aipopup.hasCancelButton = false;
             aipopup.hasContinueButton = false;

@@ -20,7 +20,7 @@ export interface IAIpopupProps {
     display: any;
 
     data: number;
-    message: string;
+    message: any[] | any;
     hasCancelButton: boolean;
     hasContinueButton: boolean;
     hasOkayButton: boolean;
@@ -45,6 +45,13 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
         else {
             root!.style.overflow = 'scroll';
         }
+    }
+
+    function ifMultipleStrings() {
+        let message = '';
+        return props.message.map((element: any, index: number) => {
+            return index === 0 ? <p className="">{element}</p> : <p className="font-bold">{element}</p>;
+        });
     }
 
     function returnButtons() {
@@ -95,7 +102,7 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
         <>
             <div id="popup" className={'card flex justify-center p-5 w-1/5 h-1/6 relative z-30' + ' ' + props.className}>
                 <div className="flex flex-col justify-center">
-                    <div className="mt-2 mb-2 text-justify ">{props.message}</div>
+                    <div className="mt-2 mb-2 text-justify ">{Array.isArray(props.message) ? ifMultipleStrings() : props.message}</div>
                     <div className="flex justify-center">{returnButtons()}</div>
                 </div>
             </div>

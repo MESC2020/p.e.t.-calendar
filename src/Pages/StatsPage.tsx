@@ -87,7 +87,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
             {isLoading ? (
                 ''
             ) : (
-                <div className="h-full flex justify-center w-full min-size-stats">
+                <div className="h-full flex justify-center w-full min-size-statsPage">
                     <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
                         <div id="cover" className="grid lg:grid-cols-2 grid-cols-1 grid-flow-row">
                             <>
@@ -107,7 +107,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                                                     </div>
                                                     <p className="font-bold pl-1">Most productive weekday</p>
                                                 </div>
-                                                <p className="pt-4" style={{ color: '#3b83f6' }}>
+                                                <p className="" style={{ color: '#3b83f6' }}>
                                                     {getHighestDay(measurement.productive)}
                                                 </p>
                                             </div>
@@ -118,7 +118,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                                                     </div>
                                                     <p className="font-bold pl-1">Most energized weekday</p>
                                                 </div>
-                                                <p className="pt-4" style={{ color: '#3b83f6' }}>
+                                                <p className="" style={{ color: '#3b83f6' }}>
                                                     {getHighestDay(measurement.energy)}
                                                 </p>
                                             </div>
@@ -139,37 +139,3 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
 };
 
 export default StatsPage;
-
-/*<div className="flex justify-end w-11/12 bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
-                        <div className="w-1/2 b flex flex-col border-black border-2">
-                            <StatsBox text="Weekly avg. Productivity" className="box-squared align-middle border-black border-2">
-                                <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
-                            </StatsBox>
-                            <StatsBox text="Weekly avg. Energy" className="box-squared border-black border-2">
-                                <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
-                            </StatsBox>
-                        </div>
-                        <div className=" w-full border-black border-2">
-                            <StatsBox text="Self-assessed Productivity & Energy" className="box-stretched border-black border-2">
-                                <VictoryLineChart data={completeAndRetrieveData()} />
-                            </StatsBox>
-                        </div>
-                    </div>*/
-
-/*<div id="cover" className="flex flex-row h-5/6">
-                            <div className="w-1/3 flex flex-col justify-between m-5 ">
-                                <StatsBox text="Weekly avg. Productivity" className="w-8/12 h-72 box-squared ">
-                                    <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
-                                </StatsBox>
-                                <StatsBox text="Weekly avg. Energy" className="h-72 w-8/12 box-squared ">
-                                    <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
-                                </StatsBox>
-                            </div>
-                            {document.getElementById('cover') ? (
-                                <StatsBox text="Self-assessed Productivity & Energy" className="m-5 ">
-                                    <VictoryLineChart width={2 * (document.getElementById('cover')!.offsetWidth / 3)} height={document.getElementById('cover')!.offsetHeight} data={data!} />
-                                </StatsBox>
-                            ) : (
-                                ''
-                            )}
-                        </div>*/

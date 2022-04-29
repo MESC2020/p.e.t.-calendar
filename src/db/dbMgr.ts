@@ -79,7 +79,7 @@ export class dbMgr {
                 if (event.deadline != undefined) data.push(event.deadline);
                 else data.push(undefined);
 
-                if (event.start) {
+                if (event.start || event.start === undefined) {
                     valuesToChange = valuesToChange + ', start = ?, end = ?';
                     data.push(event.start, event.end);
                 }
