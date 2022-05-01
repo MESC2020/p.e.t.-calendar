@@ -392,9 +392,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 title: arg.event.title,
                 deadline: arg.event.extendedProps.deadline,
                 start: arg.event.startStr,
-                end: arg.event.endStr,
+                end: calculateEndDate(arg.event.duration, arg.event.startStr),
                 classNames: arg.event.classNames,
-                durationTime: arg.event.extendedProps?.durationTime
+                durationTime: arg.event.extendedProps.durationTime
             };
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
@@ -402,7 +402,28 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
         return event;
     }
+    const timeDifference = (start: string, end: string) => {
+        const [startHour, startMinute] = new Date(start).toLocaleTimeString('en-de', { hour: '2-digit', minute: '2-digit' }).split(':');
+        const [endHour, endMinute] = new Date(end).toLocaleTimeString('en-de', { hour: '2-digit', minute: '2-digit' }).split(':');
 
+        const difHour = (parseInt(endHour) - parseInt(startHour)) * 60; //in minutes
+        const difMinute = parseInt(endMinute) - parseInt(startMinute);
+        const result = (difHour + difMinute) / 60;
+        const format = difMinute === 0 ? formatNumber(result) : formatNumber(Math.floor(result), (parseInt(result.toString().split('.')[1]) * 60).toString());
+
+        return format;
+    };
+
+    const formatNumber = (hour: number, minute: string = '00') => {
+        return hour >= 10 ? `${hour}:${minute}` : `0${hour}:${minute}`;
+    };
+
+    function calculateEndDate(duration: string, startDate: string) {
+        const startDateMilliseconds = new Date(startDate).getTime();
+        const [hours, minutes] = duration.split(':');
+        const durationMilliseconds = parseInt(hours) * 60 * 60 * 1000 + parseInt(minutes) * 60 * 1000;
+        return new Date(startDateMilliseconds + durationMilliseconds).toISOString();
+    }
     /*
        Content injection - add deadline information if necessary
     */

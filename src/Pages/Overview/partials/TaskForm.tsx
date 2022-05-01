@@ -5,6 +5,7 @@ import { colorPalettes, Mode } from '../OverviewPage';
 import RangeSlider from '../../../views/partials/RangeSlider';
 import TimeSelector from '../../../views/partials/TimeSelector';
 import moment from 'moment';
+import { State } from 'history';
 
 export interface ITaskFormProps {
     className?: string;
@@ -22,22 +23,6 @@ const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
 const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     //to display duration
-    const timeDifference = () => {
-        const startHour = parseInt(props.data.start!.charAt(11) + props.data.start!.charAt(12));
-        const startMinute = parseInt(props.data.start!.charAt(14) + props.data.start!.charAt(15));
-        const endHour = parseInt(props.data.end!.charAt(11) + props.data.end!.charAt(12));
-        const endMinute = parseInt(props.data.end!.charAt(14) + props.data.end!.charAt(15));
-        const difHour = (endHour - startHour) * 60; //in minutes
-        const difMinute = endMinute - startMinute;
-        const result = (difHour + difMinute) / 60;
-        const format = difMinute === 0 ? formatNumber(result) : formatNumber(Math.floor(result), (parseInt(result.toString().split('.')[1]) * 60).toString());
-
-        return format;
-    };
-
-    const formatNumber = (hour: number, minute: string = '00') => {
-        return hour >= 10 ? `${hour}:${minute}` : `0${hour}:${minute}`;
-    };
 
     const showDeadlineOrNot = props.data.deadline ? true : false;
     const [deadlineToggle, setDeadlineToggle] = useState(showDeadlineOrNot);
@@ -51,7 +36,8 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         deadline: props.data.deadline ? props.data.deadline : undefined,
         start: props.data.start ? props.data.start : undefined,
         end: props.data.end ? props.data.end : undefined,
-        durationTime: props.data.durationTime ? props.data.durationTime : STANDARD_DURATION
+        durationTime: props.data.durationTime ? props.data.durationTime : STANDARD_DURATION,
+        duration: STANDARD_DURATION //durationTime is for DB and duration is for fc (can't access duration later, because it's a hidden property of fc)
     });
     const today = moment().minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
     const placeholder = moment().add(1, 'days').minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
@@ -75,8 +61,13 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleConfirmation = () => {
         const copyEvent = { ...externalEvent };
+
         props.onDeadline(copyEvent);
+
         setExternalEvent({ ...copyEvent });
+
+        console.log(copyEvent);
+
         if (props.data.id) props.callback(emptyEventObject);
         addOrRemoveNoScroll(false);
 
@@ -130,10 +121,12 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
             endDate !== undefined
                 ? {
                       durationTime: durationTime,
+                      duration: durationTime,
                       end: endDate
                   }
                 : {
-                      durationTime: durationTime
+                      durationTime: durationTime,
+                      duration: durationTime
                   };
         setExternalEvent((state) => {
             return {
