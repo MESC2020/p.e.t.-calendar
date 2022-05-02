@@ -12,7 +12,6 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
     let textColor = props.event?.textColor || 'white';
 
     useEffect(() => {
-        console.log(props.event.backgroundColor);
         if (elRef.current != null) {
             let draggable = new Draggable(elRef.current, {
                 eventData: function () {

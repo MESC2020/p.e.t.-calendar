@@ -30,8 +30,9 @@ export class dbMgr {
 
     createTable() {
         const tableQueries = [
-            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT, duration TEXT)',
+            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT, durationTime TEXT)',
             'CREATE TABLE IF NOT EXISTS Report (timestamp text NOT NULL PRIMARY KEY, productive INTEGER NOT NULL, energy INTEGER NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL)'
+
             /*'CREATE TABLE IF NOT EXISTS Weekday (weekday TEXT NOT NULL PRIMARY KEY, avgProductive INTEGER NOT NULL, avgEnergy INTEGER NOT NULL)'*/
         ];
         if (this.db != undefined) {
@@ -52,12 +53,8 @@ export class dbMgr {
     }
 
     deleteEvents(data: EventObject[]) {
-        console.log('in delete');
         if (this.db != undefined) {
-            console.log('deleting');
-            console.log(data.length);
             for (let event of data) {
-                console.log(event);
                 if (event.id !== undefined) {
                     const sql = `DELETE FROM Events WHERE id = ?`;
                     this.db.run(sql, [event.id], (err: error) => {
@@ -73,9 +70,8 @@ export class dbMgr {
     updateEvents(data: EventObject[]) {
         if (this.db != undefined) {
             for (let event of data) {
-                console.log(event.durationTime);
                 let valuesToChange = 'title = ?, demand = ?, deadline = ?';
-                const demand = this.retrieveDemandLevel(event.classNames);
+                const demand = this.retrieveDemandLevel(event);
                 const data = [event.title, demand];
                 if (event.deadline != undefined) data.push(event.deadline);
                 else data.push(undefined);
@@ -85,8 +81,7 @@ export class dbMgr {
                     data.push(event.start, event.end);
                 }
                 if (event.durationTime) {
-                    console.log('updating duration');
-                    valuesToChange = valuesToChange + ', duration = ?';
+                    valuesToChange = valuesToChange + ', durationTime = ?';
                     data.push(event.durationTime);
                 }
                 data.push(event.id);
@@ -124,7 +119,7 @@ export class dbMgr {
                 if (event.id == undefined) {
                     let valuesToChange = '(title, demand';
                     let placeholders = ')';
-                    const demand = this.retrieveDemandLevel(event.classNames);
+                    const demand = this.retrieveDemandLevel(event);
 
                     const data = [event.title, demand];
                     if (event.start !== undefined && event.end !== undefined) {
@@ -138,7 +133,7 @@ export class dbMgr {
                         data.push(event.deadline);
                     }
                     if (event.durationTime != undefined) {
-                        valuesToChange = valuesToChange + ', duration)';
+                        valuesToChange = valuesToChange + ', durationTime)';
                         placeholders = ',?' + placeholders;
                         data.push(event.durationTime);
                     } else valuesToChange = valuesToChange + ')';
@@ -160,9 +155,13 @@ export class dbMgr {
         }
     }
 
-    private retrieveDemandLevel(classNames: string[]) {
-        for (let demandLevel of classNames) {
-            if (demandLevel.includes('-')) return parseInt(demandLevel.slice(-1));
+    private retrieveDemandLevel(event: EventObject) {
+        if (event.classNames === undefined || event.classNames === null) {
+            return event.demand;
+        } else {
+            for (let demandLevel of event.classNames) {
+                if (demandLevel.includes('-')) return parseInt(demandLevel.slice(-1));
+            }
         }
     }
 

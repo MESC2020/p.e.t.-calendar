@@ -72,11 +72,17 @@ export class PlanGenerator {
 
         allEvents.forEach((event: EventObject) => {
             if (new Date(event.start as string).getTime() > weekStart.getTime() && new Date(event.end as string).getTime() <= weekEnd.getTime() && permissionToIncludeEventsInCalendar) {
+                event.start = undefined;
+                event.end = undefined;
                 tasksToAssign.push(event);
             } else if (event.start === undefined || event.start === null) {
+                event.start = undefined;
+                event.end = undefined;
                 tasksToAssign.push(event);
             }
         });
+        console.log('after retrieving all data');
+        console.log(tasksToAssign);
 
         this.externTasks = tasksToAssign;
         this.aggregator = aggregator;
@@ -90,12 +96,6 @@ export class PlanGenerator {
             const demandLevels = Object.values(demandLevel);
             this.externTasks.forEach((event) => {
                 let eventsList: EventObject[] = [];
-                for (let className of event.classNames) {
-                    if (className.includes('demand-')) {
-                        event.demand = parseInt(className.split('-')[1]);
-                        break;
-                    }
-                }
                 const key = event.demand ? demandLevels[event.demand - 1] : demandLevels[demandLevels.length - 1];
                 let hasDeadline = event.deadline !== undefined && event.deadline !== null;
                 if (hasDeadline) {
@@ -150,10 +150,11 @@ export class PlanGenerator {
                 }
             });
         }
+        console.log(this.sortedByDeadlineAndDemand);
+        console.log(this.sortedByDemand);
     }
 
     async assignTasks() {
-        console.log('in assigning');
         const [weekStart, weekEnd] = this.getWeek();
         const availableSlots = await this.generateAvaiableSlots();
         const sortedByDeadlineAndDemand = await this.sortedByDeadlineAndDemand;
@@ -161,7 +162,8 @@ export class PlanGenerator {
         //assign first tasks with deadline
         if (Object.keys(sortedByDeadlineAndDemand).length !== 0) {
             for (let demandLevel in sortedByDeadlineAndDemand) {
-                for (let event of sortedByDeadlineAndDemand[demandLevel]) {
+                for (let index = sortedByDeadlineAndDemand[demandLevel].length - 1; index >= 0; index--) {
+                    const event = sortedByDeadlineAndDemand[demandLevel][index];
                     console.log('before slot assignment with deadline');
                     console.log(availableSlots);
                     console.log(event);
@@ -172,9 +174,6 @@ export class PlanGenerator {
                     if (isAssigned && event.start !== undefined && event.start !== null && event.end !== undefined && event.end !== null) {
                         this.sortedByDeadlineAndDemand[demandLevel].splice(this.sortedByDeadlineAndDemand[demandLevel].indexOf(event), 1);
                     }
-                    console.log('after slot assignment with deadline');
-                    console.log(availableSlots);
-
                     console.log(event);
                 }
             }
@@ -182,7 +181,10 @@ export class PlanGenerator {
         //events with no deadline or deadline is not until next week
         if (Object.keys(sortedByDemand).length !== 0) {
             for (let demandLevel in sortedByDemand) {
-                for (let event of sortedByDemand[demandLevel]) {
+                console.log(sortedByDemand[demandLevel]);
+                for (let index = sortedByDemand[demandLevel].length - 1; index >= 0; index--) {
+                    //going backwards is important since elements get deleted (messes up index)
+                    const event = sortedByDemand[demandLevel][index];
                     console.log('before slot assignment normal');
                     console.log(availableSlots);
                     console.log(event);
@@ -192,9 +194,6 @@ export class PlanGenerator {
                     if (isAssigned && event.start !== undefined && event.start !== null && event.end !== undefined && event.end !== null) {
                         this.sortedByDemand[demandLevel].splice(this.sortedByDemand[demandLevel].indexOf(event), 1);
                     }
-
-                    console.log('after slot assignment normal');
-                    console.log(availableSlots);
 
                     console.log(event);
                 }
@@ -250,15 +249,15 @@ export class PlanGenerator {
         }
 
         //print
-
+        /*
         for (let rating in proposals) {
             console.log(rating);
             for (let weekday in proposals[rating]) {
                 console.log(weekday);
                 for (let result of proposals[rating][weekday]) console.log(result);
             }
-        }
-        console.log('passed proposals');
+        }*/
+
         const ratingCombinations = [
             `${comparisonTypesRating.GOOD}:${comparisonTypesRating.GOOD}`,
             `${comparisonTypesRating.GOOD}:${comparisonTypesRating.OK}`,
@@ -293,9 +292,9 @@ export class PlanGenerator {
                             };
                             for (let timeCategory of proposals[ratingCombination][weekday]) {
                                 const potentialOne = timeCategory;
-                                console.log(tempFinal);
 
                                 const tempResult = this.compareProposals(tempFinal, potentialOne, event.demand as number, exactHours, availableSlots);
+                                console.log(tempResult);
                                 if (tempFinal.score < tempResult.score) {
                                     tempFinal.result = tempResult.result;
                                     tempFinal.score = tempResult.score;
@@ -315,7 +314,6 @@ export class PlanGenerator {
                         finalPick.weekday = weekdays[0];
                         finalPick.score = 100000;
                         finalPick.result.push(proposals[ratingCombination][weekdays[0]][0]); //pick first weekday, and first available time slot
-                        console.log(finalPick);
 
                         break;
                     }
@@ -346,11 +344,15 @@ export class PlanGenerator {
 
             const weekday = Object.keys(weekdayObject)[0];
             const weekdayNumber = new Date(this.formWeekdayBackToIsoDate(weekday)).getDay();
-            if (weekdayNumber >= weekStart.getDay() || weekdayNumber === 0) {
+
+            // if today is any day but sunday and weekdayNumber is any bigger day or sunday     OR     today is sunday and weekdayNumber is sunday too
+            if ((weekStart.getDay() !== 0 && (weekdayNumber === 0 || weekdayNumber >= weekStart.getDay())) || (weekStart.getDay() === 0 && weekdayNumber === 0)) {
                 let timeTresholdReached = false;
                 //go through every time
                 for (let timeProdObject of weekdayObject[weekday]) {
+                    if (timeProdObject.x === '00:00') continue; //00:00 is only a data filler and not actual real data
                     const time = this.substractFromTime(timeProdObject.x);
+                    //const time = timeProdObject.x;
                     if (weekdayNumber === weekStart.getDay() && !timeTresholdReached) {
                         if (this.checkIfTimeHasAlreadyPassed(time, parseInt(weekStartHour))) continue;
                         else timeTresholdReached = true;
@@ -359,11 +361,11 @@ export class PlanGenerator {
 
                     let notStoredYet = true;
                     //at the beginning of the loop (first time-category to store)
-                    if (lastTimeProductivity === undefined) lastTimeProductivity = { time: `${time}`, prodLevel: currentTimeProductivity, duration: time === '24:00' ? 0 : 1 };
+                    if (lastTimeProductivity === undefined) lastTimeProductivity = { time: `${time}`, prodLevel: currentTimeProductivity, duration: 1 };
                     //if next time's productivity is in similiar to the last time's productivity (based on the abberation)
                     else if (lastTimeProductivity.prodLevel - currentTimeProductivity <= 0 + ABERRATION && lastTimeProductivity.prodLevel - currentTimeProductivity >= 0 - ABERRATION) {
                         lastTimeProductivity.prodLevel = (lastTimeProductivity.prodLevel * lastTimeProductivity.duration + currentTimeProductivity) / (lastTimeProductivity.duration + 1);
-                        if (time !== '24:00') lastTimeProductivity.duration++;
+                        lastTimeProductivity.duration++;
                     }
 
                     //if next time's productivity is too far away - create new time-category and store the last one
@@ -381,11 +383,11 @@ export class PlanGenerator {
                         lastTimeProductivity = { time: `${time}`, prodLevel: currentTimeProductivity, duration: 1 };
                     }
                     //if last times are of same category (there won't be a category switch) then save them before moving on to next weekday
-                    if (weekdayObject[weekday].indexOf(timeProdObject) === weekdayObject[weekday].length - 1 && notStoredYet) {
+                    if (weekdayObject[weekday].indexOf(timeProdObject) === weekdayObject[weekday].length - 1 && (notStoredYet || lastTimeProductivity.time === '23:00')) {
                         const objToPush = {
                             from: lastTimeProductivity.time,
-                            end: `${time}`,
-                            totalDuration: lastTimeProductivity.duration,
+                            end: `24:00`, //because of substracting form 24:00 (which is then 23:00), the actual time 24:00 is never reached
+                            totalDuration: lastTimeProductivity.duration, //thus also plus another hour
                             avgPro: lastTimeProductivity.prodLevel
                         };
                         if (result[weekday] !== undefined) result[weekday].push(objToPush);
@@ -409,6 +411,10 @@ export class PlanGenerator {
         return result;
     }
 
+    private substractFromTime(time: string) {
+        let [timeHour] = time.split(':');
+        return parseInt(timeHour) <= 10 ? `0${parseInt(timeHour) - 1}:00` : `${parseInt(timeHour) - 1}:00`;
+    }
     private checkIfTimeHasAlreadyPassed(time: string, weekStartHour: number): boolean {
         const [timeHour, timeMinute] = time.split(':');
 
@@ -416,14 +422,8 @@ export class PlanGenerator {
         else return false;
     }
 
-    private substractFromTime(time: string) {
-        const [timeHour, timeMinute] = time.split(':');
-
-        if (parseInt(timeHour) === 0 || parseInt(timeHour) === 24) return '24:00';
-        else return parseInt(timeHour) <= 10 ? `0${parseInt(timeHour) - 1}:00` : `${parseInt(timeHour) - 1}:00`;
-    }
-
     private getWeek() {
+        //full week
         /*
         const now = moment().hours(0).minutes(0).seconds(0).milliseconds(0).toISOString();
         const today = new Date(now);
@@ -432,6 +432,7 @@ export class PlanGenerator {
         const weekStart = new Date(today.getTime() - (d <= 0 ? 7 - startDay : d - startDay) * 86400000); //rewind to start day
         const weekEnd = new Date(weekStart.getTime() + 6 * 86400000 + 23 * 60 * 60 * 1000 + 59 * 60 * 1000); //add 6 days 23 hrs and 59 minutes
         */
+        // current day till end of week
         const today = new Date();
         const d = today.getDay(); //get the current day
         const weekStart = today; //rewind to start day
@@ -518,26 +519,24 @@ export class PlanGenerator {
             const [fromHour, fromMinute] = timeCategory.from.split(':');
             const [endHour, endMinute] = timeCategory.end.split(':');
 
-            //if this timeslot was enough
-            if (timeCategory.totalDuration === exactDurationHour) {
-                availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1);
-                continue;
-            }
             //if this timeslot wasn't enough but fully used
             if (eventHourStart <= parseInt(fromHour) && eventHourEnd >= parseInt(endHour)) {
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1); // delete
+                console.log(`b`);
                 continue;
             }
 
             //if this timeslot is needed and more afterwards
             if (eventHourStart === parseInt(fromHour) && eventHourEnd > parseInt(endHour)) {
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1); // delete
+                console.log(`c`);
                 continue;
             }
 
             //if this timeslot is needed and more before
             else if (eventHourEnd === parseInt(endHour) && eventHourStart < parseInt(fromHour)) {
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1); // delete
+                console.log(`d`);
                 continue;
             }
             //if eventEndTime is somewhere in the middle of timeCategory's from - end time
@@ -546,6 +545,8 @@ export class PlanGenerator {
                 copy.from = this.returnHourInTimeFormat(eventHourEnd);
                 copy.totalDuration = parseInt(endHour) - eventHourEnd;
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1, copy); // delete and replace
+                console.log(`x`);
+
                 continue;
             }
             //if eventEndStart is somewhere in the middle of timeCategory's from - end time
@@ -554,6 +555,7 @@ export class PlanGenerator {
                 copy.end = this.returnHourInTimeFormat(eventHourStart);
                 copy.totalDuration = eventHourStart - parseInt(fromHour);
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1, copy); // delete and replace
+                console.log(`y`);
                 continue;
             }
         }
@@ -603,8 +605,6 @@ export class PlanGenerator {
             score: 0,
             result: [] as timeProductivityCategory[]
         };
-        console.log(`exact hours ${exactHours}`);
-        console.log(`timeObj duration ${potentialOne.totalDuration}`);
 
         //when there's not enough time with this option
         if (potentialOne.totalDuration < exactHours) {
@@ -661,7 +661,6 @@ export class PlanGenerator {
                 timeBefore = timeCatBefore.totalDuration;
                 prodBefore = timeCatBefore.avgPro;
             } else if (indexBackwards - 1 < 0) {
-                console.log('setting hardlock to true');
                 continueWithBefore = false;
                 hardLockBefore = true;
             }
@@ -717,12 +716,11 @@ export class PlanGenerator {
                     result.push(timeCatForward as timeProductivityCategory);
                 }
             }
-            console.log(hardLockBefore);
+
             indexBackwards--;
-            console.log(indexBackwards);
+
             indexForward++;
         }
-        console.log(`summed up time ${summedUpTime}`);
 
         if (summedUpTime < exactHours) totalScore = totalScore - 10000;
         else if (result.length <= 2) totalScore = totalScore + 3;

@@ -39,24 +39,34 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
         setEnergyAssessment(result);
     };
     const convertTime = (time: string) => {
-        let resultedTime = time;
         const [hour, minute] = time.split(':');
+        let hourInt = parseInt(hour);
+        let minuteInt = parseInt(minute);
         const THRESHOLD_MINUTE: number = 30;
-        if (parseInt(minute) <= THRESHOLD_MINUTE) {
-            resultedTime = `${hour}:00`;
-        } else {
-            const newHour: number = parseInt(hour) + 1;
-            resultedTime = newHour < 10 ? `0${newHour}:00` : `${newHour}:00`;
+        //round it
+        if (minuteInt > THRESHOLD_MINUTE) {
+            hourInt++;
         }
-        return resultedTime;
+
+        //substract one (so the graphs are correct)
+        if (hourInt === 0) hourInt = 24; //use last day's midnight (weekday has to be changed by one)
+        return hourInt < 10 ? `0${hourInt}:00` : `${hourInt}:00`;
+    };
+
+    const goOneDayBack = () => {
+        const today = new Date();
+        const changeDateBy = -1;
+        var _24HoursInMilliseconds = 86400000;
+        return new Date(today.getTime() + changeDateBy * _24HoursInMilliseconds).toLocaleString('en-us', { weekday: 'long' });
     };
 
     const handleConfirm = () => {
         const today = new Date();
         const report: ReportObject = { timestamp: '', productive: 0, energy: 0, day: '', time: '' };
         report.timestamp = today.toISOString();
-        report.day = today.toLocaleString('en-us', { weekday: 'long' }); //getDay() returns only number, this return weekday
         report.time = convertTime(today.toLocaleTimeString('en-de', { hour: '2-digit', minute: '2-digit' }));
+        report.day = report.time === '24:00' ? goOneDayBack() : today.toLocaleString('en-us', { weekday: 'long' }); //getDay() returns only number, this return weekday
+
         report.productive = productivityAssessment;
         report.energy = energyAssessment;
         window.api.saveReport([report]);

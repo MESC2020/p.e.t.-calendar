@@ -62,8 +62,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
     useEffect(() => {
         handlingResizeOfEvents();
-        console.log('in useEffect');
-
+    });
+    useEffect(() => {
         async function getData() {
             const events = await window.api.getAllEvents();
             setIsLoading(!isLoading);
@@ -78,10 +78,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     useEffect(() => {
         if (calendarRef.current !== undefined) {
             let calendarApi = calendarRef.current.getApi();
+            console.log('Source API');
+            console.log(sourceAPI);
+            console.log('calendar source api');
+            console.log(calendarApi.getEventSources());
+
             if (sourceAPI === undefined) {
                 const id = calendarApi.addEventSource(state.events);
+                console.log(calendarApi.getEventSources());
                 setSourceAPI(id);
-            } else sourceAPI.refetch();
+            } else {
+                console.log(calendarApi.getEvents());
+                sourceAPI.refetch();
+            }
 
             console.log('refetching');
         }
@@ -133,34 +142,22 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     async function calculateDeadline(eventObject: EventObject) {
         const sameDay = 23 * 60 * 60 * 1000;
         let toCompare;
-        if (eventObject.title === 'test5') {
-            console.log(eventObject.deadline);
-        }
+
         //Event is in external pool - thus has no date yet - compare deadline with today
         if ((eventObject?.end === undefined || eventObject.end === null) && eventObject?.deadline !== undefined && eventObject.deadline !== null) {
             const todayIsoString = moment().seconds(0).milliseconds(0).toISOString(); //instead of new Date to avoid seconds and milliseconds
             toCompare = new Date(todayIsoString).getTime();
-            if (eventObject.title === 'test5') {
-                console.log(todayIsoString);
-                console.log('nr1');
-            }
         }
 
         //Event is in calendar - thus has a date - compare deadline with end date
         else if (eventObject.end !== undefined && eventObject.deadline !== undefined && eventObject.deadline !== null) {
             toCompare = new Date(eventObject.end).getTime();
-            if (eventObject.title === 'test5') {
-                console.log('nr2');
-            }
         }
 
         //Event has no deadline
         else {
             eventObject.backgroundColor = colorPalettes.calendarBlue;
             eventObject.borderColor = colorPalettes.calendarBlue;
-            if (eventObject.title === 'test5') {
-                console.log('nr3');
-            }
         }
 
         //calculate if Deadline is close or has passed
@@ -171,39 +168,29 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             if (timeDifference <= sameDay && timeDifference > 0) {
                 eventObject.backgroundColor = colorPalettes.deadlineWarning;
                 eventObject.borderColor = colorPalettes.deadlineWarning;
-                if (eventObject.title === 'test5') {
-                    console.log('a');
-                }
             }
             //Deadline is passed
             else if (timeDifference <= sameDay && timeDifference <= 0) {
                 eventObject.backgroundColor = colorPalettes.deadlineTooLate;
                 eventObject.borderColor = colorPalettes.deadlineTooLate;
-                if (eventObject.title === 'test5') {
-                    console.log('b');
-                }
             }
             //still enought time
             else {
                 eventObject.backgroundColor = colorPalettes.calendarBlue;
                 eventObject.borderColor = colorPalettes.calendarBlue;
-                if (eventObject.title === 'test5') {
-                    console.log('c');
-                }
             }
         }
     }
 
-    function sortData(events: EventObject[]) {
-        const eventsInCalendar: EventObject[] = [];
+    function sortData(events: EventObject[], alertIfExternalEvents = false) {
+        const eventsInCalendar: EventObject[] = state.events;
         const externalEvents: EventObject[] = [];
+        emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
             const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
 
             calculateDeadline(newEvent);
-            console.log(newEvent.title);
-            console.log(newEvent.backgroundColor);
 
             if (newEvent.start !== undefined && newEvent.start !== null) {
                 eventsInCalendar.push(newEvent);
@@ -218,7 +205,17 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     externalEvents: externalEvents
                 };
             });
+        if (alertIfExternalEvents) alertIfNotAllTasksWereAssigned(externalEvents.length);
         return eventsInCalendar;
+    }
+
+    /*
+     * empties array but keeps the original reference
+     */
+    function emptyArray(array: any[]) {
+        while (array.length !== 0) {
+            array.pop();
+        }
     }
 
     async function updateData(arg: any, mode: Mode) {
@@ -239,7 +236,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     function handlingResizeOfEvents() {
         const demand = document.querySelectorAll('.demand');
-        console.log(demand);
 
         demand.forEach((el) => {
             if (!flags.demandToggle && !flags.showGraphs) {
@@ -268,7 +264,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     When Task is dropped from task pool into the calendar
      */
     function handleEventReceive(eventInfo: any) {
-        console.log(eventInfo);
         eventInfo.revert();
         updateData(eventInfo, Mode.dragAndDrop);
     }
@@ -361,7 +356,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const id = await saveData([eventInWork]);
             eventInWork.id = id.value;
             currentExternalEvents.push(eventInWork);
-            console.log(eventInWork);
 
             setState((state) => {
                 return {
@@ -373,7 +367,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function handleLeftclick(arg: any) {
-        console.log(arg);
         const currentEvent = fcEventToReactEvent(arg);
         setCurrentEvent(currentEvent); //callback set back to undefined) TODO
         openTaskMenu();
@@ -392,9 +385,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 title: arg.event.title,
                 deadline: arg.event.extendedProps.deadline,
                 start: arg.event.startStr,
-                end: calculateEndDate(arg.event.duration, arg.event.startStr),
+                end: arg.event.endStr !== null && arg.event.endStr !== undefined ? arg.event.endStr : calculateEndDate(arg.event.extendedProps.durationTime, arg.event.startStr),
                 classNames: arg.event.classNames,
-                durationTime: arg.event.extendedProps.durationTime
+                durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
             };
         } else if (arg.id) event = arg;
         else event = emptyEventObject;
@@ -409,7 +402,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         const difHour = (parseInt(endHour) - parseInt(startHour)) * 60; //in minutes
         const difMinute = parseInt(endMinute) - parseInt(startMinute);
         const result = (difHour + difMinute) / 60;
-        const format = difMinute === 0 ? formatNumber(result) : formatNumber(Math.floor(result), (parseInt(result.toString().split('.')[1]) * 60).toString());
+        const format = difMinute === 0 ? formatNumber(result) : formatNumber(Math.floor(result), (parseFloat(`0.${result.toString().split('.')[1]}`) * 60).toString());
 
         return format;
     };
@@ -515,7 +508,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 ifEventsInCalendarPermission = areEventsInCalendarEffected();
             } else {
                 const popup = aiPopup;
-                popup.message = 'There are Tasks already schedulled in the current calendar week. This action will replan these tasks. Are you sure you want to continue?';
+                popup.message = 'There are Tasks already scheduled in the current calendar week. This action will replan these tasks. Are you sure you want to continue?';
                 popup.hasCancelButton = true;
                 popup.hasContinueButton = true;
                 popup.hasOkayButton = false;
@@ -531,8 +524,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 actuallyToUpdate.push(event);
             }
         });*/
-        sortData(assignedExternalEvents);
-        if (state.externalEvents.length > 0) {
+        sortData(assignedExternalEvents, true);
+    }
+    function alertIfNotAllTasksWereAssigned(amountOfExternalEvents: number) {
+        if (amountOfExternalEvents > 0) {
             const aipopup: aiPopupContent = aiPopup;
             const text = state.externalEvents.length > 1 ? `${state.externalEvents.length} tasks` : `${state.externalEvents.length} task`;
             aipopup.message = [`Did not find appropriate Slot for `, `${text}`] as any;
@@ -542,6 +537,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             displayAIpopup(aipopup);
         }
     }
+
     function displayAIpopup(content: aiPopupContent) {
         setAiPopup(content);
         document!.getElementById('overlay_AI')!.style.display = 'block';

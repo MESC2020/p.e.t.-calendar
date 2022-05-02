@@ -38,7 +38,6 @@ const prodBasePath = `file://${path.join(__dirname, "../index.html")}`;
 
 const constructAppPath = (hashRoute = "") => {
   const basePath = isDev ? devBasePath : prodBasePath;
-  console.log(basePath);
   const appPath = new URL(basePath);
 
   // Add hash route to base url if provided
@@ -173,13 +172,11 @@ ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
     aggregator,
     await dbManager.getAllData("Events")
   );
-  console.log("xxx");
-  for (let el of args) console.log(el);
-  //console.log(await planner.generateAvaiableSlots());
+
+  //console.log(await planner.generateAvaiableSlots(false));
   const result = await planner.assignTasks();
   dbManager.updateEvents(result);
-  console.log("YYY");
-  console.log(result);
+
   return result;
 });
 
@@ -195,7 +192,8 @@ ipcMain.on("save-report", (event: any, args: any) => {
 
 ipcMain.handle("get-aggregated-hours", async (event: any, args: any) => {
   if (aggregator === undefined) aggregator = new Aggregator(dbManager);
-  return await aggregator.aggregatingHours();
+  const result = await aggregator.createFullWeekHourBundle();
+  return result;
 });
 
 ipcMain.handle("get-aggregated-weekdays", async (event: any, args: any) => {
