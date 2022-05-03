@@ -23,5 +23,10 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("get-aggregated-hours", args),
   getAggregatedWeekdays: (args: any) =>
     ipcRenderer.invoke("get-aggregated-weekdays", args),
+
+  //log handling
+  retrieveLockStatus: (args: any) =>
+    ipcRenderer.invoke("retrieve-lock-status", args),
+  updateLogs: (args: any) => ipcRenderer.send("update-logs", args),
 });
 export {};

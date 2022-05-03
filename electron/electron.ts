@@ -200,3 +200,15 @@ ipcMain.handle("get-aggregated-weekdays", async (event: any, args: any) => {
   if (aggregator === undefined) aggregator = new Aggregator(dbManager);
   return await aggregator.aggregatingWeekdays();
 });
+
+//log handlers
+ipcMain.handle("retrieve-lock-status", async (event: any, args: any) => {
+  const result = await dbManager.retrieveLog(args);
+  return result;
+});
+
+ipcMain.on("update-logs", (event: any, args: any) => {
+  console.log(args);
+  console.log("updating log");
+  dbManager.updateLogs(args);
+});

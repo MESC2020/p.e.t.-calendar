@@ -27,6 +27,11 @@ declare global {
     interface IaggregatedWeekdays {
         [day: string]: { [measurement: string]: number };
     }
+
+    type log = {
+        information: string;
+        data: any;
+    };
 }
 
 export {};

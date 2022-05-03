@@ -9,6 +9,7 @@ import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
 import moment from 'moment';
 import AIpopup from './partials/AIpopup';
+import LockScreen from './partials/LockScreen';
 
 export interface IOverviewPageProps {}
 
@@ -20,6 +21,10 @@ export enum colorPalettes {
     calendarBlue = '#3788d8'
 }
 
+//db has its own enum :/ TODO
+enum logOptions {
+    isLocked = 'isLocked'
+}
 type aiPopupContent = { message: string; data: number | undefined; hasCancelButton: boolean; hasOkayButton: boolean; hasContinueButton: boolean };
 
 interface State {
@@ -34,7 +39,7 @@ export enum Mode {
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
-    const [isUpdating, setIsUpdating] = useState(false);
+    const [isLocked, setIsLocked] = useState(true);
     const [autoAIislocked, setAutoAIislocked] = useState(true);
     const [aiPopup, setAiPopup] = useState<aiPopupContent>({
         message: '',
@@ -60,12 +65,15 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         externalEvents: [],
         events: []
     });
+    useEffect(() => {}, [isLocked]);
     useEffect(() => {
         handlingResizeOfEvents();
     });
     useEffect(() => {
         async function getData() {
             const events = await window.api.getAllEvents();
+            const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);
+            if (isLocked.data === 'false') setIsLocked(false);
             setIsLoading(!isLoading);
             const eventsCalendar = sortData(events);
         }
@@ -573,10 +581,16 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     function handleEventResize(args: any) {
         updateData(args, Mode.updating);
     }
+
+    function handleUnlockApp() {
+        window.api.updateLogs([{ information: logOptions.isLocked, data: 'false' }]);
+        setIsLocked(false);
+    }
+
     return (
         <>
-            {isLoading ? (
-                ''
+            {isLocked || isLoading ? (
+                <LockScreen unLockApp={handleUnlockApp} isLocked={isLocked} />
             ) : (
                 <div className="flex mr-5 mb-5 min-size">
                     <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5 mt-10">
