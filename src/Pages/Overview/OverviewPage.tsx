@@ -15,10 +15,10 @@ export interface IOverviewPageProps {}
 
 export enum colorPalettes {
     deadlineWarning = '#F56853',
-
     deadlineTooLate = '#DE4047',
-
-    calendarBlue = '#3788d8'
+    calendarBlue = '#3788d8',
+    greenButton = '#00B36B',
+    redButton = '#F56853'
 }
 
 //db has its own enum :/ TODO

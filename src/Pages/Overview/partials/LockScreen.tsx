@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import Loader from '../../../views/partials/Loader';
+import { colorPalettes } from '../OverviewPage';
 
 export interface ILockScreenProps {
     isLocked: boolean;
@@ -41,7 +42,7 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
                                         setKeyInput(e.target.value);
                                     }}
                                 ></input>
-                                <Button disabled={keyInput === '' || unlocked} onClick={handleKeyInput} className={'mt-1'}>
+                                <Button backgroundColor={colorPalettes.greenButton} disabled={keyInput === '' || unlocked} onClick={handleKeyInput} className={'mt-1'}>
                                     Submit Key
                                 </Button>
                             </div>
