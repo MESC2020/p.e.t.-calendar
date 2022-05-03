@@ -3,7 +3,16 @@ const sqlite3 = require('sqlite3');
 const UNSTORED = 'unstored';
 const UNLOCKED = 'unlocked';
 export enum logOptions {
-    isLocked = 'isLocked'
+    isLocked = 'isLocked',
+    usedAutoAssign = 'usedAutoAssign',
+    updatedEventAssignment = 'updatedEventAssignment',
+    updatedEventDemandLevel = 'updatedEventDemandLevel',
+    updatedEventDuration = 'updatedEventDuration',
+    updatedEventDeadline = 'updatedEventDeadline',
+    deletedEvents = 'deletedEvents',
+    lookedAtStats = 'lookedAtStats',
+    usedDemandToggle = 'usedDemandToggle',
+    eventsGenerated = 'eventsGenerated'
 }
 export class dbMgr {
     db: SQlite | undefined;
@@ -41,7 +50,48 @@ export class dbMgr {
         return results;
     }
     async initLog() {
-        const logEntries: log[] = [{ information: logOptions.isLocked, data: 'true' }];
+        const logEntries: log[] = [
+            {
+                information: logOptions.isLocked,
+                data: 'true'
+            },
+            {
+                information: logOptions.usedAutoAssign,
+                data: 0
+            },
+            {
+                information: logOptions.updatedEventAssignment,
+                data: 0
+            },
+            {
+                information: logOptions.updatedEventDeadline,
+                data: 0
+            },
+            {
+                information: logOptions.updatedEventDemandLevel,
+                data: 0
+            },
+            {
+                information: logOptions.updatedEventDuration,
+                data: 0
+            },
+            {
+                information: logOptions.deletedEvents,
+                data: 0
+            },
+            {
+                information: logOptions.lookedAtStats,
+                data: 0
+            },
+            {
+                information: logOptions.usedDemandToggle,
+                data: 0
+            },
+            {
+                information: logOptions.eventsGenerated,
+                data: 0
+            }
+        ];
         try {
             logEntries.forEach((log) => {
                 this.addToLog(log);
@@ -76,14 +126,16 @@ export class dbMgr {
                             return console.log(err.message);
                         }
                     });
+                    this.updateLogs([{ information: logOptions.deletedEvents, data: 1 }]);
                 }
             }
         }
     }
 
-    updateEvents(data: EventObject[]) {
+    async updateEvents(data: EventObject[]) {
         if (this.db != undefined) {
             for (let event of data) {
+                this.updateLogs(await this.checkChangesForEvent(event));
                 let valuesToChange = 'title = ?, demand = ?, deadline = ?';
                 const demand = this.retrieveDemandLevel(event);
                 const data = [event.title, demand];
@@ -162,6 +214,7 @@ export class dbMgr {
 
                     const sql2 = 'SELECT MAX(id) FROM Events';
                     const id = this.retrieveMaxId(sql2);
+                    this.updateLogs([{ information: logOptions.eventsGenerated, data: 1 }]);
 
                     return id;
                 }
@@ -200,9 +253,12 @@ export class dbMgr {
         }
     }
 
-    updateLogs(data: log[]) {
+    async updateLogs(data: log[]) {
         if (this.db != undefined) {
             for (let log of data) {
+                if (log.information !== logOptions.usedAutoAssign) {
+                    await this.incrementLogsData(log);
+                }
                 const timestamp: string = new Date().toISOString();
                 const valuesToChange = 'data = ?, timestamp = ?';
                 const data = [log.data, timestamp, log.information];
@@ -214,6 +270,60 @@ export class dbMgr {
                 });
             }
         }
+    }
+    private async incrementLogsData(log: log) {
+        const currentData = ((await this.retrieveLog(log.information)) as log).data;
+        log.data = currentData + log.data;
+    }
+    private async checkChangesForEvent(event: EventObject) {
+        const logsToUpdate: log[] = [];
+        if (event.id) {
+            const eventInDatabase = (await this.retrieveEvent(event.id)) as EventObject;
+            const eventProperties = Object.keys(event);
+            let index = 0;
+            let alreadyIncrementedDate = false;
+            console.log(event);
+            console.log(eventInDatabase);
+            for (let property in eventInDatabase) {
+                if (property === 'id') continue;
+                let eventValue;
+                const eventInDatabaseValue = eventInDatabase[property as keyof EventObject];
+                if (eventProperties.includes(property)) {
+                    eventValue = event[property as keyof EventObject];
+                } else if (property === 'demand') {
+                    eventValue = this.retrieveDemandLevel(event);
+                }
+                console.log(eventValue);
+                console.log(eventInDatabaseValue);
+
+                if (eventInDatabaseValue !== eventValue) {
+                    switch (property) {
+                        case 'start':
+                            if (!alreadyIncrementedDate) {
+                                alreadyIncrementedDate = true;
+                                logsToUpdate.push({ information: logOptions.updatedEventAssignment, data: 1 });
+                            }
+                            break;
+                        case 'end':
+                            if (!alreadyIncrementedDate) {
+                                alreadyIncrementedDate = true;
+                                logsToUpdate.push({ information: logOptions.updatedEventAssignment, data: 1 });
+                            }
+                            break;
+                        case 'deadline':
+                            logsToUpdate.push({ information: logOptions.updatedEventDeadline, data: 1 });
+                            break;
+                        case 'durationTime':
+                            logsToUpdate.push({ information: logOptions.updatedEventDuration, data: 1 });
+                            break;
+                        case 'demand':
+                            logsToUpdate.push({ information: logOptions.updatedEventDemandLevel, data: 1 });
+                    }
+                }
+            }
+        }
+        console.log(logsToUpdate);
+        return logsToUpdate;
     }
 
     retrieveLog(info: string) {
@@ -231,6 +341,25 @@ export class dbMgr {
         }).catch((err: error) => console.log(err));
 
         return log;
+    }
+
+    retrieveEvent(id: number) {
+        const sql = `SELECT * FROM Events where id = '${id}' `;
+        const event = new Promise((resolve, reject) => {
+            this!.db!.get(sql, (err: any, row: any) => {
+                if (err) {
+                    throw err;
+                }
+                resolve(row);
+            });
+        });
+        event
+            .then((row: any) => {
+                return row;
+            })
+            .catch((err: error) => console.log(err));
+
+        return event;
     }
 
     private retrieveMaxId(sql: string) {
@@ -274,5 +403,27 @@ export class dbMgr {
             })
             .catch((err: error) => console.log(err));
         return results;
+    }
+    private async makeEventsAnonymous() {
+        const allEvents = await this.getAllData('Events');
+        let index = 0;
+
+        for (let event of allEvents) {
+            event.title = this.assignAnonymTitle(index);
+            index++;
+        }
+    }
+    private assignAnonymTitle(index: number) {
+        if (index < 1000) {
+            if (index < 10) {
+                return `000${index}`;
+            } else if (index < 100) {
+                return `00${index}`;
+            }
+            return `0${index}`;
+        } else return `${index}`;
+    }
+    getDB() {
+        return this.db;
     }
 }

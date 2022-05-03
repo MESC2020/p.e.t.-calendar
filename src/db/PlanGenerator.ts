@@ -81,8 +81,6 @@ export class PlanGenerator {
                 tasksToAssign.push(event);
             }
         });
-        console.log('after retrieving all data');
-        console.log(tasksToAssign);
 
         this.externTasks = tasksToAssign;
         this.aggregator = aggregator;
@@ -150,8 +148,6 @@ export class PlanGenerator {
                 }
             });
         }
-        console.log(this.sortedByDeadlineAndDemand);
-        console.log(this.sortedByDemand);
     }
 
     async assignTasks() {
@@ -164,38 +160,28 @@ export class PlanGenerator {
             for (let demandLevel in sortedByDeadlineAndDemand) {
                 for (let index = sortedByDeadlineAndDemand[demandLevel].length - 1; index >= 0; index--) {
                     const event = sortedByDeadlineAndDemand[demandLevel][index];
-                    console.log('before slot assignment with deadline');
-                    console.log(availableSlots);
-                    console.log(event);
+
                     //if event was assigned - delete it out of sorted object
                     const isAssigned = this.findFit(event, weekStart, availableSlots);
-                    console.log('was it assigned?');
-                    console.log(isAssigned);
+
                     if (isAssigned && event.start !== undefined && event.start !== null && event.end !== undefined && event.end !== null) {
                         this.sortedByDeadlineAndDemand[demandLevel].splice(this.sortedByDeadlineAndDemand[demandLevel].indexOf(event), 1);
                     }
-                    console.log(event);
                 }
             }
         }
         //events with no deadline or deadline is not until next week
         if (Object.keys(sortedByDemand).length !== 0) {
             for (let demandLevel in sortedByDemand) {
-                console.log(sortedByDemand[demandLevel]);
                 for (let index = sortedByDemand[demandLevel].length - 1; index >= 0; index--) {
                     //going backwards is important since elements get deleted (messes up index)
                     const event = sortedByDemand[demandLevel][index];
-                    console.log('before slot assignment normal');
-                    console.log(availableSlots);
-                    console.log(event);
+
                     const isAssigned = this.findFit(event, weekStart, availableSlots);
-                    console.log('was it assigned?');
-                    console.log(isAssigned);
+
                     if (isAssigned && event.start !== undefined && event.start !== null && event.end !== undefined && event.end !== null) {
                         this.sortedByDemand[demandLevel].splice(this.sortedByDemand[demandLevel].indexOf(event), 1);
                     }
-
-                    console.log(event);
                 }
             }
         }
@@ -294,7 +280,6 @@ export class PlanGenerator {
                                 const potentialOne = timeCategory;
 
                                 const tempResult = this.compareProposals(tempFinal, potentialOne, event.demand as number, exactHours, availableSlots);
-                                console.log(tempResult);
                                 if (tempFinal.score < tempResult.score) {
                                     tempFinal.result = tempResult.result;
                                     tempFinal.score = tempResult.score;
@@ -522,21 +507,19 @@ export class PlanGenerator {
             //if this timeslot wasn't enough but fully used
             if (eventHourStart <= parseInt(fromHour) && eventHourEnd >= parseInt(endHour)) {
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1); // delete
-                console.log(`b`);
+
                 continue;
             }
 
             //if this timeslot is needed and more afterwards
             if (eventHourStart === parseInt(fromHour) && eventHourEnd > parseInt(endHour)) {
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1); // delete
-                console.log(`c`);
                 continue;
             }
 
             //if this timeslot is needed and more before
             else if (eventHourEnd === parseInt(endHour) && eventHourStart < parseInt(fromHour)) {
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1); // delete
-                console.log(`d`);
                 continue;
             }
             //if eventEndTime is somewhere in the middle of timeCategory's from - end time
@@ -545,7 +528,6 @@ export class PlanGenerator {
                 copy.from = this.returnHourInTimeFormat(eventHourEnd);
                 copy.totalDuration = parseInt(endHour) - eventHourEnd;
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1, copy); // delete and replace
-                console.log(`x`);
 
                 continue;
             }
@@ -555,7 +537,6 @@ export class PlanGenerator {
                 copy.end = this.returnHourInTimeFormat(eventHourStart);
                 copy.totalDuration = eventHourStart - parseInt(fromHour);
                 availableSlotsWeekday.splice(availableSlotsWeekday.indexOf(timeCategory), 1, copy); // delete and replace
-                console.log(`y`);
                 continue;
             }
         }

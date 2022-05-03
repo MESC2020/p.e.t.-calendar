@@ -31,7 +31,15 @@ const Navbar: React.FunctionComponent<INavbarProps> = (props) => {
                         <Button disabled={status} isButtonPressed={isButtonPressed(OVERVIEW_PATH)} className="" onClick={() => navigate(OVERVIEW_PATH)}>
                             Overview
                         </Button>
-                        <Button disabled={false} className="" isButtonPressed={isButtonPressed(STATS_PATH)} onClick={() => navigate(STATS_PATH)}>
+                        <Button
+                            disabled={false}
+                            className=""
+                            isButtonPressed={isButtonPressed(STATS_PATH)}
+                            onClick={() => {
+                                window.api.updateLogs([{ information: logOptions.lookedAtStats, data: 1 }]);
+                                navigate(STATS_PATH);
+                            }}
+                        >
                             Stats
                         </Button>
                     </div>

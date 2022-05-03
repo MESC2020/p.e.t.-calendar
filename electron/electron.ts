@@ -1,8 +1,9 @@
 // main entry point for electron
 
-import { dbMgr } from "../src/db/dbMgr";
+import { dbMgr, logOptions } from "../src/db/dbMgr";
 import { Aggregator } from "../src/db/Aggregator";
 import { PlanGenerator } from "../src/db/PlanGenerator";
+import { Converter } from "../src/db/ConvertToCSV";
 
 //dev toole extension
 /*
@@ -12,12 +13,21 @@ import installExtension, {
 */
 
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain, Menu, screen } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  screen,
+  dialog,
+} = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
 const { URL } = require("url");
+const fs = require("fs");
 let dbManager: dbMgr;
 let aggregator: Aggregator;
+let converter: Converter;
 
 type Window = {
   minimize(): any;
@@ -48,6 +58,41 @@ const constructAppPath = (hashRoute = "") => {
   // Return the constructed url
   return appPath.href;
 };
+const str = ["just", "an", "example"];
+
+const { stringify } = require("csv-stringify");
+
+// Importing dialog module using remote
+function storeToCSV() {
+  // Resolves to a Promise<Object>
+  dialog
+    .showSaveDialog({
+      title: "Select the File Path to save",
+      defaultPath: path.join(__dirname, "../assets/data.csv"),
+      // defaultPath: path.join(__dirname, '../assets/'),
+      buttonLabel: "Save",
+      // Restricting the user to only Text Files.
+      filters: [
+        {
+          name: "data",
+          extensions: ["csv"],
+        },
+      ],
+      properties: [],
+    })
+    .then(async (file: any) => {
+      // Stating whether dialog operation was cancelled or not.
+      console.log(file.canceled);
+      if (!file.canceled) {
+        console.log(file.filePath.toString());
+
+        // Creating and Writing to the sample.txt file
+      }
+    })
+    .catch((err: any) => {
+      console.log(err);
+    });
+}
 
 function createPopupWindow(width: any, height: any) {
   popupWindow = new BrowserWindow({
@@ -79,6 +124,23 @@ function createPopupWindow(width: any, height: any) {
     event.preventDefault();
     popupWindow.hide();
   });
+}
+
+async function toStore() {
+  const data = await dbManager.getAllData("Events");
+  stringify(
+    data,
+    {
+      header: true,
+    },
+    function (err: any, output: any) {
+      console.log(__dirname + "/someData.csv");
+      fs.writeFile(__dirname + "/someData.csv", output, function (err: any) {
+        if (err) throw err;
+        console.log("Saved!");
+      });
+    }
+  );
 }
 
 function createWindow(width: any, height: any) {
@@ -122,12 +184,22 @@ app.whenReady().then(() => {
   //createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
+  converter = new Converter();
+  toStore();
+  //converter.converting(dbManager.getDB());
+
+  //storeToCSV();
+
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow(width, height);
   });
 });
+
+async function fetchData() {
+  return await dbManager.getAllData("Events");
+}
 
 function infinitePopUpLoop(width: any, height: any) {
   setInterval(() => {
@@ -172,6 +244,7 @@ ipcMain.on("delete-events", (event: any, args: any) => {
 });
 ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
   if (aggregator === undefined) aggregator = new Aggregator(dbManager);
+  dbManager.updateLogs([{ information: logOptions.usedAutoAssign, data: 1 }]); //log
   const planner = new PlanGenerator(
     args,
     aggregator,

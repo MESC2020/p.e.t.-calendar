@@ -26,7 +26,9 @@ export enum colorPalettes {
 
 //db has its own enum :/ TODO
 export enum logOptions {
-    isLocked = 'isLocked'
+    isLocked = 'isLocked',
+    lookedAtStats = 'lookedAtStats',
+    usedDemandToggle = 'usedDemandToggle'
 }
 type aiPopupContent = { message: string; data: number | undefined; hasCancelButton: boolean; hasOkayButton: boolean; hasContinueButton: boolean };
 
@@ -276,6 +278,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function toggleDemandOnOff() {
+        window.api.updateLogs([{ information: logOptions.usedDemandToggle, data: 1 }]);
         let currentDemandToggle = flags.demandToggle;
         let currentShowAnimation = flags.showAnimation;
         let currentShowGraphs = flags.showGraphs;
