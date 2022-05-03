@@ -55,10 +55,10 @@ function createPopupWindow(width: any, height: any) {
     focusable: false,
     alwaysOnTop: true,
     skipTaskbar: true, //this might be unnecessary since in win, this is already applied when focusable: false
-    height: 300,
+    height: 450,
     width: 400,
     x: width - 400, //to get it into the right bottom corner
-    y: height - 300,
+    y: height - 450,
 
     webPreferences: {
       contextIsolation: true,
@@ -131,8 +131,11 @@ function infinitePopUpLoop(width: any, height: any) {
   setInterval(() => {
     if (popupWindow === undefined || popupWindow === null)
       createPopupWindow(width, height);
-    else if (popupWindow) popupWindow.close();
+
     popupWindow.show();
+    setTimeout(() => {
+      popupWindow.close();
+    }, 60 * 1000);
     //createPopupWindow(width, height);
   }, 60 * 60 * 1000);
 }
@@ -186,7 +189,7 @@ ipcMain.on("close-popup", (event: any, args: any) => {
 });
 
 ipcMain.on("save-report", (event: any, args: any) => {
-  dbManager.saveReport(args);
+  if (args[0].productive !== 0) dbManager.saveReport(args);
   popupWindow.close();
 });
 

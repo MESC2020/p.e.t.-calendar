@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import Slider from '@mui/material/Slider';
-import { blue, orange } from '@mui/material/colors';
+import { blue, grey, orange } from '@mui/material/colors';
 
 export interface IRangeSliderProps {
     standardDemand: number;
     onChange: any;
     labels?: { value: number; label: string }[];
     textColorWhite: boolean;
+    checkBox?: boolean;
 }
 
 function valuetext(value: any) {
@@ -42,15 +43,16 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
             },
             text: {
                 primary: props.textColorWhite ? '#fff' : '#000',
-                secondary: blue[500]
+                secondary: props.checkBox ? grey[500] : blue[500]
             }
         }
     });
     return (
-        <div className={'w-full text-pink-500'}>
+        <div className={'w-full '}>
             {' '}
             <ThemeProvider theme={muiTheme}>
                 <Slider
+                    disabled={props?.checkBox}
                     aria-label="Demanding Level"
                     defaultValue={props.standardDemand}
                     step={1}

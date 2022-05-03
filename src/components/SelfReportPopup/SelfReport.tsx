@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RangeSlider from '../../views/partials/RangeSlider';
 import { Button } from '../../views/partials/Button';
+import { colorPalettes } from '../../Pages/Overview/OverviewPage';
 
 export interface ISelfReportProps {}
 const demandLevels = [
@@ -17,6 +18,7 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
     const [productivityAssessment, setProductivityAssessment] = useState(1);
     const [energyAssessment, setEnergyAssessment] = useState(1);
     const [userInteracted, setUserInteracted] = useState({ productive: false, energy: false });
+    const [checkBox, setCheckBox] = useState(false);
 
     const handleProductivity = (result: number) => {
         if (!userInteracted.productive)
@@ -61,42 +63,76 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
     };
 
     const handleConfirm = () => {
+        setUserInteracted(() => {
+            return {
+                productive: false,
+                energy: false
+            };
+        });
         const today = new Date();
         const report: ReportObject = { timestamp: '', productive: 0, energy: 0, day: '', time: '' };
         report.timestamp = today.toISOString();
         report.time = convertTime(today.toLocaleTimeString('en-de', { hour: '2-digit', minute: '2-digit' }));
         report.day = report.time === '24:00' ? goOneDayBack() : today.toLocaleString('en-us', { weekday: 'long' }); //getDay() returns only number, this return weekday
 
-        report.productive = productivityAssessment;
-        report.energy = energyAssessment;
+        report.productive = checkBox ? 0 : productivityAssessment;
+        report.energy = checkBox ? 0 : energyAssessment;
+        resetCheckBox();
         window.api.saveReport([report]);
     };
+    const handleCheckBox = () => {
+        setCheckBox(!checkBox);
+    };
+
+    const resetCheckBox = () => {
+        setCheckBox(false);
+        const cb = document.getElementById('cb1') as HTMLInputElement;
+        cb.checked = false;
+    };
+
     return (
-        <div style={{ width: 400, height: 300 }} className="bg-red-100">
-            <div style={{ borderColor: '#2c3e50' }} className="flex border-2 justify-center gap-x-5 h-1/6 shadow-lg bg-white pt-1">
+        <div style={{ width: 400, height: 450 }} className="overflow-y-hidden ">
+            <div style={{ borderColor: '#2c3e50', height: 52 }} className="flex border-2 justify-center gap-x-5 shadow-lg bg-white pt-1">
                 <p className="flex pt-2 justify-center font-bold">Self Assessment</p>
                 <Button
-                    disabled={!userInteracted.productive || !userInteracted.energy}
+                    backgroundColor={colorPalettes.greenButton}
+                    disabled={(!userInteracted.productive || !userInteracted.energy) && !checkBox}
                     onClick={() => {
                         handleConfirm();
                     }}
-                    className={'ml-5'}
+                    className={'ml-5 mb-1'}
                 >
                     Confirm
                 </Button>
             </div>
-            <div className="report h-5/6">
-                <div className="pl-10 pr-10 pt-2">
+
+            <div style={{ height: 398 }} className="report">
+                {' '}
+                <div>
+                    <div className="flex pt-10">
+                        <input
+                            style={{ width: 20, height: 20 }}
+                            id="cb1"
+                            className={' ml-10 mr-10 pl-10 pr-10 mr-1 mt-1'}
+                            type={'checkbox'}
+                            onChange={(e) => {
+                                handleCheckBox();
+                            }}
+                        ></input>
+                        <p className="pt-1 text-white">I was on a break</p>
+                    </div>
+                </div>
+                <div className="pl-10 pt-10 pr-10 pt-2">
                     <p className="text-white">
                         How <b>productive</b> did you feel during the last hour?
                     </p>
-                    <RangeSlider textColorWhite={true} labels={demandLevels} standardDemand={5} onChange={handleProductivity} />
+                    <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={1} onChange={handleProductivity} />
                 </div>
                 <div className="pl-10 pr-10 pt-4">
                     <p className="text-white">
                         How <b>energized</b> did you feel during the last hour?
                     </p>
-                    <RangeSlider textColorWhite={true} labels={demandLevels} standardDemand={5} onChange={handleEnergy} />
+                    <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={1} onChange={handleEnergy} />
                 </div>
                 <div></div>
             </div>
