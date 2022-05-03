@@ -11,7 +11,10 @@ import moment from 'moment';
 import AIpopup from './partials/AIpopup';
 import LockScreen from './partials/LockScreen';
 
-export interface IOverviewPageProps {}
+export interface IOverviewPageProps {
+    setIsLocked: any;
+    isLocked: boolean;
+}
 
 export enum colorPalettes {
     deadlineWarning = '#F56853',
@@ -22,7 +25,7 @@ export enum colorPalettes {
 }
 
 //db has its own enum :/ TODO
-enum logOptions {
+export enum logOptions {
     isLocked = 'isLocked'
 }
 type aiPopupContent = { message: string; data: number | undefined; hasCancelButton: boolean; hasOkayButton: boolean; hasContinueButton: boolean };
@@ -39,7 +42,6 @@ export enum Mode {
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
-    const [isLocked, setIsLocked] = useState(true);
     const [autoAIislocked, setAutoAIislocked] = useState(true);
     const [aiPopup, setAiPopup] = useState<aiPopupContent>({
         message: '',
@@ -65,15 +67,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         externalEvents: [],
         events: []
     });
-    useEffect(() => {}, [isLocked]);
     useEffect(() => {
         handlingResizeOfEvents();
     });
     useEffect(() => {
         async function getData() {
             const events = await window.api.getAllEvents();
-            const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);
-            if (isLocked.data === 'false') setIsLocked(false);
             setIsLoading(!isLoading);
             const eventsCalendar = sortData(events);
         }
@@ -537,7 +536,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     function alertIfNotAllTasksWereAssigned(amountOfExternalEvents: number) {
         if (amountOfExternalEvents > 0) {
             const aipopup: aiPopupContent = aiPopup;
-            const text = state.externalEvents.length > 1 ? `${state.externalEvents.length} tasks` : `${state.externalEvents.length} task`;
+            const text = amountOfExternalEvents > 1 ? `${amountOfExternalEvents} tasks` : `${amountOfExternalEvents} task`;
             aipopup.message = [`Did not find appropriate Slot for `, `${text}`] as any;
             aipopup.hasOkayButton = true;
             aipopup.hasCancelButton = false;
@@ -584,13 +583,13 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     function handleUnlockApp() {
         window.api.updateLogs([{ information: logOptions.isLocked, data: 'false' }]);
-        setIsLocked(false);
+        props.setIsLocked(false);
     }
 
     return (
         <>
-            {isLocked || isLoading ? (
-                <LockScreen unLockApp={handleUnlockApp} isLocked={isLocked} />
+            {props.isLocked || isLoading ? (
+                <LockScreen unLockApp={handleUnlockApp} isLocked={props.isLocked} />
             ) : (
                 <div className="flex mr-5 mb-5 min-size">
                     <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5 mt-10">

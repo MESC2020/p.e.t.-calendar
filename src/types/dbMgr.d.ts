@@ -10,6 +10,7 @@ declare global {
         get(sql: string, callback: callback): any;
         prepare(sql: string): any;
         last_insert_rowid(): any;
+        serialize(calls: any): any;
     };
     type error = {
         message?: string;

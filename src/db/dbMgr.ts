@@ -15,7 +15,10 @@ export class dbMgr {
             if (err) {
                 return console.error(err.message);
             }
-            this.createTable();
+            this.db!.serialize(() => {
+                this.initTables();
+                this.initLog();
+            });
 
             console.log('Connected to SQlite database');
         });
@@ -32,34 +35,37 @@ export class dbMgr {
         }
     }
 
-    createTable() {
-        const tableQueries = [
-            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT, durationTime TEXT)',
-            'CREATE TABLE IF NOT EXISTS Report (timestamp text NOT NULL PRIMARY KEY, productive INTEGER NOT NULL, energy INTEGER NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL)',
-            'CREATE TABLE IF NOT EXISTS Log (information text NOT NULL PRIMARY KEY, data NOT NULL, timestamp text NOT NULL PRIMARY KEY)'
-            /*'CREATE TABLE IF NOT EXISTS Weekday (weekday TEXT NOT NULL PRIMARY KEY, avgProductive INTEGER NOT NULL, avgEnergy INTEGER NOT NULL)'*/
-        ];
-        const logEntries: log[] = [{ information: logOptions.isLocked, data: 'true' }];
-        if (this.db != undefined) {
-            try {
-                tableQueries.forEach((query) => {
-                    this.db!.run(query);
-                });
-                logEntries.forEach((log) => {
-                    this.addToLog(log);
-                });
-            } catch (err: any) {
-                console.log(err);
-            }
-        }
-    }
-
     getAllData(tableName: string): any {
         const sql = 'SELECT * FROM ' + tableName;
         const results = this.retrieveData(sql);
         return results;
     }
+    async initLog() {
+        const logEntries: log[] = [{ information: logOptions.isLocked, data: 'true' }];
+        try {
+            logEntries.forEach((log) => {
+                this.addToLog(log);
+            });
+        } catch (err: any) {
+            console.log(err);
+        }
+    }
 
+    async initTables() {
+        const tableQueries = [
+            'CREATE TABLE IF NOT EXISTS Events (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, demand INTEGER NOT NULL, deadline TEXT, start TEXT, end TEXT, durationTime TEXT)',
+            'CREATE TABLE IF NOT EXISTS Report (timestamp text NOT NULL PRIMARY KEY, productive INTEGER NOT NULL, energy INTEGER NOT NULL, day TEXT NOT NULL, time TEXT NOT NULL)',
+            'CREATE TABLE IF NOT EXISTS Log (information text NOT NULL PRIMARY KEY, data NOT NULL, timestamp text NOT NULL)'
+            /*'CREATE TABLE IF NOT EXISTS Weekday (weekday TEXT NOT NULL PRIMARY KEY, avgProductive INTEGER NOT NULL, avgEnergy INTEGER NOT NULL)'*/
+        ];
+        try {
+            await tableQueries.forEach(async (query) => {
+                await this.db!.run(query);
+            });
+        } catch (err: any) {
+            console.log(err);
+        }
+    }
     deleteEvents(data: EventObject[]) {
         if (this.db != undefined) {
             for (let event of data) {
@@ -175,7 +181,7 @@ export class dbMgr {
 
                 const sql = `INSERT INTO Log ${valuesToChange} VALUES${placeholders}`;
 
-                this.db.run(sql, data, (err: error) => {
+                await this.db.run(sql, data, (err: error) => {
                     if (err) {
                         return console.log(err.message);
                     }

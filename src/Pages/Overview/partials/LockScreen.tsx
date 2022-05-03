@@ -28,6 +28,7 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
                 <div className="w-1/2 h-1/2  border-blue-100 border-2 rounded-lg drop-shadow-2xl">
                     <div className="flex flex-col justify-center items-center">
                         <p>The main program is currently locked. You'll receive a key to unlock after 2 weeks of data collection</p>
+                        <p className="font-bold">Please leave this program run in background while you're at your computer doing job and/or studies related tasks</p>
                         <div className="flex flex-col">
                             <div className="flex gap-x-2 mt-2">
                                 <input
