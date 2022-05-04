@@ -4,6 +4,7 @@ import { dbMgr, logOptions } from "../src/db/dbMgr";
 import { Aggregator } from "../src/db/Aggregator";
 import { PlanGenerator } from "../src/db/PlanGenerator";
 import { Converter } from "../src/db/ConvertToCSV";
+import { table } from "console";
 
 //dev toole extension
 /*
@@ -127,20 +128,27 @@ function createPopupWindow(width: any, height: any) {
 }
 
 async function toStore() {
-  const data = await dbManager.getAllData("Events");
-  stringify(
-    data,
-    {
-      header: true,
-    },
-    function (err: any, output: any) {
-      console.log(__dirname + "/someData.csv");
-      fs.writeFile(__dirname + "/someData.csv", output, function (err: any) {
-        if (err) throw err;
-        console.log("Saved!");
-      });
-    }
-  );
+  const data: any = await dbManager.returnAllTables();
+  for (let dataTable of data) {
+    const tableName = Object.keys(dataTable)[0];
+    stringify(
+      dataTable[tableName],
+      {
+        header: true,
+      },
+      function (err: any, output: any) {
+        console.log(__dirname + "/someData.csv");
+        fs.writeFile(
+          __dirname + `/${tableName}.csv`,
+          output,
+          function (err: any) {
+            if (err) throw err;
+            console.log("Saved!");
+          }
+        );
+      }
+    );
+  }
 }
 
 function createWindow(width: any, height: any) {

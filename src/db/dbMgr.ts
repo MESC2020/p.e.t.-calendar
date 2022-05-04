@@ -44,9 +44,9 @@ export class dbMgr {
         }
     }
 
-    getAllData(tableName: string): any {
+    async getAllData(tableName: string) {
         const sql = 'SELECT * FROM ' + tableName;
-        const results = this.retrieveData(sql);
+        const results = await this.retrieveData(sql);
         return results;
     }
     async initLog() {
@@ -404,11 +404,22 @@ export class dbMgr {
             .catch((err: error) => console.log(err));
         return results;
     }
-    private async makeEventsAnonymous() {
-        const allEvents = await this.getAllData('Events');
+
+    async returnAllTables(): Promise<any> {
+        const tables = ['Events', 'Report', 'Log'];
+        const data = [];
+        for (let table of tables) {
+            const temp = (await this.getAllData(table)) as any;
+            if (table === 'Events') this.makeEventsAnonymous(temp);
+            data.push({ [table]: temp });
+        }
+
+        return data;
+    }
+    private makeEventsAnonymous(events: EventObject[]) {
         let index = 0;
 
-        for (let event of allEvents) {
+        for (let event of events) {
             event.title = this.assignAnonymTitle(index);
             index++;
         }
