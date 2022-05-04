@@ -10,6 +10,7 @@ import TaskForm from './partials/TaskForm';
 import moment from 'moment';
 import AIpopup from './partials/AIpopup';
 import LockScreen from './partials/LockScreen';
+import Tooltip from '@mui/material/Tooltip';
 
 export interface IOverviewPageProps {
     setIsLocked: any;
@@ -589,6 +590,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         props.setIsLocked(false);
     }
 
+    function exportCSV() {
+        window.api.exportToCSV();
+    }
+
     return (
         <>
             {props.isLocked || isLoading ? (
@@ -602,40 +607,26 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 backgroundColor={'#1e2b3'}
                                 disabled={false}
                                 onClick={() => {
-                                    /*
-                                    const event: EventObject = {
-                                        id: 180,
-                                        title: 'whatADay',
-                                        deadline: undefined,
-                                        classNames: ['demand', `demand-5`],
-                                        start: '2022-04-30T10:00',
-                                        end: '2022-04-30T14:00'
-                                    };
-                                    const eve = state.events;
-                                    eve.push(event);
-                                    setState((state) => {
-                                        return {
-                                            ...state,
-                                            events: eve
-                                        };
-                                    });*/
                                     openTaskMenu();
                                 }}
                                 className={''}
                             >
                                 Add Task
                             </Button>
-                            <Button
-                                color={'white'}
-                                backgroundColor={'#46719C'}
-                                disabled={autoAIislocked || state.externalEvents.length === 0}
-                                onClick={() => {
-                                    autoAssignTasks();
-                                }}
-                                className={''}
-                            >
-                                Auto-Assign Tasks
-                            </Button>
+
+                            <Tooltip placement="top" title="">
+                                <Button
+                                    color={'white'}
+                                    backgroundColor={'#46719C'}
+                                    disabled={autoAIislocked || state.externalEvents.length === 0}
+                                    onClick={() => {
+                                        autoAssignTasks();
+                                    }}
+                                    className={''}
+                                >
+                                    Auto-Assign Tasks
+                                </Button>
+                            </Tooltip>
                         </div>
                         <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
                             {state.externalEvents.map((event) => (
@@ -646,8 +637,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     <div className="w-full flex justify-center">
                         <div className="flex pl-60 flex-col">
                             <div className="flex justify-end">
-                                <p className="mr-2">Demanding Level</p>
-                                <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                                <div style={{ marginRight: 60 }} className=" flex">
+                                    <p className="pt-1 pr-1">show behavior</p>
+                                    <div id="switch" className=" pt-1">
+                                        <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                                    </div>
+                                </div>
+                                <div className=" mb-2 mr-2">
+                                    <Button disabled={false} rounded={'rounded-md'} backgroundColor={'#86d3ff'} onClick={exportCSV} className={''}>
+                                        <Tooltip placement="top" title="Export to CSV">
+                                            {<img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/store.png'} />}
+                                        </Tooltip>
+                                    </Button>{' '}
+                                </div>
                             </div>
                             <div className="container-overview">
                                 <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">

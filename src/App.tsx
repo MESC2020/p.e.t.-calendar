@@ -21,7 +21,7 @@ export interface IAppProps {}
 
 const App: React.FunctionComponent<IAppProps> = (props) => {
     const [isLocked, setIsLocked] = useState(true);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
         async function checkIfLocked() {
             const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);

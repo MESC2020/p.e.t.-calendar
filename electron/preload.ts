@@ -28,5 +28,8 @@ contextBridge.exposeInMainWorld("api", {
   retrieveLockStatus: (args: any) =>
     ipcRenderer.invoke("retrieve-lock-status", args),
   updateLogs: (args: any) => ipcRenderer.send("update-logs", args),
+
+  //save-handling
+  exportToCSV: (args: any) => ipcRenderer.send("export-to-csv", args),
 });
 export {};

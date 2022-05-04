@@ -1,49 +1,86 @@
-import { stringify } from 'csv-stringify';
-const sqlite3 = require('sqlite3');
+const { stringify } = require('csv-stringify');
+import { dbMgr } from './dbMgr';
 
-let stringifier: any;
-let columns: any;
+const fs = require('fs');
+const archiver = require('archiver');
+const fsPromises = fs.promises;
 
 export class Converter {
-    constructorq() {}
+    dbManager: dbMgr;
+    filePathBase: any;
+    data?: any;
+    fileNames?: any;
+    constructor(dbManager: dbMgr, filePathBase: any) {
+        this.dbManager = dbManager;
+        this.filePathBase = filePathBase;
+    }
+    async convert() {
+        try {
+            await this.retrieveData();
+            await this.createCSVfiles();
+        } catch (err: any) {
+            console.error('Error occured while storing files!', err);
+        }
+        //await this.createZIPfolder();
+    }
 
-    async converting(db: any) {
-        await new Promise((resolve, reject) => {
-            db.each(
-                'SELECT * FROM Events',
-                function (err: any, row: any) {
-                    // This function is executed for each row in the result set.
-                    // For the first invocation, we initialize the columns and stringifier.
-                    // For every invocation, we write the row object to the stringifier.
-                    // The row object is a simple object where the fields match the columns
-                    // specified in the query.
-                    if (err) {
-                        reject(err);
-                    }
-                    if (!columns) {
-                        columns = Object.keys(row);
-                    }
-                    if (!stringifier) {
-                        stringifier = stringify({
-                            delimiter: ',',
-                            header: true,
-                            columns: columns
+    private async retrieveData() {
+        if (this.dbManager !== undefined) {
+            const data: any = await this.dbManager.returnAllTables();
+            this.data = data;
+        }
+    }
+
+    private async createCSVfiles() {
+        const pathBase = this.filePathBase;
+        const tableNames = [];
+        if (this.data !== undefined && pathBase !== undefined) {
+            for (let dataTable of this.data) {
+                const tableName = Object.keys(dataTable)[0];
+                tableNames.push(tableName);
+                stringify(
+                    dataTable[tableName],
+                    {
+                        header: true
+                    },
+                    function (err: any, output: any) {
+                        fsPromises.writeFile(pathBase + `/${tableName}.csv`, output, function (err: any) {
+                            if (err) throw err;
+                            console.log('Saved!');
                         });
-                        stringifier.pipe(process.stdout);
                     }
-                    // console.log(row);
-                    stringifier.write(row);
-                },
-                function (err: any, count: any) {
-                    // This is invoked when all rows are processed.
-                    if (err) {
-                        reject(err);
-                    }
-                    // console.log(`FINISHED ${count} rows`);
-                    stringifier.end();
-                    resolve(undefined);
-                }
-            );
-        });
+                );
+            }
+            this.fileNames = tableNames;
+        }
+    }
+
+    //used to work but currently doesnt TODO
+    async createZIPfolder() {
+        const pathBase = this.filePathBase;
+        const fileNames = this.fileNames;
+        console.log(fileNames);
+
+        if (pathBase !== undefined && fileNames !== undefined) {
+            const output = fs.createWriteStream(`${pathBase}/data.zip`);
+            const archive = archiver('zip', {
+                gzip: true,
+                zlib: { level: 9 } // Sets the compression level.
+            });
+
+            archive.on('error', function (err: any) {
+                throw err;
+            });
+
+            // pipe archive data to the output file
+            archive.pipe(output);
+
+            // append files
+            for (let fileName of fileNames) {
+                archive.file(`${pathBase}/${fileName}.csv`, { name: `${fileName}.csv` });
+            }
+            //
+            archive.finalize();
+        }
     }
 }

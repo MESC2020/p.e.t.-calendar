@@ -4,7 +4,6 @@ import { dbMgr, logOptions } from "../src/db/dbMgr";
 import { Aggregator } from "../src/db/Aggregator";
 import { PlanGenerator } from "../src/db/PlanGenerator";
 import { Converter } from "../src/db/ConvertToCSV";
-import { table } from "console";
 
 //dev toole extension
 /*
@@ -25,10 +24,8 @@ const {
 const path = require("path");
 const isDev = require("electron-is-dev");
 const { URL } = require("url");
-const fs = require("fs");
 let dbManager: dbMgr;
 let aggregator: Aggregator;
-let converter: Converter;
 
 type Window = {
   minimize(): any;
@@ -44,6 +41,7 @@ type Window = {
 };
 
 let popupWindow: Window;
+let mainWindow: Window;
 
 // Define React App dev and prod base paths
 const devBasePath = "http://localhost:3000/";
@@ -59,33 +57,29 @@ const constructAppPath = (hashRoute = "") => {
   // Return the constructed url
   return appPath.href;
 };
-const str = ["just", "an", "example"];
-
-const { stringify } = require("csv-stringify");
 
 // Importing dialog module using remote
 function storeToCSV() {
   // Resolves to a Promise<Object>
   dialog
-    .showSaveDialog({
-      title: "Select the File Path to save",
-      defaultPath: path.join(__dirname, "../assets/data.csv"),
+    .showOpenDialog(mainWindow, {
+      title: "Select a Folder where the files should be saved",
+      defaultPath: path.join(__dirname, "../assets/"),
       // defaultPath: path.join(__dirname, '../assets/'),
-      buttonLabel: "Save",
+      buttonLabel: "Select",
       // Restricting the user to only Text Files.
-      filters: [
-        {
-          name: "data",
-          extensions: ["csv"],
-        },
-      ],
-      properties: [],
+      properties: ["openDirectory"],
     })
     .then(async (file: any) => {
       // Stating whether dialog operation was cancelled or not.
       console.log(file.canceled);
-      if (!file.canceled) {
-        console.log(file.filePath.toString());
+      if (!file.canceled && file.filePaths.length !== 0) {
+        console.log(file.filePaths[0].toString());
+        const converter = new Converter(
+          dbManager,
+          file.filePaths[0].toString()
+        );
+        converter.convert();
 
         // Creating and Writing to the sample.txt file
       }
@@ -127,33 +121,9 @@ function createPopupWindow(width: any, height: any) {
   });
 }
 
-async function toStore() {
-  const data: any = await dbManager.returnAllTables();
-  for (let dataTable of data) {
-    const tableName = Object.keys(dataTable)[0];
-    stringify(
-      dataTable[tableName],
-      {
-        header: true,
-      },
-      function (err: any, output: any) {
-        console.log(__dirname + "/someData.csv");
-        fs.writeFile(
-          __dirname + `/${tableName}.csv`,
-          output,
-          function (err: any) {
-            if (err) throw err;
-            console.log("Saved!");
-          }
-        );
-      }
-    );
-  }
-}
-
 function createWindow(width: any, height: any) {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: width,
     height: height,
     fullscreen: false,
@@ -168,7 +138,7 @@ function createWindow(width: any, height: any) {
   // mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   mainWindow.on("close", (event: any) => {
     if (popupWindow) popupWindow.destroy();
@@ -192,11 +162,6 @@ app.whenReady().then(() => {
   //createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
-  converter = new Converter();
-  toStore();
-  //converter.converting(dbManager.getDB());
-
-  //storeToCSV();
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
@@ -297,4 +262,9 @@ ipcMain.on("update-logs", (event: any, args: any) => {
   console.log(args);
   console.log("updating log");
   dbManager.updateLogs(args);
+});
+
+//save handlers
+ipcMain.on("export-to-csv", (event: any, args: any) => {
+  storeToCSV();
 });
