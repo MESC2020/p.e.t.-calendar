@@ -18,6 +18,7 @@ export interface IAIpopupProps {
     autoAssignTasks?: any;
 
     display: any;
+    noScroll: any;
 
     data: number;
     message: any[] | any;
@@ -28,24 +29,11 @@ export interface IAIpopupProps {
 const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
 const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
-    //to display duration
-    useEffect(() => {
-        noScroll(true);
-    });
     const handleConfirmation = (button: buttonType) => {
         if (button === buttonType.continue) props.autoAssignTasks(true);
         props.display();
-        noScroll(false);
+        props.noScroll(false);
     };
-
-    //prevent background scrolling when task popup is open
-    function noScroll(addProperty: boolean) {
-        const root = document.querySelector('body');
-        if (addProperty) root!.style.overflow = 'hidden';
-        else {
-            root!.style.overflow = 'scroll';
-        }
-    }
 
     function ifMultipleStrings() {
         let message = '';
@@ -100,7 +88,7 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
 
     return (
         <>
-            <div id="popup" className={'card flex justify-center p-5 w-1/5 h-1/6 relative z-30' + ' ' + props.className}>
+            <div id="" className={'small-popup flex justify-center p-5 w-1/5 h-1/6' + ' ' + props.className}>
                 <div className="flex flex-col justify-center">
                     <div className="mt-2 mb-2 text-justify ">{Array.isArray(props.message) ? ifMultipleStrings() : props.message}</div>
                     <div className="flex justify-center">{returnButtons()}</div>

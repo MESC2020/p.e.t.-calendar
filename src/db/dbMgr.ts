@@ -256,7 +256,7 @@ export class dbMgr {
     async updateLogs(data: log[]) {
         if (this.db != undefined) {
             for (let log of data) {
-                if (log.information !== logOptions.usedAutoAssign) {
+                if (log.information !== logOptions.isLocked) {
                     await this.incrementLogsData(log);
                 }
                 const timestamp: string = new Date().toISOString();

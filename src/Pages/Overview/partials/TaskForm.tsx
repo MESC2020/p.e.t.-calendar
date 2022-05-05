@@ -18,6 +18,7 @@ export interface ITaskFormProps {
     onDelete: any;
     callback: any;
     onDeadline: any;
+    noScroll: any;
 }
 const STANDARD_DURATION = '02:00';
 const STANDARD_DEMAND = 5;
@@ -42,9 +43,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const today = moment().minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
     const placeholder = moment().add(1, 'days').minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
 
-    useEffect(() => {
-        addOrRemoveNoScroll(true);
-    });
+    useEffect(() => {});
 
     const handleExternalEvent = async (key: string, value: any) => {
         setExternalEvent({ ...externalEvent, [key]: value });
@@ -64,21 +63,21 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         props.onDeadline(copyEvent);
         setExternalEvent({ ...copyEvent });
         if (props.data.id) props.callback(emptyEventObject);
-        addOrRemoveNoScroll(false);
+        props.noScroll(false);
         props.onChange(externalEvent);
         props.display();
     };
 
     const handleCancle = () => {
         if (props.data.id) props.callback(emptyEventObject);
-        addOrRemoveNoScroll(false);
+        props.noScroll(false);
         props.display();
     };
 
     const closeAndDelete = () => {
         const event: EventObject = props.data;
         props.onDelete(event, Mode.deleting); //delete
-        addOrRemoveNoScroll(false);
+        props.noScroll(false);
         props.callback(emptyEventObject);
         props.display(); // close popup
     };
@@ -100,14 +99,6 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 classNames: currentClassNames
             };
         });
-    }
-    //prevent background scrolling when task popup is open
-    function addOrRemoveNoScroll(addProperty: boolean) {
-        const root = document.querySelector('body');
-        if (addProperty) root!.style.overflow = 'hidden';
-        else {
-            root!.style.overflow = 'scroll';
-        }
     }
 
     function updateDurationAndEndDate(durationTime: string, endDate?: string) {
@@ -146,7 +137,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     return (
         <>
-            <div onKeyDown={handleKeyDown} id="popup" className={'card flex flex-col p-5 w-3/5 h-3/5 relative z-30' + ' ' + props.className}>
+            <div onKeyDown={handleKeyDown} className={'popup flex flex-col p-5 w-3/5 h-3/5 ' + ' ' + props.className}>
                 <div className="flex justify-center">
                     <h1 className="font-bold text-3xl mb-2">{props.data.id ? 'Edit Task' : 'Create Task'}</h1>
                 </div>

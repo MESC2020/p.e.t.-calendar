@@ -11,11 +11,9 @@ import moment from 'moment';
 import AIpopup from './partials/AIpopup';
 import LockScreen from './partials/LockScreen';
 import Tooltip from '@mui/material/Tooltip';
+import ContextMenu from '../../views/partials/ContextMenu';
 
-export interface IOverviewPageProps {
-    setIsLocked: any;
-    isLocked: boolean;
-}
+export interface IOverviewPageProps {}
 
 export enum colorPalettes {
     deadlineWarning = '#F56853',
@@ -55,8 +53,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     const [isLoading, setIsLoading] = useState(true);
+    const [isLocked, setIsLocked] = useState(true);
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
     const [displayAutoAI, setDisplayAutoAI] = useState(false);
+    const [displayUnlock, setDisplayUnlock] = useState(false);
     const [flags, setFlags] = useState({
         showAnimation: true,
         demandToggle: true,
@@ -69,7 +69,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         events: []
     });
     useEffect(() => {
-        handlingResizeOfEvents();
+        if (!isLocked) handlingResizeOfEvents();
     });
     useEffect(() => {
         if (sourceAPI === undefined && calendarRef.current !== undefined) {
@@ -80,6 +80,13 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     useEffect(() => {
+        async function checkIfLocked() {
+            if (isLocked) {
+                const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);
+                if (isLocked.data === 'false') setIsLocked(false);
+            }
+        }
+
         async function getData() {
             const events = await window.api.getAllEvents();
             setIsLoading(!isLoading);
@@ -89,7 +96,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         if (isLoading) {
             getData();
         }
-    }, [state]);
+        if (isLocked) checkIfLocked();
+    });
 
     useEffect(() => {
         if (sourceAPI !== undefined) {
@@ -189,7 +197,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
-            const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`] };
+            const newEvent = { ...eventWithoutDemand, classNames: ['demand', !isLocked ? `demand-${demand}` : ''] };
 
             calculateDeadline(newEvent);
 
@@ -373,6 +381,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     async function openTaskMenu() {
         document!.getElementById('overlay')!.style.display = 'block';
+        noScroll(true);
         setDisplayTaskForm(!displayTaskForm);
     }
 
@@ -539,8 +548,14 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     function displayAIpopup(content: aiPopupContent) {
         setAiPopup(content);
-        document!.getElementById('overlay_AI')!.style.display = 'block';
+        document!.getElementById('overlay')!.style.display = 'block';
+        noScroll(true);
         setDisplayAutoAI(true);
+    }
+    function handleDisplayUnlock() {
+        document!.getElementById('overlay')!.style.display = 'block';
+        noScroll(true);
+        setDisplayUnlock(true);
     }
 
     function unlockAI(unlock: boolean) {
@@ -560,8 +575,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 hasContinueButton={aiPopup.hasContinueButton}
                 autoAssignTasks={autoAssignTasks}
                 className="mt-10 ml-14"
+                noScroll={noScroll}
                 display={() => {
-                    document!.getElementById('overlay_AI')!.style.display = 'none';
+                    document!.getElementById('overlay')!.style.display = 'none';
                     setDisplayAutoAI(false);
                 }}
                 data={state.externalEvents.length}
@@ -575,129 +591,160 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     function handleUnlockApp() {
         window.api.updateLogs([{ information: logOptions.isLocked, data: 'false' }]);
-        props.setIsLocked(false);
+        setIsLoading(true);
     }
-
-    function exportCSV() {
-        window.api.exportToCSV();
+    function noScroll(addProperty: boolean) {
+        const root = document.querySelector('body');
+        if (addProperty) root!.style.overflow = 'hidden';
+        else {
+            root!.style.overflow = 'scroll';
+        }
     }
 
     return (
         <>
-            {props.isLocked || isLoading ? (
-                <LockScreen unLockApp={handleUnlockApp} isLocked={props.isLocked} />
+            {isLoading ? (
+                ''
             ) : (
-                <div className="flex mr-5 mb-5 min-size">
-                    <div style={{ position: 'fixed', zIndex: 10 }} className="ml-5 mt-10">
-                        <div className="flex gap-x-2 ">
-                            <Button
-                                color={'white'}
-                                backgroundColor={'#1e2b3'}
-                                disabled={false}
-                                onClick={() => {
-                                    openTaskMenu();
-                                }}
-                                className={''}
-                            >
-                                Add Task
-                            </Button>
-
-                            <Tooltip placement="top" title="">
+                <>
+                    <div className="flex mr-5 mb-5 min-size">
+                        <div style={{ position: 'fixed', zIndex: 1 }} className="ml-5 mt-10">
+                            <div className="flex gap-x-2 ">
                                 <Button
                                     color={'white'}
-                                    backgroundColor={'#46719C'}
-                                    disabled={autoAIislocked || state.externalEvents.length === 0}
+                                    backgroundColor={'#1e2b3'}
+                                    disabled={false}
                                     onClick={() => {
-                                        autoAssignTasks();
+                                        openTaskMenu();
                                     }}
                                     className={''}
                                 >
-                                    Auto-Assign Tasks
+                                    Add Task
                                 </Button>
-                            </Tooltip>
+                                {isLocked ? (
+                                    ''
+                                ) : (
+                                    <Button
+                                        color={'white'}
+                                        backgroundColor={'#46719C'}
+                                        disabled={autoAIislocked || state.externalEvents.length === 0}
+                                        onClick={() => {
+                                            autoAssignTasks();
+                                        }}
+                                        className={''}
+                                    >
+                                        Auto-Assign Tasks
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
+                                {state.externalEvents.map((event) => (
+                                    <ExternalEvent onClick={handleLeftclick} event={event} />
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
-                            {state.externalEvents.map((event) => (
-                                <ExternalEvent onClick={handleLeftclick} event={event} />
-                            ))}
-                        </div>
-                    </div>
-                    <div className="w-full flex justify-center">
-                        <div className="flex pl-60 flex-col">
-                            <div className="flex justify-end">
-                                <div style={{ marginRight: 60 }} className=" flex">
-                                    <p className="pt-1 pr-1">show behavior</p>
-                                    <div id="switch" className=" pt-1">
-                                        <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                        <div className="w-full flex justify-center">
+                            <div className="flex pl-60 flex-col">
+                                <div className="flex justify-end">
+                                    <div className=" flex">
+                                        {isLocked ? (
+                                            ''
+                                        ) : (
+                                            <>
+                                                <p className="pt-1 pr-1">show behavior</p>
+                                                <div id="switch" className=" pt-1">
+                                                    <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                                                </div>
+                                            </>
+                                        )}{' '}
+                                        <ContextMenu setDisplayUnlock={handleDisplayUnlock} />
                                     </div>
                                 </div>
-                                <div className=" mb-2 mr-2">
-                                    <Button disabled={false} rounded={'rounded-md'} backgroundColor={'#86d3ff'} onClick={exportCSV} className={''}>
-                                        <Tooltip placement="top" title="Export to CSV">
-                                            {<img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/store.png'} />}
-                                        </Tooltip>
-                                    </Button>{' '}
-                                </div>
-                            </div>
-                            <div className="container-overview">
-                                <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
-                                    <FullCalendar
-                                        ref={calendarRef}
-                                        plugins={[timeGridPlugin, interactionPlugin]}
-                                        initialView="timeGridWeek"
-                                        allDaySlot={false}
-                                        slotMinTime="0:00:00"
-                                        slotMaxTime="23:59:59"
-                                        nowIndicator={true}
-                                        height="1600px"
-                                        contentHeight="100px"
-                                        expandRows={true}
-                                        editable={true}
-                                        droppable={true}
-                                        forceEventDuration={false}
-                                        eventContent={handleEventContent}
-                                        eventDragStart={handleDragStart}
-                                        eventDragStop={handleDragStop}
-                                        eventDrop={handleDrop}
-                                        eventReceive={handleEventReceive}
-                                        eventLeave={handleExternalEventLeave}
-                                        eventResize={handleEventResize}
-                                        eventClick={handleLeftclick}
-                                        snapDuration={'00:15:00'}
-                                        businessHours={{
-                                            daysOfWeek: [1, 2, 3, 4, 5],
-                                            startTime: '08:00',
-                                            endTime: '18:00'
-                                        }}
-                                        firstDay={1} //Monday
-                                    />
-                                </div>
-                                {flags.showGraphs ? <VerticalGraph unlockAIbutton={unlockAI} showAnimation={flags.showAnimation} className="box z-20" /> : ''}
-                                <div id="overlay" className="">
-                                    {displayTaskForm ? (
-                                        <TaskForm
-                                            className="mt-10 ml-14"
-                                            onChange={handleNewOrEditEvent}
-                                            display={() => {
-                                                document!.getElementById('overlay')!.style.display = 'none';
-                                                setDisplayTaskForm(!displayTaskForm);
+                                <div className="container-overview">
+                                    <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                                        <FullCalendar
+                                            ref={calendarRef}
+                                            plugins={[timeGridPlugin, interactionPlugin]}
+                                            initialView="timeGridWeek"
+                                            allDaySlot={false}
+                                            slotMinTime="0:00:00"
+                                            slotMaxTime="23:59:59"
+                                            nowIndicator={true}
+                                            height="1600px"
+                                            contentHeight="100px"
+                                            expandRows={true}
+                                            editable={true}
+                                            droppable={true}
+                                            forceEventDuration={false}
+                                            eventContent={handleEventContent}
+                                            eventDragStart={handleDragStart}
+                                            eventDragStop={handleDragStop}
+                                            eventDrop={handleDrop}
+                                            eventReceive={handleEventReceive}
+                                            eventLeave={handleExternalEventLeave}
+                                            eventResize={handleEventResize}
+                                            eventClick={handleLeftclick}
+                                            snapDuration={'00:15:00'}
+                                            businessHours={{
+                                                daysOfWeek: [1, 2, 3, 4, 5],
+                                                startTime: '08:00',
+                                                endTime: '18:00'
                                             }}
-                                            onDeadline={calculateDeadline}
-                                            data={currentEvent}
-                                            onDelete={editEventsInCalendar}
-                                            callback={setCurrentEvent}
+                                            firstDay={1} //Monday
                                         />
-                                    ) : (
-                                        ''
-                                    )}
-                                </div>
-                                <div id="overlay_AI" className="">
-                                    {displayAutoAI ? returnAIpopup() : ''}
+                                    </div>
+                                    {flags.showGraphs && !isLocked ? <VerticalGraph unlockAIbutton={unlockAI} showAnimation={flags.showAnimation} className="box z-20" /> : ''}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                    <div
+                        id="overlay"
+                        onClick={(event: any) => {
+                            console.log(event.target);
+                            if (event.target.id === 'overlay') {
+                                document!.getElementById('overlay')!.style.display = 'none';
+                                if (displayTaskForm) setDisplayTaskForm(false);
+                                else if (displayAutoAI) setDisplayAutoAI(false);
+                                else if (displayUnlock) setDisplayUnlock(false);
+                            }
+                        }}
+                        className=""
+                    >
+                        {displayTaskForm ? (
+                            <TaskForm
+                                className="mt-10 ml-14"
+                                onChange={handleNewOrEditEvent}
+                                display={() => {
+                                    document!.getElementById('overlay')!.style.display = 'none';
+                                    setDisplayTaskForm(!displayTaskForm);
+                                }}
+                                noScroll={noScroll}
+                                onDeadline={calculateDeadline}
+                                data={currentEvent}
+                                onDelete={editEventsInCalendar}
+                                callback={setCurrentEvent}
+                            />
+                        ) : displayAutoAI ? (
+                            returnAIpopup()
+                        ) : (
+                            ''
+                        )}
+                        {displayUnlock ? (
+                            <LockScreen
+                                noScroll={noScroll}
+                                display={() => {
+                                    document!.getElementById('overlay')!.style.display = 'none';
+                                    setDisplayUnlock(false);
+                                }}
+                                unLockApp={handleUnlockApp}
+                                lockStatus={isLocked}
+                            />
+                        ) : (
+                            ''
+                        )}
+                    </div>
+                </>
             )}
         </>
     );

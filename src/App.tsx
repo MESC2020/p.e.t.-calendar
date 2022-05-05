@@ -20,20 +20,14 @@ global.emptyEventObject = {
 export interface IAppProps {}
 
 const App: React.FunctionComponent<IAppProps> = (props) => {
-    const [isLocked, setIsLocked] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     useEffect(() => {
-        async function checkIfLocked() {
-            const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);
-            if (isLocked.data === 'false') setIsLocked(false);
-        }
-        if (isLocked) checkIfLocked();
         if (isLoading) {
             setTimeout(() => {
                 setIsLoading(false);
-            }, 3000);
+            }, 2000);
         }
-    }, [isLocked]);
+    });
 
     return (
         <>
@@ -44,8 +38,8 @@ const App: React.FunctionComponent<IAppProps> = (props) => {
             ) : (
                 <HashRouter>
                     <Switch>
-                        <Route element={<WithNavbar isLocked={isLocked} />}>
-                            <Route path="/" element={<OverviewPage isLocked={isLocked} setIsLocked={setIsLocked} />} />
+                        <Route element={<WithNavbar />}>
+                            <Route path="/" element={<OverviewPage />} />
                             <Route path="/stats" element={<StatsPage />} />
                         </Route>
                         <Route element={<WithoutNavbar />}>

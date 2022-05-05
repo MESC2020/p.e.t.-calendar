@@ -3,14 +3,12 @@ import { Outlet } from 'react-router';
 import { logOptions } from '../../Pages/Overview/OverviewPage';
 import Navbar from './Navbar';
 
-export interface IWithNavbarProps {
-    isLocked: boolean;
-}
+export interface IWithNavbarProps {}
 
 const WithNavbar: React.FunctionComponent<IWithNavbarProps> = (props) => {
     return (
         <>
-            <Navbar isLocked={props.isLocked} />
+            <Navbar />
             <div className="main">
                 <Outlet />
             </div>
