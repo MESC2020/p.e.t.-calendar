@@ -6,11 +6,10 @@ import { PlanGenerator } from "../src/db/PlanGenerator";
 import { Converter } from "../src/db/ConvertToCSV";
 
 //dev toole extension
-/*
+
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
-*/
 
 // Modules to control application life and create native browser window
 const {
@@ -151,12 +150,12 @@ function createWindow(width: any, height: any) {
 app.whenReady().then(() => {
   const mainScreen = screen.getPrimaryDisplay();
   const { width, height } = mainScreen.workAreaSize;
-  /*installExtension(REACT_DEVELOPER_TOOLS, {
+  installExtension(REACT_DEVELOPER_TOOLS, {
     loadExtensionOptions: { allowFileAccess: true },
   })
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));
-*/
+
   infinitePopUpLoop(width, height);
   createWindow(width, height);
   //createPopupWindow(width, height);

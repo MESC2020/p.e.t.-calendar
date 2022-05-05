@@ -79,6 +79,8 @@ export class PlanGenerator {
                 event.start = undefined;
                 event.end = undefined;
                 tasksToAssign.push(event);
+            } else {
+                this.assignedEvents.push(event);
             }
         });
 

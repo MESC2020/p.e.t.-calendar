@@ -61,16 +61,10 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleConfirmation = () => {
         const copyEvent = { ...externalEvent };
-
         props.onDeadline(copyEvent);
-
         setExternalEvent({ ...copyEvent });
-
-        console.log(copyEvent);
-
         if (props.data.id) props.callback(emptyEventObject);
         addOrRemoveNoScroll(false);
-
         props.onChange(externalEvent);
         props.display();
     };
@@ -136,13 +130,28 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         });
     }
 
+    function handleKeyDown(event: any) {
+        const isNotFull = checkIfFormFull();
+        if (event.key === 'Enter' && !isNotFull) {
+            handleConfirmation();
+        } else if (event.key === 'Escape') {
+            handleCancle();
+        }
+    }
+
+    function checkIfFormFull() {
+        const isNotFull = externalEvent.title.length === 0 || (deadlineToggle && externalEvent.deadline === undefined);
+        return isNotFull;
+    }
+
     return (
         <>
-            <div id="popup" className={'card flex flex-col p-5 w-3/4 h-3/4 relative z-30' + ' ' + props.className}>
+            <div onKeyDown={handleKeyDown} id="popup" className={'card flex flex-col p-5 w-3/5 h-3/5 relative z-30' + ' ' + props.className}>
                 <div className="flex justify-center">
                     <h1 className="font-bold text-3xl mb-2">{props.data.id ? 'Edit Task' : 'Create Task'}</h1>
                 </div>
                 <input
+                    autoFocus={true}
                     className={'block ml-10 mr-10'}
                     placeholder={'Task Name'}
                     type={'text'}
@@ -152,20 +161,22 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     value={externalEvent.title}
                 ></input>
 
-                <div className="ml-10 mt-4 mr-10">
+                <div className="ml-10 mt-7 mr-10">
                     <p>How demanding will this task be?</p>
                     <RangeSlider textColorWhite={false} standardDemand={defaultDemand} onChange={updateClassList} />
                 </div>
-                <div className="flex mt-4 ml-10 gap-x-4">
+                <div className="flex mt-7 ml-10 gap-x-4">
                     <div className="flex flex-col">
                         <p>Duration (h/m)</p>
                         <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.durationTime} onChange={updateDurationAndEndDate} />
                     </div>
+                </div>
+                <div className="ml-10 mt-7 flex">
                     <div className="">
                         <p>Deadline?</p>
                         <SwitchButton onChange={handleChangeToggle} defaultMode={showDeadlineOrNot} />
                     </div>
-                    <div className="mt-2">
+                    <div className="pl-11">
                         {deadlineToggle ? (
                             <input
                                 className={'block w-full'}
@@ -183,19 +194,8 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                         )}
                     </div>
                 </div>
-                <Button
-                    backgroundColor={colorPalettes.greenButton}
-                    disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
-                    onClick={handleConfirmation}
-                    className={'w-1/6 block mr-auto ml-auto'}
-                >
-                    <div className="flex justify-center">
-                        {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/save.png'} />}
-                        Save
-                    </div>
-                </Button>
 
-                <div className="mt-auto flex gap-x-80">
+                <div className="mt-auto flex justify-center gap-x-2">
                     {props.data.id ? (
                         <Button disabled={false} onClick={closeAndDelete} backgroundColor={colorPalettes.redButton} className={'mr-auto mt-auto'}>
                             <div className="flex">
@@ -206,10 +206,23 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     ) : (
                         ''
                     )}
+                    <div className="flex justify-end gap-x-2 w-full">
+                        <Button
+                            backgroundColor={colorPalettes.greenButton}
+                            disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
+                            onClick={handleConfirmation}
+                            className={'w-1/6 block '}
+                        >
+                            <div className="flex justify-center">
+                                {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/save.png'} />}
+                                Save
+                            </div>
+                        </Button>
 
-                    <Button disabled={false} onClick={handleCancle} className={'ml-auto mt-auto'}>
-                        Cancel
-                    </Button>
+                        <Button disabled={false} onClick={handleCancle} className={''}>
+                            Cancel
+                        </Button>
+                    </div>
                 </div>
             </div>
         </>

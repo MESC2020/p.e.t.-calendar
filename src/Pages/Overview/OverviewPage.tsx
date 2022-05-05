@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import FullCalendar, { EventSourceInput } from '@fullcalendar/react';
+import FullCalendar, { CalendarApi, EventSourceInput } from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SwitchButton from '../../views/partials/switchButton';
@@ -63,9 +63,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         showGraphs: true
     });
     const [sourceAPI, setSourceAPI] = useState<any>(undefined);
-
     const [currentEvent, setCurrentEvent] = useState<EventObject>(emptyEventObject);
-
     const [state, setState] = useState<State>({
         externalEvents: [],
         events: []
@@ -74,10 +72,18 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         handlingResizeOfEvents();
     });
     useEffect(() => {
+        if (sourceAPI === undefined && calendarRef.current !== undefined) {
+            const calendarApi = calendarRef.current.getApi();
+            const id = calendarApi.addEventSource(state.events);
+            setSourceAPI(id);
+        }
+    });
+
+    useEffect(() => {
         async function getData() {
             const events = await window.api.getAllEvents();
             setIsLoading(!isLoading);
-            const eventsCalendar = sortData(events);
+            sortData(events);
         }
 
         if (isLoading) {
@@ -86,23 +92,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }, [state]);
 
     useEffect(() => {
-        if (calendarRef.current !== undefined) {
-            let calendarApi = calendarRef.current.getApi();
-            console.log('Source API');
-            console.log(sourceAPI);
-            console.log('calendar source api');
-            console.log(calendarApi.getEventSources());
-
-            if (sourceAPI === undefined) {
-                const id = calendarApi.addEventSource(state.events);
-                console.log(calendarApi.getEventSources());
-                setSourceAPI(id);
-            } else {
-                console.log(calendarApi.getEvents());
-                sourceAPI.refetch();
-            }
-
-            console.log('refetching');
+        if (sourceAPI !== undefined) {
+            sourceAPI.refetch();
         }
     }, [state]);
 
@@ -236,11 +227,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             formatedEdit.push(currentEvent);
         });
 
-        if (!flags.demandToggle) {
-            setFlags((flags) => {
-                return { ...flags, showAnimation: false };
-            });
-        }
         await editEventsInCalendar(formatedEdit, mode); //update and forcing refresh of component "FullCalendar"
     }
 
@@ -252,6 +238,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 // Case 1: when toggle has been turned Off
                 if (!el.classList.contains('full-width')) {
                     el.classList.add('full-width');
+                    console.log('set to full-width');
                 }
                 if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
                 // Case 2: when Event is beeing dragged
@@ -265,6 +252,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 if (el.classList.contains('full-width')) {
                     el.classList.remove('full-width');
                     if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
+                    console.log('set to demand');
                 }
             }
         });
