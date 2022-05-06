@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import Slider from '@mui/material/Slider';
 import { blue, grey, orange } from '@mui/material/colors';
@@ -15,7 +15,16 @@ function valuetext(value: any) {
     return `${value}`;
 }
 const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
-    const [value, setValue] = useState(props.standardDemand);
+    const [storedHTML, setStoredHTML] = useState<any>(undefined);
+    useEffect(() => {
+        if (storedHTML === undefined) {
+            const el = document.getElementsByClassName('MuiSlider-thumbColorPrimary MuiSlider-thumbSizeMedium MuiSlider-thumb css-fqmdoh-MuiSlider-thumb')[0] as HTMLElement;
+            console.log(el);
+            el.style.display = 'none';
+            setStoredHTML(el);
+        }
+    });
+    const [value, setValue] = useState(undefined);
     const demandLevels = [
         { value: 1, label: 'Extremly Low' },
         { value: 2, label: '2' },
@@ -54,7 +63,6 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
                 <Slider
                     disabled={props?.checkBox}
                     aria-label="Demanding Level"
-                    defaultValue={props.standardDemand}
                     step={1}
                     color={'primary'}
                     min={1}
@@ -62,6 +70,7 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
                     value={value}
                     onChange={(event: any, newValue: any) => {
                         console.log('sliding');
+                        if (storedHTML !== undefined) storedHTML.style.display = 'block';
                         handleChange(event.target.value);
                     }}
                     valueLabelDisplay="auto"
