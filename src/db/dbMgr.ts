@@ -141,6 +141,7 @@ export class dbMgr {
                 const data = [event.title, demand];
                 if (event.deadline != undefined) data.push(event.deadline);
                 else data.push(undefined);
+                console.log(event);
 
                 if (event.start || event.start === undefined || event.start === null) {
                     valuesToChange = valuesToChange + ', start = ?, end = ?';

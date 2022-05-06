@@ -3,7 +3,7 @@ import FullCalendar, { CalendarApi, EventSourceInput } from '@fullcalendar/react
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SwitchButton from '../../views/partials/switchButton';
-import ExternalEvent from './partials/ExternalEvent';
+import ExternalEvent, { retrieveDemandLevel } from './partials/ExternalEvent';
 import VerticalGraph from './partials/verticalGraphs';
 import { Button } from '../../views/partials/Button';
 import TaskForm from './partials/TaskForm';
@@ -39,7 +39,8 @@ export enum Mode {
     updating = 'updating',
     deleting = 'deleting',
     dragAndDrop = 'dragAndDrop',
-    assigning = 'assigning'
+    assigning = 'assigning',
+    movingBackToPool = 'movingBackToPool'
 }
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
@@ -92,11 +93,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             setIsLoading(!isLoading);
             sortData(events);
         }
+        if (isLocked) checkIfLocked();
 
         if (isLoading) {
             getData();
         }
-        if (isLocked) checkIfLocked();
     });
 
     useEffect(() => {
@@ -137,6 +138,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 }
             }
             if (mode === Mode.dragAndDrop) eventsInCalendar.push(event);
+            if (mode === Mode.movingBackToPool) externalEvents.push(event);
         }
         if (mode === Mode.deleting) window.api.deleteEvents(toEdit);
         else window.api.updateEvents(toEdit);
@@ -191,13 +193,16 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         }
     }
 
-    function sortData(events: EventObject[], alertIfExternalEvents = false) {
+    async function sortData(events: EventObject[], alertIfExternalEvents = false) {
         const eventsInCalendar: EventObject[] = state.events;
         const externalEvents: EventObject[] = [];
+
+        const isLocked = (await window.api.retrieveLockStatus(logOptions.isLocked).data) !== 'false' ? true : false;
+
         emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
-            const newEvent = { ...eventWithoutDemand, classNames: ['demand', !isLocked ? `demand-${demand}` : ''] };
+            const newEvent = { ...eventWithoutDemand, classNames: ['demand', isLocked ? `demand-${demand}` : ''] };
 
             calculateDeadline(newEvent);
 
@@ -231,7 +236,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         const toEdit = Array.isArray(arg) ? arg : [arg]; //make an array
         let formatedEdit: EventObject[] = [];
         toEdit.forEach((event) => {
-            let currentEvent: EventObject = fcEventToReactEvent(event);
+            let currentEvent: EventObject = fcEventToReactEvent(event, mode);
             formatedEdit.push(currentEvent);
         });
 
@@ -246,7 +251,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 // Case 1: when toggle has been turned Off
                 if (!el.classList.contains('full-width')) {
                     el.classList.add('full-width');
-                    console.log('set to full-width');
                 }
                 if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
                 // Case 2: when Event is beeing dragged
@@ -260,7 +264,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 if (el.classList.contains('full-width')) {
                     el.classList.remove('full-width');
                     if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
-                    console.log('set to demand');
                 }
             }
         });
@@ -385,15 +388,20 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         setDisplayTaskForm(!displayTaskForm);
     }
 
-    function fcEventToReactEvent(arg: any): EventObject {
+    function fcEventToReactEvent(arg: any, mode?: Mode): EventObject {
         let event;
         if (arg.event !== undefined) {
             event = {
                 id: parseInt(arg.event.id),
                 title: arg.event.title,
                 deadline: arg.event.extendedProps.deadline,
-                start: arg.event.startStr,
-                end: arg.event.endStr !== null && arg.event.endStr !== undefined ? arg.event.endStr : calculateEndDate(arg.event.extendedProps.durationTime, arg.event.startStr),
+                start: mode !== undefined && mode === Mode.movingBackToPool ? undefined : arg.event.startStr,
+                end:
+                    arg.event.endStr !== null && arg.event.endStr !== undefined
+                        ? mode !== undefined && mode === Mode.movingBackToPool
+                            ? undefined
+                            : arg.event.endStr
+                        : calculateEndDate(arg.event.extendedProps.durationTime, arg.event.startStr),
                 classNames: arg.event.classNames,
                 durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
             };
@@ -430,12 +438,25 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     */
     function handleEventContent(arg: any) {
         let timeLeft;
+
         if (arg.event.extendedProps.deadline) {
             const endDateHours = new Date(arg.event.end).getTime();
             const deadlineHours = new Date(arg.event.extendedProps.deadline).getTime();
             timeLeft = deadlineHours - endDateHours;
             timeLeft = new Date(timeLeft).getHours();
         }
+
+        /*
+        if (arg.event.extendedProps.durationTime > 2) {
+            const newButton = document.createElement('button');
+            const text = `Press`;
+            const newContent = document.createTextNode(text);
+            newButton.appendChild(newContent);
+            newButton.style.overflow = 'hidden';
+            return {
+                domNodes: [newButton]
+            };
+        }*/
 
         if (arg.event.backgroundColor === colorPalettes.deadlineWarning) {
             const newDiv = document.createElement('div');
@@ -600,6 +621,78 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             root!.style.overflow = 'scroll';
         }
     }
+    function handleMouseHover(arg: any) {
+        const parent = arg.el.parentNode;
+        const grandparent = parent.parentNode;
+        const demand = retrieveDemandLevel(arg.event);
+
+        if (parent.childNodes.length === 1) {
+            const div = document.createElement('div');
+            div.className = 'injected-container';
+            div.style.display = 'block';
+            div.style.marginLeft = (demand as number) <= 6 ? `${arg.el.offsetWidth}px` : '130px';
+            parent.style.pointerEvents = 'all';
+            grandparent.parentNode.addEventListener('mouseleave', () => {
+                setTimeout(() => {
+                    div.style.display = 'none';
+                }, 2000);
+            });
+
+            //minus Button
+            let minusButton = document.createElement('button');
+            minusButton.className = 'injected-buttons';
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
+
+            minusButton.onclick = function (e) {
+                e.stopPropagation();
+                updateData(arg, Mode.movingBackToPool);
+            };
+
+            //trash Button
+            let deleteButton = document.createElement('button');
+            deleteButton.className = 'injected-buttons';
+            const deleteImg = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
+
+            deleteButton.onclick = function (e) {
+                e.stopPropagation();
+                updateData(arg, Mode.deleting);
+            };
+            div.appendChild(minusButton);
+            div.appendChild(deleteButton);
+
+            parent.appendChild(div);
+        }
+        if (parent.childNodes.length === 2) {
+            const button = parent.childNodes[1];
+            button.style.display = 'block';
+        }
+    }
+    function handleMouseStopHover(arg: any) {
+        const parent = arg.el.parentNode;
+
+        console.log(parent.getBoundingClientRect());
+        const demand = retrieveDemandLevel(arg.event);
+        const f = () => {
+            if (parent.childNodes.length === 2) {
+                const button = parent.childNodes[1];
+                button.style.display = 'none';
+            }
+        };
+
+        setTimeout(() => {
+            f();
+        }, 2000);
+    }
+    function testFunc(event: any) {
+        //console.clear();
+        console.log(document.elementFromPoint(event.clientX, event.clientY));
+    }
 
     return (
         <>
@@ -637,7 +730,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     </Button>
                                 )}
                             </div>
-                            <div className="flex flex-grow flex-col min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
+                            <div className="flex flex-grow flex-col gap-y-1 min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
                                 {state.externalEvents.map((event) => (
                                     <ExternalEvent onClick={handleLeftclick} event={event} />
                                 ))}
@@ -661,7 +754,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     </div>
                                 </div>
                                 <div className="container-overview">
-                                    <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                                    <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl" onMouseMove={testFunc}>
                                         <FullCalendar
                                             ref={calendarRef}
                                             plugins={[timeGridPlugin, interactionPlugin]}
@@ -684,6 +777,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                             eventLeave={handleExternalEventLeave}
                                             eventResize={handleEventResize}
                                             eventClick={handleLeftclick}
+                                            eventMouseEnter={handleMouseHover}
                                             snapDuration={'00:15:00'}
                                             businessHours={{
                                                 daysOfWeek: [1, 2, 3, 4, 5],
@@ -701,7 +795,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     <div
                         id="overlay"
                         onClick={(event: any) => {
-                            console.log(event.target);
                             if (event.target.id === 'overlay') {
                                 document!.getElementById('overlay')!.style.display = 'none';
                                 if (displayTaskForm) setDisplayTaskForm(false);

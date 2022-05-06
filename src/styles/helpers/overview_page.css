@@ -46,3 +46,30 @@
 .min-size-statsPage {
     min-width: 618px;
 }
+
+.injected-container {
+    @apply flex flex-col justify-end items-end;
+    position: relative;
+
+    margin-right: 1px;
+    z-index: 1000;
+
+    width: 50px;
+    height: 70px;
+
+    padding: 0 !important;
+}
+
+.injected-buttons {
+    @apply border-2 border-calendar-blue;
+    background-color: white;
+    margin-top: 8px;
+
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+
+    padding: 0 !important;
+
+    overflow: hidden;
+}

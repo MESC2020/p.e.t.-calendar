@@ -9,6 +9,7 @@ module.exports = {
       },
       colors: {
         "my-bright-blue": "#86d3ff",
+        "calendar-blue": "#3788d8",
       },
     },
   },

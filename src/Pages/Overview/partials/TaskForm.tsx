@@ -61,10 +61,10 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const handleConfirmation = () => {
         const copyEvent = { ...externalEvent };
         props.onDeadline(copyEvent);
-        setExternalEvent({ ...copyEvent });
         if (props.data.id) props.callback(emptyEventObject);
         props.noScroll(false);
-        props.onChange(externalEvent);
+
+        props.onChange(copyEvent);
         props.display();
     };
 

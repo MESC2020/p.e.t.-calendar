@@ -1,3 +1,4 @@
+import styled from '@emotion/styled';
 import { Draggable } from '@fullcalendar/interaction';
 import React, { memo, useEffect, useRef } from 'react';
 import { colorPalettes } from '../OverviewPage';
@@ -40,20 +41,19 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
             onClick={() => {
                 props.onClick(props.event);
             }}
-            id="divBox"
+            style={{ cursor: 'pointer' }}
             ref={elRef}
-            className="fc-event fc-h-event mb-1 fc-daygrid-event fc-daygrid-block-event p-2"
-            title={props.event.title}
-            style={{
-                backgroundColor: props.event.backgroundColor,
-                borderColor: props.event.backgroundColor,
-                cursor: 'pointer'
-            }}
+            className="w-ful "
         >
-            <div className="fc-event-main">
-                <div>
-                    <strong style={{ color: textColor }}>{props.event.title}</strong>
-                    <p>{props.event.deadline ? displayDeadlineText() : ''}</p>
+            <div style={{ backgroundColor: props.event.backgroundColor }} className="rounded-md text-white w-full flex justify-between p-2">
+                <div style={{ maxWidth: '80%' }} className="flex flex-col">
+                    <p className="font-bold overflow-hidden">{props.event.title}</p>
+                    <p>{displayDeadlineText()}</p>
+                </div>
+                <div style={{ minWidth: '20%' }} className="w-1/5 rounded-sm  bg-white flex justify-center items-center">
+                    <p className="font-bold" style={{ color: props.event.backgroundColor }}>
+                        {retrieveDemandLevel(props.event)}
+                    </p>
                 </div>
             </div>
         </div>
@@ -61,3 +61,8 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
 });
 
 export default ExternalEvent;
+export function retrieveDemandLevel(event: any) {
+    for (let className of event.classNames) {
+        if (className.includes('-')) return parseInt(className.slice(-1));
+    }
+}

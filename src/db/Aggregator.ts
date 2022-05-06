@@ -29,7 +29,7 @@ export class Aggregator {
     }
     //Used for stats
     async aggregatingWeekdays(): Promise<IaggregatedWeekdays[]> {
-        const weekdays: any = await this.aggregatingHours(true); //any as type: IaggregatedHoursWithEnergy
+        const weekdays: any = await this.aggregatingHours(true, true); //any as type: IaggregatedHoursWithEnergy
         let count = 0;
         let sumProductive = 0;
         let sumEnergy = 0;
@@ -51,7 +51,7 @@ export class Aggregator {
         return avgWeekdays;
     }
     //used for graphs in the calendar
-    aggregatingHours(includeEnergy: boolean = false) {
+    aggregatingHours(includeEnergy: boolean = true, includeProductivity: boolean = true) {
         const db = this.dbManager.db;
         const sql = `SELECT day, time, AVG(productive)${includeEnergy ? ',AVG(energy) ' : ' '}FROM Report GROUP BY day, time ORDER BY time ASC`;
         let result;
@@ -63,7 +63,15 @@ export class Aggregator {
                     }
                     const objc: aggregatedHours = {};
                     rows.forEach((row: any) => {
-                        objc[row.day] = { ...objc[row.day], [row.time]: includeEnergy ? { productive: row['AVG(productive)'], energy: row['AVG(energy)'] } : row['AVG(productive)'] };
+                        objc[row.day] = {
+                            ...objc[row.day],
+                            [row.time]:
+                                includeEnergy && includeProductivity
+                                    ? { productive: row['AVG(productive)'], energy: row['AVG(energy)'] } //if both have to be included
+                                    : !includeEnergy && includeProductivity
+                                    ? row['AVG(productive)'] //if only productive
+                                    : row['AVG(energy)'] // if only energy
+                        };
                     });
                     resolve(objc);
                 });
@@ -78,7 +86,7 @@ export class Aggregator {
     }
 
     async createFullWeekHourBundle() {
-        const data: any = await this.aggregatingHours();
+        const data: any = await this.aggregatingHours(true, false);
         return this.fillUp(data as IaggregatedHoursWithoutEnergy);
     }
 
