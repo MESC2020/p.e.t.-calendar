@@ -42,6 +42,11 @@ export enum Mode {
     assigning = 'assigning',
     movingBackToPool = 'movingBackToPool'
 }
+let isLocked: boolean = true;
+async function getLock() {
+    isLocked = (await window.api.retrieveLockStatus(logOptions.isLocked)) === 'true';
+}
+getLock();
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
     const [autoAIislocked, setAutoAIislocked] = useState(true);
@@ -54,7 +59,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     const [isLoading, setIsLoading] = useState(true);
-    const [isLocked, setIsLocked] = useState(true);
+
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
     const [displayAutoAI, setDisplayAutoAI] = useState(false);
     const [displayUnlock, setDisplayUnlock] = useState(false);
@@ -70,7 +75,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         events: []
     });
     useEffect(() => {
-        if (!isLocked) handlingResizeOfEvents();
+        handlingResizeOfEvents();
     });
     useEffect(() => {
         if (sourceAPI === undefined && calendarRef.current !== undefined) {
@@ -81,19 +86,20 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     useEffect(() => {
+        /*
         async function checkIfLocked() {
             if (isLocked) {
                 const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);
                 if (isLocked.data === 'false') setIsLocked(false);
             }
-        }
+        }*/
 
         async function getData() {
             const events = await window.api.getAllEvents();
             setIsLoading(!isLoading);
             sortData(events);
         }
-        if (isLocked) checkIfLocked();
+        //if (isLocked) checkIfLocked();
 
         if (isLoading) {
             getData();
@@ -101,9 +107,14 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     useEffect(() => {
-        if (sourceAPI !== undefined) {
-            sourceAPI.refetch();
+        async function fetch() {
+            if (sourceAPI !== undefined) {
+                console.log('fetching');
+                await sourceAPI.refetch();
+                handlingResizeOfEvents(true);
+            }
         }
+        fetch();
     }, [state]);
 
     async function saveData(event: EventObject[]) {
@@ -197,12 +208,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         const eventsInCalendar: EventObject[] = state.events;
         const externalEvents: EventObject[] = [];
 
-        const isLocked = (await window.api.retrieveLockStatus(logOptions.isLocked).data) !== 'false' ? true : false;
+        //const isLocked = (await window.api.retrieveLockStatus(logOptions.isLocked).data) !== 'false' ? true : false;
 
         emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
-            const newEvent = { ...eventWithoutDemand, classNames: ['demand', isLocked ? `demand-${demand}` : ''] };
+            const newEvent = { ...eventWithoutDemand, classNames: ['demand', !isLocked ? `demand-${demand}` : ''] };
 
             calculateDeadline(newEvent);
 
@@ -220,6 +231,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 };
             });
         if (alertIfExternalEvents) alertIfNotAllTasksWereAssigned(externalEvents.length);
+
         return eventsInCalendar;
     }
 
@@ -243,16 +255,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         await editEventsInCalendar(formatedEdit, mode); //update and forcing refresh of component "FullCalendar"
     }
 
-    function handlingResizeOfEvents() {
+    function handlingResizeOfEvents(withAnimation?: boolean) {
         const demand = document.querySelectorAll('.demand');
+        console.log(flags.demandToggle);
+        console.log(flags.showGraphs);
 
         demand.forEach((el) => {
+            console.log(el);
             if (!flags.demandToggle && !flags.showGraphs) {
                 // Case 1: when toggle has been turned Off
                 if (!el.classList.contains('full-width')) {
                     el.classList.add('full-width');
                 }
-                if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
+                if (el.classList.contains('demand-no-animation') && !withAnimation) el.classList.remove('demand-no-animation');
                 // Case 2: when Event is beeing dragged
             } else if (!flags.demandToggle && flags.showGraphs) {
                 if (el.classList.contains('full-width')) {
@@ -621,77 +636,66 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             root!.style.overflow = 'scroll';
         }
     }
+
     function handleMouseHover(arg: any) {
         const parent = arg.el.parentNode;
-        const grandparent = parent.parentNode;
         const demand = retrieveDemandLevel(arg.event);
+        function showButtons(e: any) {
+            if (parent.childNodes.length === 1) {
+                const div = document.createElement('div');
+                div.className = 'injected-container';
+                div.style.display = 'block';
+                div.style.marginLeft = (demand as number) <= 6 && flags.demandToggle ? `${arg.el.offsetWidth + 5}px` : '128px';
 
-        if (parent.childNodes.length === 1) {
-            const div = document.createElement('div');
-            div.className = 'injected-container';
-            div.style.display = 'block';
-            div.style.marginLeft = (demand as number) <= 6 ? `${arg.el.offsetWidth}px` : '130px';
-            parent.style.pointerEvents = 'all';
-            grandparent.parentNode.addEventListener('mouseleave', () => {
-                setTimeout(() => {
-                    div.style.display = 'none';
-                }, 2000);
-            });
+                //minus Button
+                let minusButton = document.createElement('button');
+                minusButton.className = 'injected-buttons';
+                const img = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = '100%';
+                minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
 
-            //minus Button
-            let minusButton = document.createElement('button');
-            minusButton.className = 'injected-buttons';
-            const img = document.createElement('img');
-            img.style.width = '100%';
-            img.style.height = '100%';
-            minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
+                minusButton.onclick = function (e) {
+                    e.stopPropagation();
+                    updateData(arg, Mode.movingBackToPool);
+                };
 
-            minusButton.onclick = function (e) {
-                e.stopPropagation();
-                updateData(arg, Mode.movingBackToPool);
-            };
+                //trash Button
+                let deleteButton = document.createElement('button');
+                deleteButton.className = 'injected-buttons';
+                const deleteImg = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = '100%';
+                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
 
-            //trash Button
-            let deleteButton = document.createElement('button');
-            deleteButton.className = 'injected-buttons';
-            const deleteImg = document.createElement('img');
-            img.style.width = '100%';
-            img.style.height = '100%';
-            deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
+                deleteButton.onclick = function (e) {
+                    e.stopPropagation();
+                    updateData(arg, Mode.deleting);
+                };
+                div.appendChild(minusButton);
+                div.appendChild(deleteButton);
 
-            deleteButton.onclick = function (e) {
-                e.stopPropagation();
-                updateData(arg, Mode.deleting);
-            };
-            div.appendChild(minusButton);
-            div.appendChild(deleteButton);
-
-            parent.appendChild(div);
-        }
-        if (parent.childNodes.length === 2) {
-            const button = parent.childNodes[1];
-            button.style.display = 'block';
-        }
-    }
-    function handleMouseStopHover(arg: any) {
-        const parent = arg.el.parentNode;
-
-        console.log(parent.getBoundingClientRect());
-        const demand = retrieveDemandLevel(arg.event);
-        const f = () => {
+                parent.appendChild(div);
+            }
             if (parent.childNodes.length === 2) {
                 const button = parent.childNodes[1];
-                button.style.display = 'none';
+                button.style.display = 'block';
             }
-        };
+            parent.setPointerCapture(e.pointerId);
+        }
+        function disableButtons(event: any) {
+            const size = parent.getBoundingClientRect();
 
-        setTimeout(() => {
-            f();
-        }, 2000);
-    }
-    function testFunc(event: any) {
-        //console.clear();
-        console.log(document.elementFromPoint(event.clientX, event.clientY));
+            if (parent.childNodes.length === 2) {
+                const button = parent.childNodes[1];
+                if (event.clientX < size.left || event.clientX > size.right || event.clientY < size.top || event.clientY > size.bottom) {
+                    button.style.display = 'none';
+                }
+            }
+            parent.releasePointerCapture(event.pointerId);
+        }
+        parent.onmouseenter = showButtons;
+        parent.onmouseleave = disableButtons;
     }
 
     return (
@@ -753,8 +757,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                         <ContextMenu setDisplayUnlock={handleDisplayUnlock} />
                                     </div>
                                 </div>
-                                <div className="container-overview">
-                                    <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl" onMouseMove={testFunc}>
+                                <div id="mousemove" className="container-overview">
+                                    <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
                                         <FullCalendar
                                             ref={calendarRef}
                                             plugins={[timeGridPlugin, interactionPlugin]}
@@ -844,3 +848,139 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 };
 
 export default OverviewPage;
+/*function handleMouseHover(arg: any) {
+        const parent = arg.el.parentNode;
+        const demand = retrieveDemandLevel(arg.event);
+        function showButtons(e: any) {
+            if (parent.childNodes.length === 1) {
+                const div = document.createElement('div');
+                div.className = 'injected-container';
+                div.style.display = 'block';
+                div.style.marginLeft = (demand as number) <= 6 ? `${arg.el.offsetWidth}px` : '130px';
+
+                //minus Button
+                let minusButton = document.createElement('button');
+                minusButton.className = 'injected-buttons';
+                const img = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = '100%';
+                minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
+
+                minusButton.onclick = function (e) {
+                    e.stopPropagation();
+                    updateData(arg, Mode.movingBackToPool);
+                };
+
+                //trash Button
+                let deleteButton = document.createElement('button');
+                deleteButton.className = 'injected-buttons';
+                const deleteImg = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = '100%';
+                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
+
+                deleteButton.onclick = function (e) {
+                    e.stopPropagation();
+                    updateData(arg, Mode.deleting);
+                };
+                div.appendChild(minusButton);
+                div.appendChild(deleteButton);
+
+                parent.appendChild(div);
+            }
+            if (parent.childNodes.length === 2) {
+                const button = parent.childNodes[1];
+                button.style.display = 'block';
+            }
+            parent.setPointerCapture(e.pointerId);
+        }
+        function disableButtons(e: any) {
+            console.log(parent.getBoundingClientRect());
+            console.log(mouse);
+
+            if (parent.childNodes.length === 2) {
+                const button = parent.childNodes[1];
+                button.style.display = 'none';
+            }
+            parent.releasePointerCapture(e.pointerId);
+        }
+        parent.onmouseenter = showButtons;
+        parent.onmouseleave = disableButtons;
+    }
+    function handleMouseStopHover(arg: any) {
+        const parent = arg.el.parentNode;
+
+        //console.log(parent.getBoundingClientRect());
+        const demand = retrieveDemandLevel(arg.event);
+        const f = () => {
+            if (parent.childNodes.length === 2) {
+                const button = parent.childNodes[1];
+                button.style.display = 'none';
+            }
+        };
+        f();
+        /*
+        setTimeout(() => {
+            f();
+        }, 2000);
+    }
+    function testFunc(event: any) {
+        //console.clear();
+        //console.log(document.elementFromPoint(event.clientX, event.clientY));
+    }*/
+
+/*
+    function handleMouseHover(arg: any) {
+        const parent = arg.el.parentNode;
+        const demand = retrieveDemandLevel(arg.event);
+
+        if (parent.childNodes.length === 1) {
+            const div = document.createElement('div');
+            div.className = 'injected-container';
+            div.style.display = 'block';
+            div.style.marginLeft = (demand as number) <= 6 ? `${arg.el.offsetWidth}px` : '130px';
+
+            parent.addEventListener('mouseleave', (event: any) => {
+                console.log(event);
+                console.log(parent.getBoundingClientRect());
+                const size = parent.getBoundingClientRect();
+                if (event.clientX < size.left || event.clientX > size.right || event.clientY < event.top || event.clientY > event.bottom) {
+                    div.style.display = 'none';
+                }
+            });
+
+            //minus Button
+            let minusButton = document.createElement('button');
+            minusButton.className = 'injected-buttons';
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
+
+            minusButton.onclick = function (e) {
+                e.stopPropagation();
+                updateData(arg, Mode.movingBackToPool);
+            };
+
+            //trash Button
+            let deleteButton = document.createElement('button');
+            deleteButton.className = 'injected-buttons';
+            const deleteImg = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
+
+            deleteButton.onclick = function (e) {
+                e.stopPropagation();
+                updateData(arg, Mode.deleting);
+            };
+            div.appendChild(minusButton);
+            div.appendChild(deleteButton);
+
+            parent.appendChild(div);
+        }
+        if (parent.childNodes.length === 2) {
+            const button = parent.childNodes[1];
+            button.style.display = 'block';
+        }
+    }*/

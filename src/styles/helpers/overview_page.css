@@ -73,3 +73,7 @@
 
     overflow: hidden;
 }
+
+.prevent-pointer {
+    pointer-events: none;
+}

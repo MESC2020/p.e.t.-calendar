@@ -20,8 +20,10 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
         if (storedHTML === undefined) {
             const el = document.getElementsByClassName('MuiSlider-thumbColorPrimary MuiSlider-thumbSizeMedium MuiSlider-thumb css-fqmdoh-MuiSlider-thumb')[0] as HTMLElement;
             console.log(el);
-            el.style.display = 'none';
-            setStoredHTML(el);
+            if (el !== undefined) {
+                el.style.display = 'none';
+                setStoredHTML(el);
+            }
         }
     });
     const [value, setValue] = useState(undefined);
