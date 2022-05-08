@@ -32,7 +32,7 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
     const handleConfirmation = (button: buttonType) => {
         if (button === buttonType.continue) props.autoAssignTasks(true);
         props.display();
-        props.noScroll(false);
+        // props.noScroll(false);
     };
 
     function ifMultipleStrings() {

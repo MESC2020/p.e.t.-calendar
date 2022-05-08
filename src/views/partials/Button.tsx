@@ -27,10 +27,10 @@ export const Button = (props: IbuttonProps) => {
             onClick={props.onClick}
             color={props.textColor ? props.textColor : 'white'}
             className={
-                (props.isButtonPressed ? 'ring-blue-500 ring-2 ring-offset-2 ' : '') +
+                (props.isButtonPressed ? 'ring-2 ring-calendar-blue/50 ring-offset-2 ' : '') +
                 (props.rounded ? `${props.rounded} ` : 'rounded-xl ') +
                 (props.fullWidth ? 'w-full' : '') +
-                ' focus:ring-blue-500 ' +
+                ' focus:ring-calendar-blue/50 ' +
                 (props.className ?? '')
             }
         >

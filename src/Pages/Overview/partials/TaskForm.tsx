@@ -19,21 +19,23 @@ export interface ITaskFormProps {
     callback: any;
     onDeadline: any;
     noScroll: any;
+    lockStatus: boolean;
 }
 const STANDARD_DURATION = '02:00';
-const STANDARD_DEMAND = 5;
+const STANDARD_DEMAND = 0;
 const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     //to display duration
 
     const showDeadlineOrNot = props.data.deadline ? true : false;
     const [deadlineToggle, setDeadlineToggle] = useState(showDeadlineOrNot);
     const defaultDemand = props.data.classNames.length !== 0 ? parseInt(props.data.classNames[1].slice(-1)) : STANDARD_DEMAND;
+    const [usedDemandSlider, setUsedDemandSlider] = useState(defaultDemand !== 0 ? true : false);
     const [externalEvent, setExternalEvent] = useState({
         id: props.data.id ? props.data.id : undefined,
         title: props.data.title.length !== 0 ? props.data.title : '',
         backgroundColor: props.data.backgroundColor ? props.data.backgroundColor : colorPalettes.calendarBlue,
         textColor: 'white',
-        classNames: props.data.classNames.length !== 0 ? props.data.classNames : ['demand', `demand-${STANDARD_DEMAND}`],
+        classNames: props.data.classNames.length !== 0 ? props.data.classNames : props.lockStatus ? ['demand', `demand-${STANDARD_DEMAND}`, 'full-width'] : ['demand', `demand-${STANDARD_DEMAND}`],
         deadline: props.data.deadline ? props.data.deadline : undefined,
         start: props.data.start ? props.data.start : undefined,
         end: props.data.end ? props.data.end : undefined,
@@ -62,7 +64,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         const copyEvent = { ...externalEvent };
         props.onDeadline(copyEvent);
         if (props.data.id) props.callback(emptyEventObject);
-        props.noScroll(false);
+        //props.noScroll(false);
 
         props.onChange(copyEvent);
         props.display();
@@ -70,18 +72,19 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleCancle = () => {
         if (props.data.id) props.callback(emptyEventObject);
-        props.noScroll(false);
+        // props.noScroll(false);
         props.display();
     };
 
     const closeAndDelete = () => {
         const event: EventObject = props.data;
         props.onDelete(event, Mode.deleting); //delete
-        props.noScroll(false);
+        // props.noScroll(false);
         props.callback(emptyEventObject);
         props.display(); // close popup
     };
     function updateClassList(demand: any) {
+        setUsedDemandSlider(true);
         const currentClassNames = [...externalEvent.classNames];
         let arrayChanged: boolean = false;
 
@@ -200,7 +203,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     <div className="flex justify-end gap-x-2 w-full">
                         <Button
                             backgroundColor={colorPalettes.greenButton}
-                            disabled={externalEvent.title.length == 0 || (deadlineToggle && externalEvent.deadline == undefined)}
+                            disabled={externalEvent.title.length == 0 || !usedDemandSlider || (deadlineToggle && externalEvent.deadline == undefined)}
                             onClick={handleConfirmation}
                             className={'w-1/6 block '}
                         >

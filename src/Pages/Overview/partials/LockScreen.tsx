@@ -19,7 +19,7 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
 
     function handleCancle() {
         props.display();
-        props.noScroll(false);
+        // props.noScroll(false);
     }
     function handleKeyDown(event: any) {
         if (event.key === 'Escape') {
@@ -32,7 +32,7 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
             setIsUnlocked(true);
             await setTimeout(() => {
                 props.unLockApp(true);
-                props.noScroll(false);
+                // props.noScroll(false);
                 props.display(false);
             }, 3000);
         } else setError(true);

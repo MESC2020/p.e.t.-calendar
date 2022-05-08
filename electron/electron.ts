@@ -25,9 +25,10 @@ const {
 const path = require("path");
 const isDev = require("electron-is-dev");
 const { URL } = require("url");
+const AutoLaunch = require("auto-launch");
 let dbManager: dbMgr;
 let aggregator: Aggregator;
-let tray: any;
+let tray: any = null;
 
 type Window = {
   minimize(): any;
@@ -113,7 +114,7 @@ function createPopupWindow(width: any, height: any) {
   //popupWindow.loadURL("http://localhost:3000/#/report");
   popupWindow.loadURL(constructAppPath("/report/"));
   //popupWindow.loadFile(path.join(__dirname, "../index.html#report"));
-  //popupWindow.webContents.openDevTools();
+  popupWindow.webContents.openDevTools();
 
   popupWindow.on("close", (event: any) => {
     //win = null
@@ -142,24 +143,30 @@ function createWindow(width: any, height: any) {
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 
-  mainWindow.on("close", (event: any) => {
-    if (popupWindow) popupWindow.destroy();
-  });
-  mainWindow.on("minimize", (event: any) => {
-    /*if (tray !== null) {
+  mainWindow.on("close", function (event: any) {
+    if (!app.isQuiting) {
+      if (tray === null) {
+        createTray();
+      }
       event.preventDefault();
       mainWindow.hide();
-      return;
-    }*/
+    }
 
-    //createTray();
+    return false;
+  });
+  mainWindow.on("minimize", (event: any) => {
+    if (tray === null) {
+      createTray();
+    }
     event.preventDefault();
     mainWindow.hide();
   });
 
   function createTray() {
-    console.log(path.join(__dirname, "../tray.png/"));
-    tray = new Tray(path.join(__dirname, "../tray.png/"));
+    const ASSETS_PATH = path.join(__dirname, "../tray.png");
+    const icon = nativeImage.createFromPath(ASSETS_PATH);
+    console.log(ASSETS_PATH);
+    tray = new Tray(icon);
     const template = [
       {
         label: "Show App",
@@ -170,23 +177,17 @@ function createWindow(width: any, height: any) {
       {
         label: "Quit",
         click: function () {
-          app.close();
+          if (popupWindow) popupWindow.destroy();
+          mainWindow.destroy();
         },
       },
     ];
     const contextMenu = Menu.buildFromTemplate(template);
+
     tray.setContextMenu(contextMenu);
+
     tray.setToolTip("TaskProject");
   }
-
-  mainWindow.on("close", function (event: any) {
-    if (!app.isQuiting) {
-      event.preventDefault();
-      mainWindow.hide();
-    }
-
-    return false;
-  });
 }
 
 // This method will be called when Electron has finished
@@ -199,28 +200,22 @@ app.whenReady().then(() => {
     loadExtensionOptions: { allowFileAccess: true },
   })
     .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log("An error occurred: ", err));
-*/
+    .catch((err) => console.log("An error occurred: ", err));*/
+
   infinitePopUpLoop(width, height);
   createWindow(width, height);
   //createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
   //console.log("printing path:");
-  console.log(process.env.PUBLIC_URL + "/someIcons/productive.png");
 
-  const icon = nativeImage.createFromPath(
-    process.env.PUBLIC_URL + "/someIcons/productive.png"
-  );
-  tray = new Tray(icon);
-  const contextMenu = Menu.buildFromTemplate([
-    { label: "Item1", type: "radio" },
-    { label: "Item2", type: "radio" },
-    { label: "Item3", type: "radio", checked: true },
-    { label: "Item4", type: "radio" },
-  ]);
-
-  tray.setContextMenu(contextMenu);
+  let autoLaunch = new AutoLaunch({
+    name: "Task Project",
+    path: app.getPath("exe"),
+  });
+  autoLaunch.isEnabled().then((isEnabled: any) => {
+    if (!isEnabled) autoLaunch.enable();
+  });
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
@@ -228,10 +223,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow(width, height);
   });
 });
-
-async function fetchData() {
-  return await dbManager.getAllData("Events");
-}
 
 function infinitePopUpLoop(width: any, height: any) {
   setInterval(() => {
@@ -241,7 +232,7 @@ function infinitePopUpLoop(width: any, height: any) {
     popupWindow.show();
     setTimeout(() => {
       popupWindow.close();
-    }, 60 * 1000);
+    }, 30 * 60 * 1000);
     //createPopupWindow(width, height);
   }, 60 * 60 * 1000);
 }

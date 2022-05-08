@@ -1,6 +1,6 @@
 .container-overview {
     width: 1200px;
-    height: 1600px;
+    height: 93vh;
     position: relative;
 }
 .min-size {
@@ -19,14 +19,14 @@
     margin-bottom: 3.4em;
 }
 .overlap-main {
-    height: 1500px;
-    width: 1144px;
+    height: 1504px;
+    width: 1130px;
     position: absolute;
     right: 0px;
 }
 
 .overlap-day-box {
-    width: 163.42px;
+    width: 161.16px;
     height: 100%;
 }
 
@@ -34,9 +34,17 @@
     pointer-events: none;
 }
 
+.pool {
+    height: 80vh;
+    max-height: 92vh;
+}
+
 .max-height {
-    max-height: 600px;
+    max-height: 80vh;
     overflow-y: scroll;
+}
+.min-width-cal {
+    min-width: 1250px;
 }
 
 .min-height {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import RangeSlider from '../../views/partials/RangeSlider';
 import { Button } from '../../views/partials/Button';
 import { colorPalettes } from '../../Pages/Overview/OverviewPage';
@@ -15,9 +15,10 @@ const demandLevels = [
 ];
 
 const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
-    const [productivityAssessment, setProductivityAssessment] = useState(1);
-    const [energyAssessment, setEnergyAssessment] = useState(1);
+    const [productivityAssessment, setProductivityAssessment] = useState(0);
+    const [energyAssessment, setEnergyAssessment] = useState(0);
     const [userInteracted, setUserInteracted] = useState({ productive: false, energy: false });
+    const [isLoading, setIsLoading] = useState(false);
     const [checkBox, setCheckBox] = useState(false);
 
     const handleProductivity = (result: number) => {
@@ -61,8 +62,12 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
         var _24HoursInMilliseconds = 86400000;
         return new Date(today.getTime() + changeDateBy * _24HoursInMilliseconds).toLocaleString('en-us', { weekday: 'long' });
     };
+    const resetForm = () => {
+        setEnergyAssessment(0);
+        setProductivityAssessment(0);
+    };
 
-    const handleConfirm = () => {
+    const handleConfirm = (doNotTrack: boolean = false) => {
         setUserInteracted(() => {
             return {
                 productive: false,
@@ -75,68 +80,76 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
         report.time = convertTime(today.toLocaleTimeString('en-de', { hour: '2-digit', minute: '2-digit' }));
         report.day = report.time === '24:00' ? goOneDayBack() : today.toLocaleString('en-us', { weekday: 'long' }); //getDay() returns only number, this return weekday
 
-        report.productive = checkBox ? 0 : productivityAssessment;
-        report.energy = checkBox ? 0 : energyAssessment;
-        resetCheckBox();
+        report.productive = doNotTrack ? 0 : productivityAssessment;
+        report.energy = doNotTrack ? 0 : energyAssessment;
+        resetPage();
         window.api.saveReport([report]);
     };
-    const handleCheckBox = () => {
-        setCheckBox(!checkBox);
-    };
 
-    const resetCheckBox = () => {
-        setCheckBox(false);
-        const cb = document.getElementById('cb1') as HTMLInputElement;
-        cb.checked = false;
+    const resetPage = () => {
+        resetForm();
+        setIsLoading(true);
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 5000);
     };
 
     return (
-        <div style={{ width: 400, height: 450 }} className="overflow-y-hidden ">
-            <div style={{ borderColor: '#2c3e50', height: 52 }} className="flex border-2 justify-center gap-x-5 shadow-lg bg-white pt-1">
-                <p className="flex pt-2 justify-center font-bold">Self Assessment</p>
-                <Button
-                    backgroundColor={colorPalettes.greenButton}
-                    disabled={(!userInteracted.productive || !userInteracted.energy) && !checkBox}
-                    onClick={() => {
-                        handleConfirm();
-                    }}
-                    className={'ml-5 mb-1'}
-                >
-                    Confirm
-                </Button>
-            </div>
+        <>
+            {isLoading ? (
+                ''
+            ) : (
+                <>
+                    <div style={{ width: 400, height: 450 }} className="overflow-y-hidden ">
+                        <div style={{ borderColor: '#2c3e50', height: 52 }} className="flex border-2 justify-center gap-x-24 shadow-lg bg-white pt-1">
+                            <p className="flex pt-2 justify-center font-bold">Self Assessment</p>
+                            <Button
+                                backgroundColor={colorPalettes.greenButton}
+                                disabled={(!userInteracted.productive || !userInteracted.energy) && !checkBox}
+                                onClick={() => {
+                                    handleConfirm();
+                                }}
+                                className={'ml-5 mb-1'}
+                            >
+                                Confirm
+                            </Button>
+                        </div>
 
-            <div style={{ height: 398 }} className="report">
-                {' '}
-                <div>
-                    <div className="flex pt-10">
-                        <input
-                            style={{ width: 20, height: 20 }}
-                            id="cb1"
-                            className={' ml-10 mr-10 pl-10 pr-10 mr-1 mt-1'}
-                            type={'checkbox'}
-                            onChange={(e) => {
-                                handleCheckBox();
-                            }}
-                        ></input>
-                        <p className="pt-1 text-white">I was on a break</p>
+                        <div style={{ height: 398 }} className="report">
+                            <div>
+                                <div className="flex pt-10">
+                                    <Button
+                                        disabled={false}
+                                        backgroundColor={colorPalettes.redButton}
+                                        onClick={() => {
+                                            handleConfirm(true);
+                                        }}
+                                        className={' ml-10 mr-10  mr-1 mt-1 '}
+                                    >
+                                        I was on a break
+                                    </Button>
+
+                                    <p className="pt-1 text-white"></p>
+                                </div>
+                            </div>
+                            <div className="pl-10 pt-10 pr-10 pt-2">
+                                <p className="text-white">
+                                    How <b>productive</b> did you feel during the last hour?
+                                </p>
+                                <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={productivityAssessment} onChange={handleProductivity} />
+                            </div>
+                            <div className="pl-10 pr-10 pt-4">
+                                <p className="text-white">
+                                    How <b>energized</b> did you feel during the last hour?
+                                </p>
+                                <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={energyAssessment} onChange={handleEnergy} />
+                            </div>
+                            <div></div>
+                        </div>
                     </div>
-                </div>
-                <div className="pl-10 pt-10 pr-10 pt-2">
-                    <p className="text-white">
-                        How <b>productive</b> did you feel during the last hour?
-                    </p>
-                    <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={1} onChange={handleProductivity} />
-                </div>
-                <div className="pl-10 pr-10 pt-4">
-                    <p className="text-white">
-                        How <b>energized</b> did you feel during the last hour?
-                    </p>
-                    <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={1} onChange={handleEnergy} />
-                </div>
-                <div></div>
-            </div>
-        </div>
+                </>
+            )}
+        </>
     );
 };
 

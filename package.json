@@ -1,9 +1,13 @@
 {
   "name": "desktop-task-app",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "private": true,
   "main": "./build/electron/electron.js",
   "homepage": "./",
+  "author": {
+    "name": "Micha Eschmann",
+    "email": "eschmann.micha@hotmail.ch"
+  },
   "dependencies": {
     "@craco/craco": "^6.4.3",
     "@emotion/styled": "^11.8.1",
@@ -20,6 +24,7 @@
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.13",
     "archiver": "^5.3.1",
+    "auto-launch": "^5.0.5",
     "autoprefixer": "^10.4.2",
     "chart.js": "^3.7.1",
     "concurrently": "^7.0.0",
@@ -56,20 +61,16 @@
       "package.json",
       "node_modules"
     ],
-    "extraResources": [],
+    "extraResources": [
+      {
+        "from": "./public/assets",
+        "to": "assets"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "./build/icon.ico"
     },
-    "extraFiles": [
-      {
-        "from": "./public/tray.png",
-        "to": "resources",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
     "mac": {
       "target": {
         "target": "default",

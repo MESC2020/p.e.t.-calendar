@@ -24,7 +24,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
     return (
         <React.Fragment>
             <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-                <Tooltip title="More Options" placement="top">
+                <Tooltip title="More Options" placement="bottom">
                     <div onClick={handleClick} className="rounded-full shadow-xl hover:ring-2 ring-my-bright-blue/50 cursor-pointer">
                         <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/settings.png'} />
                     </div>
@@ -53,7 +53,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
                             display: 'block',
                             position: 'absolute',
                             top: 0,
-                            right: 14,
+                            right: 175,
                             width: 10,
                             height: 10,
                             bgcolor: 'background.paper',
@@ -62,8 +62,8 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
                         }
                     }
                 }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
             >
                 <MenuItem
                     onClick={() => {

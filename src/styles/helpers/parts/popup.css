@@ -4,6 +4,7 @@
     width: 50%;
     top: 25%;
     left: 25%;
+    position: absolute;
 }
 
 #overlay {

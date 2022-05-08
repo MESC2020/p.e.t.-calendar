@@ -33,7 +33,7 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     function returnGraphs() {
         if (data !== undefined) {
             return data.map((data) => (
-                <div className="overlap-day-box pointer-events-none overflow-hidden ">
+                <div className="overlap-day-box pointer-events-none   overflow-hidden ">
                     <ProductivityGraph showAnimation={props.showAnimation} data={data[Object.keys(data)[0]]} />
                 </div>
             ));
@@ -58,12 +58,12 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     }
 
     return (
-        <div className={`${props.className}` + ' click-through pointer-events-none opacity-20 h-full w-full '}>
-            <div className="w-full overlap-header"></div>
+        <div className={`${props.className}` + ' click-through  pointer-events-none opacity-20 h-full w-full '}>
+            <div className="w-full overlap-header h-full"></div>
             {isLoading ? (
                 ''
             ) : (
-                <div className="flex overlap-main overflow-hidden">
+                <div className="flex overlap-main h-full overflow-hidden">
                     <>{returnGraphs()}</>
                 </div>
             )}

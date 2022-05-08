@@ -13,7 +13,10 @@ import LockScreen from './partials/LockScreen';
 import Tooltip from '@mui/material/Tooltip';
 import ContextMenu from '../../views/partials/ContextMenu';
 
-export interface IOverviewPageProps {}
+export interface IOverviewPageProps {
+    lockStatus: boolean;
+    reloadPage: any;
+}
 
 export enum colorPalettes {
     deadlineWarning = '#F56853',
@@ -42,11 +45,7 @@ export enum Mode {
     assigning = 'assigning',
     movingBackToPool = 'movingBackToPool'
 }
-let isLocked: boolean = true;
-async function getLock() {
-    isLocked = (await window.api.retrieveLockStatus(logOptions.isLocked)) === 'true';
-}
-getLock();
+
 const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const calendarRef = useRef<any>();
     const [autoAIislocked, setAutoAIislocked] = useState(true);
@@ -76,7 +75,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         events: []
     });
     useEffect(() => {
-        handlingResizeOfEvents();
+        if (!props.lockStatus) handlingResizeOfEvents();
     });
     useEffect(() => {
         if (sourceAPI === undefined && calendarRef.current !== undefined) {
@@ -99,10 +98,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const events = await window.api.getAllEvents();
             setIsLoading(!isLoading);
             sortData(events);
+            document.getElementById('scroll-box')!.scrollTop = 506;
         }
         //if (isLocked) checkIfLocked();
 
         if (isLoading) {
+            console.log('is loading');
             getData();
         }
     });
@@ -112,7 +113,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             if (sourceAPI !== undefined) {
                 console.log('fetching');
                 await sourceAPI.refetch();
-                handlingResizeOfEvents();
+                if (!props.lockStatus) handlingResizeOfEvents();
             }
         }
         fetch();
@@ -214,7 +215,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
-            const newEvent = { ...eventWithoutDemand, classNames: ['demand', !isLocked ? `demand-${demand}` : ''] };
+            const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`, props.lockStatus ? 'full-width' : ''] };
 
             calculateDeadline(newEvent);
 
@@ -410,7 +411,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     async function openTaskMenu() {
         document!.getElementById('overlay')!.style.display = 'block';
-        noScroll(true);
+        //noScroll(true);
         setDisplayTaskForm(!displayTaskForm);
     }
 
@@ -428,7 +429,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             ? undefined
                             : arg.event.endStr
                         : calculateEndDate(arg.event.extendedProps.durationTime, arg.event.startStr),
-                classNames: arg.event.classNames, //[...arg.event.classNames, Mode.movingBackToPool ? 'full-width' : '']
+                classNames: props.lockStatus ? [...arg.event.classNames, 'full-width'] : arg.event.classNames,
                 durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
             };
         } else if (arg.id) event = arg;
@@ -596,12 +597,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     function displayAIpopup(content: aiPopupContent) {
         setAiPopup(content);
         document!.getElementById('overlay')!.style.display = 'block';
-        noScroll(true);
+        //noScroll(true);
         setDisplayAutoAI(true);
     }
     function handleDisplayUnlock() {
         document!.getElementById('overlay')!.style.display = 'block';
-        noScroll(true);
+        //noScroll(true);
         setDisplayUnlock(true);
     }
 
@@ -636,9 +637,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         updateData(args, Mode.updating);
     }
 
-    function handleUnlockApp() {
-        window.api.updateLogs([{ information: logOptions.isLocked, data: 'false' }]);
-        setIsLoading(true);
+    async function handleUnlockApp() {
+        await window.api.updateLogs([{ information: logOptions.isLocked, data: 'false' }]);
+        props.reloadPage(true);
     }
     function noScroll(addProperty: boolean) {
         const root = document.querySelector('body');
@@ -657,7 +658,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 const div = document.createElement('div');
                 div.className = 'injected-container';
                 div.style.display = 'block';
-                div.style.marginLeft = (demand as number) <= 6 && flags.demandToggle ? `${arg.el.offsetWidth + 5}px` : '128px';
+                const width = div.classList.contains('full-width') ? 123 : arg.el.offsetWidth;
+                console.log(div.classList.contains('full-width'));
+                div.style.marginLeft = (demand as number) <= 6 ? `${width + 5}px` : '128px';
 
                 //minus Button
                 let minusButton = document.createElement('button');
@@ -691,9 +694,13 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             }
             if (parent.childNodes.length === 2) {
                 const button = parent.childNodes[1];
+                const width = !flags.demandToggle ? 123 : arg.el.offsetWidth;
+                console.log(flags.demandToggle);
+                console.log(width);
+                button.style.marginLeft = (demand as number) <= 6 ? `${width + 5}px` : '128px';
                 button.style.display = 'block';
             }
-            parent.setPointerCapture(e.pointerId);
+            //parent.setPointerCapture(e.pointerId);
         }
         function disableButtons(event: any) {
             const size = parent.getBoundingClientRect();
@@ -704,7 +711,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     button.style.display = 'none';
                 }
             }
-            parent.releasePointerCapture(event.pointerId);
+            //parent.releasePointerCapture(event.pointerId);
         }
         parent.onmouseenter = showButtons;
         parent.onmouseleave = disableButtons;
@@ -716,8 +723,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 ''
             ) : (
                 <>
-                    <div className="flex mr-5 mb-5 min-size">
-                        <div style={{ position: 'fixed', zIndex: 1 }} className="ml-5 mt-10">
+                    <div className="flex ml-5 mr-5 w-full min-size h-full">
+                        <div style={{ width: '15%' }} id="pool" className="">
                             <div className="flex gap-x-2 ">
                                 <Button
                                     color={'white'}
@@ -730,7 +737,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 >
                                     Add Task
                                 </Button>
-                                {isLocked ? (
+                                {props.lockStatus ? (
                                     ''
                                 ) : (
                                     <Button
@@ -746,7 +753,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     </Button>
                                 )}
                             </div>
-                            <div className="flex flex-grow flex-col gap-y-1 min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
+                            <div className="flex flex-grow flex-col gap-y-1 pool mt-4 bg-slate-100 border-2 rounded-lg w-56 h-1/2 relative">
                                 {state.externalEvents.map((event) => (
                                     <ExternalEvent
                                         onClick={handleLeftclick}
@@ -765,25 +772,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 ))}
                             </div>
                         </div>
-                        <div className="w-full flex justify-center">
-                            <div className="flex pl-60 flex-col">
-                                <div className="flex justify-end">
-                                    <div className=" flex">
-                                        {isLocked ? (
-                                            ''
-                                        ) : (
-                                            <>
-                                                <p className="pt-1 pr-1">show behavior</p>
-                                                <div id="switch" className=" pt-1">
-                                                    <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
-                                                </div>
-                                            </>
-                                        )}{' '}
-                                        <ContextMenu setDisplayUnlock={handleDisplayUnlock} />
-                                    </div>
-                                </div>
-                                <div id="mousemove" className="container-overview">
-                                    <div className=" bg-blue-50 box border-blue-100 border-2 rounded-lg drop-shadow-2xl">
+                        <div id="cal" style={{ width: '65%' }} className=" flex justify-end min-width-cal overflow-hidden">
+                            <div className="flex flex-col">
+                                <div id="scroll-box" className="container-overview  overflow-auto mb-5 bg-blue-50 border-2 rounded-lg drop-shadow-2xl border-blue-100">
+                                    <div style={{ height: '1600px' }} className="  box ">
                                         <FullCalendar
                                             ref={calendarRef}
                                             plugins={[timeGridPlugin, interactionPlugin]}
@@ -814,10 +806,31 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                                 endTime: '18:00'
                                             }}
                                             firstDay={1} //Monday
+                                            stickyHeaderDates={true}
                                         />
                                     </div>
-                                    {flags.showGraphs && !isLocked ? <VerticalGraph unlockAIbutton={unlockAI} showAnimation={flags.showAnimation} className="box z-20" /> : ''}
+                                    {flags.showGraphs && !props.lockStatus ? <VerticalGraph unlockAIbutton={unlockAI} showAnimation={flags.showAnimation} className="box z-20" /> : ''}
                                 </div>
+                            </div>
+                        </div>
+                        <div id="settings" style={{ width: '20%' }} className="flex ml-2 ">
+                            <div className=" flex flex-col w-9/12">
+                                {props.lockStatus ? (
+                                    ''
+                                ) : (
+                                    <>
+                                        <div className="flex w-full">
+                                            <div id="switch" className=" ">
+                                                <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                                            </div>
+                                            <div className="flex">
+                                                <img style={{ width: '20px', height: '20px' }} className="mt-1" src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
+                                                <p className="mt-1">show energy pattern</p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                                <ContextMenu setDisplayUnlock={handleDisplayUnlock} />
                             </div>
                         </div>
                     </div>
@@ -835,6 +848,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                     >
                         {displayTaskForm ? (
                             <TaskForm
+                                lockStatus={props.lockStatus}
                                 className="mt-10 ml-14"
                                 onChange={handleNewOrEditEvent}
                                 display={() => {
@@ -856,11 +870,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             <LockScreen
                                 noScroll={noScroll}
                                 display={() => {
-                                    document!.getElementById('overlay')!.style.display = 'none';
+                                    const el = document!.getElementById('overlay');
+                                    if (el) el.style.display = 'none';
                                     setDisplayUnlock(false);
                                 }}
                                 unLockApp={handleUnlockApp}
-                                lockStatus={isLocked}
+                                lockStatus={props.lockStatus}
                             />
                         ) : (
                             ''

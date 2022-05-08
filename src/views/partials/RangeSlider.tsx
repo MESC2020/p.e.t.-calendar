@@ -17,16 +17,25 @@ function valuetext(value: any) {
 const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
     const [storedHTML, setStoredHTML] = useState<any>(undefined);
     useEffect(() => {
-        if (storedHTML === undefined) {
-            const el = document.getElementsByClassName('MuiSlider-thumbColorPrimary MuiSlider-thumbSizeMedium MuiSlider-thumb css-fqmdoh-MuiSlider-thumb')[0] as HTMLElement;
-            console.log(el);
-            if (el !== undefined) {
-                el.style.display = 'none';
-                setStoredHTML(el);
+        console.log(props.standardDemand);
+        if (storedHTML === undefined && props.standardDemand === 0) {
+            const elements = document.getElementsByClassName('MuiSlider-colorPrimary MuiSlider-sizeMedium MuiSlider-root MuiSlider-marked css-1bs13h5-MuiSlider-root') as unknown as HTMLElement[];
+            //make buttonKnob disappear when init
+            //make buttonKnob appear when user uses slider
+            for (let el of elements) {
+                const buttonKnob = el.children.item(16);
+                if (el !== undefined && buttonKnob !== undefined) {
+                    (buttonKnob as any).style.display = 'none';
+                    el.addEventListener('mousedown', () => {
+                        console.log('test');
+                        if ((buttonKnob as any).style.display !== 'block') (buttonKnob as any).style.display = 'block';
+                    });
+                }
             }
+            setStoredHTML(elements);
         }
     });
-    const [value, setValue] = useState(undefined);
+    const [value, setValue] = useState(props.standardDemand);
     const demandLevels = [
         { value: 1, label: 'Extremly Low' },
         { value: 2, label: '2' },
@@ -70,9 +79,10 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
                     min={1}
                     max={7}
                     value={value}
+                    defaultValue={props.standardDemand}
                     onChange={(event: any, newValue: any) => {
                         console.log('sliding');
-                        if (storedHTML !== undefined) storedHTML.style.display = 'block';
+                        //if (storedHTML !== undefined) storedHTML.style.display = 'block';
                         handleChange(event.target.value);
                     }}
                     valueLabelDisplay="auto"

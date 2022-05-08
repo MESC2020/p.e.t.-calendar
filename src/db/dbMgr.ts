@@ -274,7 +274,7 @@ export class dbMgr {
     }
     private async incrementLogsData(log: log) {
         const currentData = ((await this.retrieveLog(log.information)) as log).data;
-        log.data = currentData + log.data;
+        log.data = typeof currentData === 'string' ? parseInt(currentData) + log.data : currentData + log.data;
     }
     private async checkChangesForEvent(event: EventObject) {
         const logsToUpdate: log[] = [];

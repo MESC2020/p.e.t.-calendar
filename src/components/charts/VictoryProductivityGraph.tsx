@@ -15,7 +15,7 @@ const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (pro
     return (
         // 163.41 * 700
         // viewBox = <min-x> <min-y> <width> <height>
-        <svg className="" pointer-events="none" width={1560} height={262} transform="rotate(90), translate(600,700)">
+        <svg className="" width={1605} height={255} transform="rotate(90), translate(625,722)">
             <VictoryChart
                 style={{
                     parent: { pointerEvents: 'none' }
@@ -25,7 +25,7 @@ const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (pro
                 horizontal={false}
                 standalone={false}
                 width={1605}
-                height={262}
+                height={255}
             >
                 <VictoryArea
                     interpolation={'stepBefore'} //monotoneX
