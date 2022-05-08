@@ -19,12 +19,15 @@ const {
   Menu,
   screen,
   dialog,
+  Tray,
+  nativeImage,
 } = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
 const { URL } = require("url");
 let dbManager: dbMgr;
 let aggregator: Aggregator;
+let tray: any;
 
 type Window = {
   minimize(): any;
@@ -142,6 +145,48 @@ function createWindow(width: any, height: any) {
   mainWindow.on("close", (event: any) => {
     if (popupWindow) popupWindow.destroy();
   });
+  mainWindow.on("minimize", (event: any) => {
+    /*if (tray !== null) {
+      event.preventDefault();
+      mainWindow.hide();
+      return;
+    }*/
+
+    //createTray();
+    event.preventDefault();
+    mainWindow.hide();
+  });
+
+  function createTray() {
+    console.log(path.join(__dirname, "../tray.png/"));
+    tray = new Tray(path.join(__dirname, "../tray.png/"));
+    const template = [
+      {
+        label: "Show App",
+        click: function () {
+          mainWindow.show();
+        },
+      },
+      {
+        label: "Quit",
+        click: function () {
+          app.close();
+        },
+      },
+    ];
+    const contextMenu = Menu.buildFromTemplate(template);
+    tray.setContextMenu(contextMenu);
+    tray.setToolTip("TaskProject");
+  }
+
+  mainWindow.on("close", function (event: any) {
+    if (!app.isQuiting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+
+    return false;
+  });
 }
 
 // This method will be called when Electron has finished
@@ -161,6 +206,21 @@ app.whenReady().then(() => {
   //createPopupWindow(width, height);
   dbManager = new dbMgr();
   dbManager.initDb();
+  //console.log("printing path:");
+  console.log(process.env.PUBLIC_URL + "/someIcons/productive.png");
+
+  const icon = nativeImage.createFromPath(
+    process.env.PUBLIC_URL + "/someIcons/productive.png"
+  );
+  tray = new Tray(icon);
+  const contextMenu = Menu.buildFromTemplate([
+    { label: "Item1", type: "radio" },
+    { label: "Item2", type: "radio" },
+    { label: "Item3", type: "radio", checked: true },
+    { label: "Item4", type: "radio" },
+  ]);
+
+  tray.setContextMenu(contextMenu);
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the

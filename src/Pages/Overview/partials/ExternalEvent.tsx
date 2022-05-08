@@ -6,6 +6,7 @@ import { colorPalettes } from '../OverviewPage';
 export interface IExternalEventProps {
     event: any;
     onClick: any;
+    onMousePress: any;
 }
 
 const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props) => {

@@ -66,7 +66,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     const [flags, setFlags] = useState({
         showAnimation: true,
         demandToggle: true,
-        showGraphs: true
+        showGraphs: true,
+        justSwitched: false
     });
     const [sourceAPI, setSourceAPI] = useState<any>(undefined);
     const [currentEvent, setCurrentEvent] = useState<EventObject>(emptyEventObject);
@@ -111,7 +112,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             if (sourceAPI !== undefined) {
                 console.log('fetching');
                 await sourceAPI.refetch();
-                handlingResizeOfEvents(true);
+                handlingResizeOfEvents();
             }
         }
         fetch();
@@ -255,19 +256,16 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         await editEventsInCalendar(formatedEdit, mode); //update and forcing refresh of component "FullCalendar"
     }
 
-    function handlingResizeOfEvents(withAnimation?: boolean) {
+    function handlingResizeOfEvents() {
         const demand = document.querySelectorAll('.demand');
-        console.log(flags.demandToggle);
-        console.log(flags.showGraphs);
 
         demand.forEach((el) => {
-            console.log(el);
             if (!flags.demandToggle && !flags.showGraphs) {
                 // Case 1: when toggle has been turned Off
                 if (!el.classList.contains('full-width')) {
                     el.classList.add('full-width');
                 }
-                if (el.classList.contains('demand-no-animation') && !withAnimation) el.classList.remove('demand-no-animation');
+                if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
                 // Case 2: when Event is beeing dragged
             } else if (!flags.demandToggle && flags.showGraphs) {
                 if (el.classList.contains('full-width')) {
@@ -282,6 +280,13 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 }
             }
         });
+        /*
+        setFlags((flags) => {
+            return {
+                ...flags,
+                justSwitched: false
+            };
+        });*/
     }
 
     /*
@@ -310,12 +315,14 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 ...flags, //if more flags are to be added in the future
                 showGraphs: currentShowGraphs,
                 demandToggle: currentDemandToggle,
-                showAnimation: currentShowAnimation
+                showAnimation: currentShowAnimation,
+                justSwitched: true
             };
         });
     }
 
-    function handleDragStart() {
+    function handleDragStart(args: any) {
+        console.log(args);
         if (!flags.showGraphs) {
             setFlags((flags) => {
                 return {
@@ -346,6 +353,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     function handleDrop(arg: any) {
         const demand = document.querySelectorAll('.demand') as any;
         //fixes the bug that the event, which was dragged, would go back into full width (if toggle turned off)
+
         if (!flags.demandToggle) {
             for (let el of demand) {
                 if (el.fcSeg.eventRange.def.publicId == arg.event.id) {
@@ -358,6 +366,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function handleExternalEventLeave() {
+        console.log('hellooo');
         if (!flags.showGraphs) {
             setFlags((flags) => {
                 return {
@@ -380,6 +389,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const currentExternalEvents = state.externalEvents;
             const id = await saveData([eventInWork]);
             eventInWork.id = id.value;
+            /*if (!flags.demandToggle) eventInWork.classNames.push('full-width');
+            eventInWork.classNames.push('demand-no-animation');*/
             currentExternalEvents.push(eventInWork);
 
             setState((state) => {
@@ -417,7 +428,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             ? undefined
                             : arg.event.endStr
                         : calculateEndDate(arg.event.extendedProps.durationTime, arg.event.startStr),
-                classNames: arg.event.classNames,
+                classNames: arg.event.classNames, //[...arg.event.classNames, Mode.movingBackToPool ? 'full-width' : '']
                 durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
             };
         } else if (arg.id) event = arg;
@@ -638,6 +649,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function handleMouseHover(arg: any) {
+        console.log(arg);
         const parent = arg.el.parentNode;
         const demand = retrieveDemandLevel(arg.event);
         function showButtons(e: any) {
@@ -736,7 +748,20 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             </div>
                             <div className="flex flex-grow flex-col gap-y-1 min-height max-height bg-slate-100 border-2 rounded-lg w-56 mt-2 h-1/2 relative p-2">
                                 {state.externalEvents.map((event) => (
-                                    <ExternalEvent onClick={handleLeftclick} event={event} />
+                                    <ExternalEvent
+                                        onClick={handleLeftclick}
+                                        onMousePress={(pressStatus: boolean) => {
+                                            if (!flags.demandToggle) {
+                                                setFlags((flags) => {
+                                                    return {
+                                                        ...flags,
+                                                        showGraphs: pressStatus
+                                                    };
+                                                });
+                                            }
+                                        }}
+                                        event={event}
+                                    />
                                 ))}
                             </div>
                         </div>
