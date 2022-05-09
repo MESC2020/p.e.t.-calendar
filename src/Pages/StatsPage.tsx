@@ -65,10 +65,12 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
 
     function getHighestDay(measure: measurement): string {
         const values = [];
+        console.log(data);
         for (let weekday in weekdays) {
             values.push(data![weekday][measure]);
         }
         const highestValue = Math.max(...values);
+        if (highestValue === 0) return '?';
         const indexInWeekdays = values.indexOf(highestValue);
         const result = Object.values(weekdays)[indexInWeekdays];
         return result;

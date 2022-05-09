@@ -31,8 +31,7 @@ const App: React.FunctionComponent<IAppProps> = (props) => {
     });
     async function retrieveLockStatus() {
         const isLocked = (await window.api.retrieveLockStatus(logOptions.isLocked)).data === 'true';
-        console.log(await window.api.retrieveLockStatus(logOptions.isLocked));
-        console.log(isLocked);
+
         setIsLoading(false);
         setIsLocked(isLocked);
     }

@@ -74,9 +74,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         externalEvents: [],
         events: []
     });
-    useEffect(() => {
-        if (!props.lockStatus) handlingResizeOfEvents();
-    });
+
     useEffect(() => {
         if (sourceAPI === undefined && calendarRef.current !== undefined) {
             const calendarApi = calendarRef.current.getApi();
@@ -113,7 +111,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             if (sourceAPI !== undefined) {
                 console.log('fetching');
                 await sourceAPI.refetch();
-                if (!props.lockStatus) handlingResizeOfEvents();
+                if (!props.lockStatus) handlingResizeOfEvents(flags.demandToggle, flags.showGraphs);
             }
         }
         fetch();
@@ -215,7 +213,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
-            const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`, props.lockStatus ? 'full-width' : ''] };
+            const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`, props.lockStatus ? 'full-width' : '', 'demand-no-animation'] };
 
             calculateDeadline(newEvent);
 
@@ -257,30 +255,33 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         await editEventsInCalendar(formatedEdit, mode); //update and forcing refresh of component "FullCalendar"
     }
 
-    function handlingResizeOfEvents() {
+    function handlingResizeOfEvents(demandToggle: boolean, showGraphs: boolean, vip: boolean = false) {
         const demand = document.querySelectorAll('.demand');
 
         demand.forEach((el) => {
-            if (!flags.demandToggle && !flags.showGraphs) {
+            if (!demandToggle && !showGraphs) {
                 // Case 1: when toggle has been turned Off
                 if (!el.classList.contains('full-width')) {
                     el.classList.add('full-width');
+                    console.log('aaaaddded');
                 }
-                if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
+                if (el.classList.contains('demand-no-animation') && vip) el.classList.remove('demand-no-animation');
                 // Case 2: when Event is beeing dragged
-            } else if (!flags.demandToggle && flags.showGraphs) {
+            } else if (!demandToggle && showGraphs && !props.lockStatus) {
                 if (el.classList.contains('full-width')) {
                     el.classList.remove('full-width');
-                    el.classList.add('demand-no-animation');
+                    console.log('remooooooved');
+                    if (!el.classList.contains('demand-no-animation')) el.classList.add('demand-no-animation');
                 }
                 // Case 3: when toggle is turned on or dragging stopped
-            } else {
+            } else if (!props.lockStatus) {
                 if (el.classList.contains('full-width')) {
                     el.classList.remove('full-width');
-                    if (el.classList.contains('demand-no-animation')) el.classList.remove('demand-no-animation');
+                    if (el.classList.contains('demand-no-animation') && vip) el.classList.remove('demand-no-animation');
                 }
             }
         });
+
         /*
         setFlags((flags) => {
             return {
@@ -320,9 +321,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 justSwitched: true
             };
         });
+        handlingResizeOfEvents(currentDemandToggle, currentShowGraphs, true);
     }
 
     function handleDragStart(args: any) {
+        handlingResizeOfEvents(false, true);
         console.log(args);
         if (!flags.showGraphs) {
             setFlags((flags) => {
@@ -338,6 +341,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     Triggered when dragging stops. It's always triggered - before eventDrop
     */
     function handleDragStop(eventInfo: any) {
+        handlingResizeOfEvents(flags.demandToggle, false);
         if (!flags.demandToggle) {
             setFlags((flags) => {
                 return {
@@ -382,9 +386,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     /*
     Created by the task pool
     */
-    async function handleNewOrEditEvent(eventInWork: EventObject) {
+    async function handleNewOrEditEvent(eventInWork: EventObject, mode?: Mode) {
         //if already existing
-        if (eventInWork.id !== undefined) updateData(eventInWork, Mode.updating);
+        if (eventInWork.id !== undefined) updateData(eventInWork, mode !== undefined ? mode : Mode.updating);
         //otherwise create new Task
         else {
             const currentExternalEvents = state.externalEvents;
@@ -432,8 +436,11 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 classNames: props.lockStatus ? [...arg.event.classNames, 'full-width'] : arg.event.classNames,
                 durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
             };
-        } else if (arg.id) event = arg;
-        else event = emptyEventObject;
+        } else if (arg.id) {
+            if ((mode = Mode.movingBackToPool)) {
+                event = { ...arg, start: undefined, end: undefined };
+            } else event = arg;
+        } else event = emptyEventObject;
         calculateDeadline(event);
 
         return event;
@@ -653,12 +660,13 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         console.log(arg);
         const parent = arg.el.parentNode;
         const demand = retrieveDemandLevel(arg.event);
+        const hour = parseInt(arg.event.extendedProps.durationTime.split(':')[0]);
         function showButtons(e: any) {
             if (parent.childNodes.length === 1) {
                 const div = document.createElement('div');
                 div.className = 'injected-container';
                 div.style.display = 'block';
-                const width = div.classList.contains('full-width') ? 123 : arg.el.offsetWidth;
+                const width = div.classList.contains('full-width') || props.lockStatus ? 123 : arg.el.offsetWidth;
                 console.log(div.classList.contains('full-width'));
                 div.style.marginLeft = (demand as number) <= 6 ? `${width + 5}px` : '128px';
 
@@ -681,7 +689,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 const deleteImg = document.createElement('img');
                 img.style.width = '100%';
                 img.style.height = '100%';
-                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
+                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trash.png'}`;
 
                 deleteButton.onclick = function (e) {
                     e.stopPropagation();
@@ -697,7 +705,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 const width = !flags.demandToggle ? 123 : arg.el.offsetWidth;
                 console.log(flags.demandToggle);
                 console.log(width);
-                button.style.marginLeft = (demand as number) <= 6 ? `${width + 5}px` : '128px';
+                button.style.marginLeft = (demand as number) <= 6 && !props.lockStatus ? `${width + 5}px` : '128px';
                 button.style.display = 'block';
             }
             //parent.setPointerCapture(e.pointerId);
@@ -713,8 +721,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             }
             //parent.releasePointerCapture(event.pointerId);
         }
-        parent.onmouseenter = showButtons;
-        parent.onmouseleave = disableButtons;
+        if (hour >= 1) {
+            parent.onmouseenter = showButtons;
+            parent.onmouseleave = disableButtons;
+        }
     }
 
     return (

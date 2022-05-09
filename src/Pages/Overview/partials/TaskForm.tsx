@@ -35,7 +35,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         title: props.data.title.length !== 0 ? props.data.title : '',
         backgroundColor: props.data.backgroundColor ? props.data.backgroundColor : colorPalettes.calendarBlue,
         textColor: 'white',
-        classNames: props.data.classNames.length !== 0 ? props.data.classNames : props.lockStatus ? ['demand', `demand-${STANDARD_DEMAND}`, 'full-width'] : ['demand', `demand-${STANDARD_DEMAND}`],
+        classNames: props.data.classNames.length !== 0 ? props.data.classNames : ['demand', `demand-${STANDARD_DEMAND}`, props.lockStatus ? 'full-width' : '', 'demand-no-animation'], // : ['demand', `demand-${STANDARD_DEMAND}`],
         deadline: props.data.deadline ? props.data.deadline : undefined,
         start: props.data.start ? props.data.start : undefined,
         end: props.data.end ? props.data.end : undefined,
@@ -60,13 +60,13 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         setDeadlineToggle(!deadlineToggle);
     };
 
-    const handleConfirmation = () => {
+    const handleConfirmation = (mode?: Mode) => {
         const copyEvent = { ...externalEvent };
         props.onDeadline(copyEvent);
         if (props.data.id) props.callback(emptyEventObject);
         //props.noScroll(false);
-
-        props.onChange(copyEvent);
+        if (mode !== undefined) props.onChange(copyEvent, mode);
+        else props.onChange(copyEvent);
         props.display();
     };
 
@@ -164,39 +164,49 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                         <p>Duration (h/m)</p>
                         <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.durationTime} onChange={updateDurationAndEndDate} />
                     </div>
-                </div>
-                <div className="ml-10 mt-7 flex">
-                    <div className="">
-                        <p>Deadline?</p>
-                        <SwitchButton onChange={handleChangeToggle} defaultMode={showDeadlineOrNot} />
-                    </div>
-                    <div className="pl-11">
-                        {deadlineToggle ? (
-                            <input
-                                className={'block w-full'}
-                                type={'datetime-local'}
-                                onFocus={props.onFocus}
-                                onChange={(e) => {
-                                    handleExternalEvent('deadline', e.target.value);
-                                }}
-                                min={`${today}`}
-                                step={60 * 15}
-                                value={externalEvent.deadline ? externalEvent.deadline : placeholder}
-                            ></input>
-                        ) : (
-                            ''
-                        )}
+                    <div className="  flex">
+                        <div className="ml-10">
+                            <p>Deadline?</p>
+                            <SwitchButton onChange={handleChangeToggle} defaultMode={showDeadlineOrNot} />
+                        </div>
+                        <div className="pl-11 mt-2">
+                            {deadlineToggle ? (
+                                <input
+                                    className={'block w-full'}
+                                    type={'datetime-local'}
+                                    onFocus={props.onFocus}
+                                    onChange={(e) => {
+                                        handleExternalEvent('deadline', e.target.value);
+                                    }}
+                                    min={`${today}`}
+                                    step={60 * 15}
+                                    value={externalEvent.deadline ? externalEvent.deadline : placeholder}
+                                ></input>
+                            ) : (
+                                ''
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 <div className="mt-auto flex justify-center gap-x-2">
                     {props.data.id ? (
-                        <Button disabled={false} onClick={closeAndDelete} backgroundColor={colorPalettes.redButton} className={'mr-auto mt-auto'}>
-                            <div className="flex">
-                                {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/trash.png'} />}
-                                Delete
-                            </div>
-                        </Button>
+                        <>
+                            <Button disabled={false} onClick={closeAndDelete} backgroundColor={'white'} rounded={'rounded-full'} className={'h-16 w-16'}>
+                                {<img className="" src={process.env.PUBLIC_URL + '/someIcons/trash.png'} />}
+                            </Button>
+                            <Button
+                                disabled={false}
+                                onClick={() => {
+                                    handleConfirmation(Mode.movingBackToPool);
+                                }}
+                                backgroundColor={'white'}
+                                rounded={'rounded-full'}
+                                className={'h-16 w-16'}
+                            >
+                                {<img className="" src={process.env.PUBLIC_URL + '/someIcons/minus.png'} />}
+                            </Button>
+                        </>
                     ) : (
                         ''
                     )}
