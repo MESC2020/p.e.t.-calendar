@@ -140,7 +140,7 @@ function createWindow(width: any, height: any) {
   // mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   mainWindow.on("close", function (event: any) {
     if (!app.isQuiting) {

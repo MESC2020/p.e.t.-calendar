@@ -811,7 +811,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     ''
                                 ) : (
                                     <>
-                                        <div className="flex w-full settin:flex-row flex-col">
+                                        <div className="flex w-full settin:flex-row flex-col mb-2">
                                             <>
                                                 <div id="switch" className="">
                                                     <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />

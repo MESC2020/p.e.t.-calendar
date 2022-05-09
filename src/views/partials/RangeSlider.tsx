@@ -18,7 +18,8 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
     const [storedHTML, setStoredHTML] = useState<any>(undefined);
     useEffect(() => {
         if (storedHTML === undefined && props.standardDemand === 0) {
-            const elements = document.getElementsByClassName('MuiSlider-colorPrimary MuiSlider-sizeMedium MuiSlider-root MuiSlider-marked css-1bs13h5-MuiSlider-root') as unknown as HTMLElement[];
+            const elements = document.getElementsByClassName('MuiSlider-colorPrimary MuiSlider-sizeMedium MuiSlider-root MuiSlider-marked css-24mx6r') as unknown as HTMLElement[];
+
             //make buttonKnob disappear when init
             //make buttonKnob appear when user uses slider
             for (let el of elements) {
