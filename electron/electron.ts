@@ -6,11 +6,11 @@ import { PlanGenerator } from "../src/db/PlanGenerator";
 import { Converter } from "../src/db/ConvertToCSV";
 
 //dev toole extension
-/*
+
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
-*/
+
 // Modules to control application life and create native browser window
 const {
   app,
@@ -25,7 +25,6 @@ const {
 const path = require("path");
 const isDev = require("electron-is-dev");
 const { URL } = require("url");
-const AutoLaunch = require("auto-launch");
 let dbManager: dbMgr;
 let aggregator: Aggregator;
 let tray: any = null;
@@ -66,7 +65,7 @@ function storeToCSV() {
   // Resolves to a Promise<Object>
   dialog
     .showOpenDialog(mainWindow, {
-      title: "Select a Folder where the files should be saved",
+      title: "Select a folder where the files should be stored",
       defaultPath: path.join(__dirname, "../assets/"),
       // defaultPath: path.join(__dirname, '../assets/'),
       buttonLabel: "Select",
@@ -114,7 +113,7 @@ function createPopupWindow(width: any, height: any) {
   //popupWindow.loadURL("http://localhost:3000/#/report");
   popupWindow.loadURL(constructAppPath("/report/"));
   //popupWindow.loadFile(path.join(__dirname, "../index.html#report"));
-  popupWindow.webContents.openDevTools();
+  //popupWindow.webContents.openDevTools();
 
   popupWindow.on("close", (event: any) => {
     //win = null
@@ -165,7 +164,6 @@ function createWindow(width: any, height: any) {
   function createTray() {
     const ASSETS_PATH = path.join(__dirname, "../tray.png");
     const icon = nativeImage.createFromPath(ASSETS_PATH);
-    console.log(ASSETS_PATH);
     tray = new Tray(icon);
     const template = [
       {
@@ -186,7 +184,7 @@ function createWindow(width: any, height: any) {
 
     tray.setContextMenu(contextMenu);
 
-    tray.setToolTip("TaskProject");
+    tray.setToolTip("P.E.T. calendar");
   }
 }
 
@@ -196,11 +194,11 @@ function createWindow(width: any, height: any) {
 app.whenReady().then(() => {
   const mainScreen = screen.getPrimaryDisplay();
   const { width, height } = mainScreen.workAreaSize;
-  /*installExtension(REACT_DEVELOPER_TOOLS, {
+  installExtension(REACT_DEVELOPER_TOOLS, {
     loadExtensionOptions: { allowFileAccess: true },
   })
     .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log("An error occurred: ", err));*/
+    .catch((err) => console.log("An error occurred: ", err));
 
   infinitePopUpLoop(width, height);
   createWindow(width, height);
@@ -208,14 +206,6 @@ app.whenReady().then(() => {
   dbManager = new dbMgr();
   dbManager.initDb();
   //console.log("printing path:");
-
-  let autoLaunch = new AutoLaunch({
-    name: "Task Project",
-    path: app.getPath("exe"),
-  });
-  autoLaunch.isEnabled().then((isEnabled: any) => {
-    if (!isEnabled) autoLaunch.enable();
-  });
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
@@ -232,7 +222,7 @@ function infinitePopUpLoop(width: any, height: any) {
     popupWindow.show();
     setTimeout(() => {
       popupWindow.close();
-    }, 30 * 60 * 1000);
+    }, 10 * 60 * 1000);
     //createPopupWindow(width, height);
   }, 60 * 60 * 1000);
 }
@@ -309,8 +299,6 @@ ipcMain.handle("retrieve-lock-status", async (event: any, args: any) => {
 });
 
 ipcMain.on("update-logs", (event: any, args: any) => {
-  console.log(args);
-  console.log("updating log");
   dbManager.updateLogs(args);
 });
 

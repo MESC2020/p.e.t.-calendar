@@ -1,10 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from '../../../views/partials/Button';
-import SwitchButton from '../../../views/partials/switchButton';
-import { colorPalettes, Mode } from '../OverviewPage';
-import RangeSlider from '../../../views/partials/RangeSlider';
-import TimeSelector from '../../../views/partials/TimeSelector';
-import moment from 'moment';
 
 enum buttonType {
     cancel = 'cancel',

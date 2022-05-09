@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import FullCalendar, { CalendarApi, EventSourceInput } from '@fullcalendar/react';
+import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SwitchButton from '../../views/partials/switchButton';
@@ -10,7 +10,7 @@ import TaskForm from './partials/TaskForm';
 import moment from 'moment';
 import AIpopup from './partials/AIpopup';
 import LockScreen from './partials/LockScreen';
-import Tooltip from '@mui/material/Tooltip';
+
 import ContextMenu from '../../views/partials/ContextMenu';
 
 export interface IOverviewPageProps {
@@ -80,6 +80,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const calendarApi = calendarRef.current.getApi();
             const id = calendarApi.addEventSource(state.events);
             setSourceAPI(id);
+        } else if (sourceAPI !== undefined) {
+            sourceAPI.refetch();
+            if (!props.lockStatus) handlingResizeOfEvents(flags.demandToggle, flags.showGraphs);
         }
     });
 
@@ -101,7 +104,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         //if (isLocked) checkIfLocked();
 
         if (isLoading) {
-            console.log('is loading');
             getData();
         }
     });
@@ -109,9 +111,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     useEffect(() => {
         async function fetch() {
             if (sourceAPI !== undefined) {
-                console.log('fetching');
                 await sourceAPI.refetch();
                 if (!props.lockStatus) handlingResizeOfEvents(flags.demandToggle, flags.showGraphs);
+                console.log('fetching');
             }
         }
         fetch();
@@ -132,8 +134,10 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             for (let eventCalendar of eventsInCalendar) {
                 if (eventCalendar.id === event.id) {
                     let index = eventsInCalendar.indexOf(eventCalendar);
-                    if (mode === Mode.updating) eventsInCalendar.splice(index, 1, event);
-                    else eventsInCalendar.splice(eventsInCalendar.indexOf(eventCalendar), 1);
+                    if (mode === Mode.updating) {
+                        eventsInCalendar.splice(index, 1);
+                        eventsInCalendar.push(event);
+                    } else eventsInCalendar.splice(eventsInCalendar.indexOf(eventCalendar), 1);
                     alreadyChanged = true;
                     break;
                 }
@@ -248,6 +252,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         const toEdit = Array.isArray(arg) ? arg : [arg]; //make an array
         let formatedEdit: EventObject[] = [];
         toEdit.forEach((event) => {
+            console.log(event);
             let currentEvent: EventObject = fcEventToReactEvent(event, mode);
             formatedEdit.push(currentEvent);
         });
@@ -263,14 +268,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 // Case 1: when toggle has been turned Off
                 if (!el.classList.contains('full-width')) {
                     el.classList.add('full-width');
-                    console.log('aaaaddded');
                 }
                 if (el.classList.contains('demand-no-animation') && vip) el.classList.remove('demand-no-animation');
                 // Case 2: when Event is beeing dragged
             } else if (!demandToggle && showGraphs && !props.lockStatus) {
                 if (el.classList.contains('full-width')) {
                     el.classList.remove('full-width');
-                    console.log('remooooooved');
                     if (!el.classList.contains('demand-no-animation')) el.classList.add('demand-no-animation');
                 }
                 // Case 3: when toggle is turned on or dragging stopped
@@ -295,6 +298,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     When Task is dropped from task pool into the calendar
      */
     function handleEventReceive(eventInfo: any) {
+        console.log(eventInfo);
         eventInfo.revert();
         updateData(eventInfo, Mode.dragAndDrop);
     }
@@ -326,7 +330,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 
     function handleDragStart(args: any) {
         handlingResizeOfEvents(false, true);
-        console.log(args);
         if (!flags.showGraphs) {
             setFlags((flags) => {
                 return {
@@ -371,7 +374,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function handleExternalEventLeave() {
-        console.log('hellooo');
         if (!flags.showGraphs) {
             setFlags((flags) => {
                 return {
@@ -437,10 +439,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
             };
         } else if (arg.id) {
-            if ((mode = Mode.movingBackToPool)) {
+            if (mode === Mode.movingBackToPool) {
+                console.log('here');
                 event = { ...arg, start: undefined, end: undefined };
             } else event = arg;
         } else event = emptyEventObject;
+        console.log(event);
         calculateDeadline(event);
 
         return event;
@@ -523,33 +527,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         return [weekStart, weekEnd];
     }
 
-    function getAffectedEventsInCaledar() {
-        const [weekStart, weekEnd] = getWeek();
-        const externalEvents: EventObject[] = [];
-        const events = [...state.events];
-        const external = [...state.externalEvents];
-
-        for (let event of events) {
-            if (new Date(event.start as string).getTime() > weekStart.getTime() && new Date(event.end as string).getTime() <= weekEnd.getTime()) {
-                event.start = undefined;
-                event.end = undefined;
-                externalEvents.push(event);
-                // events.splice(events.indexOf(event), 1);
-            }
-        }
-        for (let event of external) {
-            externalEvents.push(event);
-        }
-        /*
-        await setState((state) => {
-            return {
-                ...state,
-                events: events
-            };
-        });*/
-        return externalEvents;
-    }
-
     function areEventsInCalendarEffected() {
         const [weekStart, weekEnd] = getWeek();
 
@@ -571,7 +548,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 ifEventsInCalendarPermission = areEventsInCalendarEffected();
             } else {
                 const popup = aiPopup;
-                popup.message = 'There are Tasks already scheduled in the current calendar week. This action will replan these tasks. Are you sure you want to continue?';
+                popup.message = 'There are Tasks already scheduled in the current calendar week. This action will replan these Tasks. Are you sure you want to continue?';
                 popup.hasCancelButton = true;
                 popup.hasContinueButton = true;
                 popup.hasOkayButton = false;
@@ -593,7 +570,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         if (amountOfExternalEvents > 0) {
             const aipopup: aiPopupContent = aiPopup;
             const text = amountOfExternalEvents > 1 ? `${amountOfExternalEvents} tasks` : `${amountOfExternalEvents} task`;
-            aipopup.message = [`Did not find appropriate Slot for `, `${text}`] as any;
+            aipopup.message = [`Did not find appropriate slot for `, `${text}`] as any;
             aipopup.hasOkayButton = true;
             aipopup.hasCancelButton = false;
             aipopup.hasContinueButton = false;
@@ -657,7 +634,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     function handleMouseHover(arg: any) {
-        console.log(arg);
         const parent = arg.el.parentNode;
         const demand = retrieveDemandLevel(arg.event);
         const hour = parseInt(arg.event.extendedProps.durationTime.split(':')[0]);
@@ -667,7 +643,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 div.className = 'injected-container';
                 div.style.display = 'block';
                 const width = div.classList.contains('full-width') || props.lockStatus ? 123 : arg.el.offsetWidth;
-                console.log(div.classList.contains('full-width'));
                 div.style.marginLeft = (demand as number) <= 6 ? `${width + 5}px` : '128px';
 
                 //minus Button
@@ -703,8 +678,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             if (parent.childNodes.length === 2) {
                 const button = parent.childNodes[1];
                 const width = !flags.demandToggle ? 123 : arg.el.offsetWidth;
-                console.log(flags.demandToggle);
-                console.log(width);
                 button.style.marginLeft = (demand as number) <= 6 && !props.lockStatus ? `${width + 5}px` : '128px';
                 button.style.display = 'block';
             }
@@ -898,139 +871,3 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
 };
 
 export default OverviewPage;
-/*function handleMouseHover(arg: any) {
-        const parent = arg.el.parentNode;
-        const demand = retrieveDemandLevel(arg.event);
-        function showButtons(e: any) {
-            if (parent.childNodes.length === 1) {
-                const div = document.createElement('div');
-                div.className = 'injected-container';
-                div.style.display = 'block';
-                div.style.marginLeft = (demand as number) <= 6 ? `${arg.el.offsetWidth}px` : '130px';
-
-                //minus Button
-                let minusButton = document.createElement('button');
-                minusButton.className = 'injected-buttons';
-                const img = document.createElement('img');
-                img.style.width = '100%';
-                img.style.height = '100%';
-                minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
-
-                minusButton.onclick = function (e) {
-                    e.stopPropagation();
-                    updateData(arg, Mode.movingBackToPool);
-                };
-
-                //trash Button
-                let deleteButton = document.createElement('button');
-                deleteButton.className = 'injected-buttons';
-                const deleteImg = document.createElement('img');
-                img.style.width = '100%';
-                img.style.height = '100%';
-                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
-
-                deleteButton.onclick = function (e) {
-                    e.stopPropagation();
-                    updateData(arg, Mode.deleting);
-                };
-                div.appendChild(minusButton);
-                div.appendChild(deleteButton);
-
-                parent.appendChild(div);
-            }
-            if (parent.childNodes.length === 2) {
-                const button = parent.childNodes[1];
-                button.style.display = 'block';
-            }
-            parent.setPointerCapture(e.pointerId);
-        }
-        function disableButtons(e: any) {
-            console.log(parent.getBoundingClientRect());
-            console.log(mouse);
-
-            if (parent.childNodes.length === 2) {
-                const button = parent.childNodes[1];
-                button.style.display = 'none';
-            }
-            parent.releasePointerCapture(e.pointerId);
-        }
-        parent.onmouseenter = showButtons;
-        parent.onmouseleave = disableButtons;
-    }
-    function handleMouseStopHover(arg: any) {
-        const parent = arg.el.parentNode;
-
-        //console.log(parent.getBoundingClientRect());
-        const demand = retrieveDemandLevel(arg.event);
-        const f = () => {
-            if (parent.childNodes.length === 2) {
-                const button = parent.childNodes[1];
-                button.style.display = 'none';
-            }
-        };
-        f();
-        /*
-        setTimeout(() => {
-            f();
-        }, 2000);
-    }
-    function testFunc(event: any) {
-        //console.clear();
-        //console.log(document.elementFromPoint(event.clientX, event.clientY));
-    }*/
-
-/*
-    function handleMouseHover(arg: any) {
-        const parent = arg.el.parentNode;
-        const demand = retrieveDemandLevel(arg.event);
-
-        if (parent.childNodes.length === 1) {
-            const div = document.createElement('div');
-            div.className = 'injected-container';
-            div.style.display = 'block';
-            div.style.marginLeft = (demand as number) <= 6 ? `${arg.el.offsetWidth}px` : '130px';
-
-            parent.addEventListener('mouseleave', (event: any) => {
-                console.log(event);
-                console.log(parent.getBoundingClientRect());
-                const size = parent.getBoundingClientRect();
-                if (event.clientX < size.left || event.clientX > size.right || event.clientY < event.top || event.clientY > event.bottom) {
-                    div.style.display = 'none';
-                }
-            });
-
-            //minus Button
-            let minusButton = document.createElement('button');
-            minusButton.className = 'injected-buttons';
-            const img = document.createElement('img');
-            img.style.width = '100%';
-            img.style.height = '100%';
-            minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
-
-            minusButton.onclick = function (e) {
-                e.stopPropagation();
-                updateData(arg, Mode.movingBackToPool);
-            };
-
-            //trash Button
-            let deleteButton = document.createElement('button');
-            deleteButton.className = 'injected-buttons';
-            const deleteImg = document.createElement('img');
-            img.style.width = '100%';
-            img.style.height = '100%';
-            deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trashBlue.png'}`;
-
-            deleteButton.onclick = function (e) {
-                e.stopPropagation();
-                updateData(arg, Mode.deleting);
-            };
-            div.appendChild(minusButton);
-            div.appendChild(deleteButton);
-
-            parent.appendChild(div);
-        }
-        if (parent.childNodes.length === 2) {
-            const button = parent.childNodes[1];
-            button.style.display = 'block';
-        }
-    }*/

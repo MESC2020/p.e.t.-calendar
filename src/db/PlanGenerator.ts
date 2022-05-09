@@ -92,7 +92,6 @@ export class PlanGenerator {
     sortTasks() {
         const [weekStart, weekEnd] = this.getWeek();
         if (this.externTasks.length !== 0) {
-            console.log('in sorting');
             const demandLevels = Object.values(demandLevel);
             this.externTasks.forEach((event) => {
                 let eventsList: EventObject[] = [];

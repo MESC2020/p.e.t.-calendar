@@ -1,12 +1,10 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
+
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
+
 import Tooltip from '@mui/material/Tooltip';
 export interface IContextMenuProps {
     setDisplayUnlock: any;
@@ -75,7 +73,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
                             <img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/unlock.png'} />
                         </div>
                     </ListItemIcon>
-                    Unlock Assistance
+                    Unlock Program
                 </MenuItem>
                 <MenuItem
                     onClick={() => {

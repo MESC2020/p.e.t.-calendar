@@ -1,4 +1,3 @@
-import { display } from '@mui/system';
 import React, { useState } from 'react';
 import { Button } from '../../../views/partials/Button';
 import Loader from '../../../views/partials/Loader';
@@ -22,6 +21,7 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
         // props.noScroll(false);
     }
     function handleKeyDown(event: any) {
+        console.log('checking');
         if (event.key === 'Escape') {
             handleCancle();
         }
@@ -38,47 +38,50 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
         } else setError(true);
     }
     return (
-        <div onKeyDown={handleKeyDown} className=" small-popup  flex flex-col p-5 h-96">
-            {props.lockStatus ? (
-                <>
-                    <div className="h-3/5 flex justify-center items-center">
-                        <div className="flex flex-col justify-center items-center">
-                            <p className="font-bold">The main program is currently locked. You'll receive a key to unlock after 2 weeks of data collection</p>
-                            <div className="flex flex-col">
-                                <div className="flex gap-x-2 mt-2">
-                                    <input
-                                        className={'block'}
-                                        placeholder={'key'}
-                                        disabled={unlocked}
-                                        type={'text'}
-                                        onFocus={() => {
-                                            setError(false);
-                                        }}
-                                        onChange={(e) => {
-                                            setKeyInput(e.target.value);
-                                        }}
-                                    ></input>
-                                    <Button backgroundColor={colorPalettes.greenButton} disabled={keyInput === '' || unlocked} onClick={handleKeyInput} className={'mt-1'}>
-                                        Submit Key
-                                    </Button>
+        <div onKeyDown={handleKeyDown}>
+            <div className=" small-popup absolute  flex flex-col p-5 h-96">
+                {props.lockStatus ? (
+                    <>
+                        <div className="h-3/5 flex justify-center items-center">
+                            <div className="flex flex-col justify-center items-center">
+                                <p className="font-bold">The main program is currently locked. You'll receive a key to unlock after 2 weeks of data collection</p>
+                                <div className="flex flex-col">
+                                    <div className="flex gap-x-2 mt-2">
+                                        <input
+                                            autoFocus={true}
+                                            className={'block'}
+                                            placeholder={'key'}
+                                            disabled={unlocked}
+                                            type={'text'}
+                                            onFocus={() => {
+                                                setError(false);
+                                            }}
+                                            onChange={(e) => {
+                                                setKeyInput(e.target.value);
+                                            }}
+                                        ></input>
+                                        <Button backgroundColor={colorPalettes.greenButton} disabled={keyInput === '' || unlocked} onClick={handleKeyInput} className={'mt-1'}>
+                                            Submit Key
+                                        </Button>
+                                    </div>
+                                    {showError ? <div className="text-red-500 h-4">wrong key provided</div> : <div className="h-4"></div>}
                                 </div>
-                                {showError ? <div className="text-red-500 h-4">wrong key provided</div> : <div className="h-4"></div>}
                             </div>
                         </div>
+                        <div className="h-1/5 flex justify-center"> {unlocked ? <Loader className={''} /> : <div className=""></div>}</div>{' '}
+                    </>
+                ) : (
+                    <div className="h-full flex justify-center items-center">
+                        <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/checkmark.png'} />
+                        <p>You already unlocked missing features. In case you think something went wrong, feel free to contact me</p>
                     </div>
-                    <div className="h-1/5 flex justify-center"> {unlocked ? <Loader className={''} /> : <div className=""></div>}</div>{' '}
-                </>
-            ) : (
-                <div className="h-full flex justify-center items-center">
-                    <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/checkmark.png'} />
-                    <p>You already unlocked missing features. In case you think something went wrong, feel free to contact me</p>
-                </div>
-            )}
+                )}
 
-            <div className="mt-auto flex justify-end w-full">
-                <Button disabled={false} onClick={handleCancle} className={''}>
-                    Cancel
-                </Button>
+                <div className="mt-auto flex justify-end w-full">
+                    <Button disabled={false} onClick={handleCancle} className={''}>
+                        Cancel
+                    </Button>
+                </div>
             </div>
         </div>
     );

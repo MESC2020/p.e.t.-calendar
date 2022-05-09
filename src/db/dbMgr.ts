@@ -1,7 +1,5 @@
 const sqlite3 = require('sqlite3');
 
-const UNSTORED = 'unstored';
-const UNLOCKED = 'unlocked';
 export enum logOptions {
     isLocked = 'isLocked',
     usedAutoAssign = 'usedAutoAssign',
@@ -141,7 +139,6 @@ export class dbMgr {
                 const data = [event.title, demand];
                 if (event.deadline != undefined) data.push(event.deadline);
                 else data.push(undefined);
-                console.log(event);
 
                 if (event.start || event.start === undefined || event.start === null) {
                     valuesToChange = valuesToChange + ', start = ?, end = ?';
@@ -283,8 +280,7 @@ export class dbMgr {
             const eventProperties = Object.keys(event);
             let index = 0;
             let alreadyIncrementedDate = false;
-            console.log(event);
-            console.log(eventInDatabase);
+
             for (let property in eventInDatabase) {
                 if (property === 'id') continue;
                 let eventValue;
@@ -294,8 +290,6 @@ export class dbMgr {
                 } else if (property === 'demand') {
                     eventValue = this.retrieveDemandLevel(event);
                 }
-                console.log(eventValue);
-                console.log(eventInDatabaseValue);
 
                 if (eventInDatabaseValue !== eventValue) {
                     switch (property) {
@@ -323,7 +317,6 @@ export class dbMgr {
                 }
             }
         }
-        console.log(logsToUpdate);
         return logsToUpdate;
     }
 

@@ -5,7 +5,6 @@ import { colorPalettes, Mode } from '../OverviewPage';
 import RangeSlider from '../../../views/partials/RangeSlider';
 import TimeSelector from '../../../views/partials/TimeSelector';
 import moment from 'moment';
-import { State } from 'history';
 
 export interface ITaskFormProps {
     className?: string;
@@ -40,7 +39,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
         start: props.data.start ? props.data.start : undefined,
         end: props.data.end ? props.data.end : undefined,
         durationTime: props.data.durationTime ? props.data.durationTime : STANDARD_DURATION,
-        duration: STANDARD_DURATION //durationTime is for DB and duration is for fc (can't access duration later, because it's a hidden property of fc)
+        duration: props.data.durationTime ? props.data.durationTime : STANDARD_DURATION //durationTime is for DB and duration is for fc (can't access duration later, because it's a hidden property of fc)
     });
     const today = moment().minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
     const placeholder = moment().add(1, 'days').minutes(0).seconds(0).milliseconds(0).toISOString().replace(':00.000Z', '');
@@ -49,6 +48,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleExternalEvent = async (key: string, value: any) => {
         setExternalEvent({ ...externalEvent, [key]: value });
+        console.log(props.data.durationTime);
     };
 
     const handleChangeToggle = () => {
@@ -116,6 +116,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                       durationTime: durationTime,
                       duration: durationTime
                   };
+        console.log(endDate);
         setExternalEvent((state) => {
             return {
                 ...state,

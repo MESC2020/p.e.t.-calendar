@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import { Draggable } from '@fullcalendar/interaction';
 import React, { memo, useEffect, useRef } from 'react';
 import { colorPalettes } from '../OverviewPage';

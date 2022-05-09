@@ -1,6 +1,4 @@
-import { translateRect } from '@fullcalendar/react';
-import React, { useEffect } from 'react';
-import { transform } from 'typescript';
+import React from 'react';
 import { VictoryArea, VictoryChart, VictoryLegend, VictoryLine, VictoryScatter, VictoryTheme } from 'victory';
 
 export interface IProductivityGraphProps {
@@ -15,7 +13,7 @@ const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (pro
     return (
         // 163.41 * 700
         // viewBox = <min-x> <min-y> <width> <height>
-        <svg className="" width={1605} height={255} transform="rotate(90), translate(625,722)">
+        <svg className="" width={1605} height={255} transform="rotate(90), translate(625,723)">
             <VictoryChart
                 style={{
                     parent: { pointerEvents: 'none' }

@@ -17,7 +17,6 @@ function valuetext(value: any) {
 const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
     const [storedHTML, setStoredHTML] = useState<any>(undefined);
     useEffect(() => {
-        console.log(props.standardDemand);
         if (storedHTML === undefined && props.standardDemand === 0) {
             const elements = document.getElementsByClassName('MuiSlider-colorPrimary MuiSlider-sizeMedium MuiSlider-root MuiSlider-marked css-1bs13h5-MuiSlider-root') as unknown as HTMLElement[];
             //make buttonKnob disappear when init
@@ -27,7 +26,6 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
                 if (el !== undefined && buttonKnob !== undefined) {
                     (buttonKnob as any).style.display = 'none';
                     el.addEventListener('mousedown', () => {
-                        console.log('test');
                         if ((buttonKnob as any).style.display !== 'block') (buttonKnob as any).style.display = 'block';
                     });
                 }
@@ -37,13 +35,13 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
     });
     const [value, setValue] = useState(props.standardDemand);
     const demandLevels = [
-        { value: 1, label: 'Extremly Low' },
+        { value: 1, label: 'Extremely Low' },
         { value: 2, label: '2' },
         { value: 3, label: '3' },
         { value: 4, label: 'Neutral' },
         { value: 5, label: '5' },
         { value: 6, label: '6' },
-        { value: 7, label: 'Extremly High' }
+        { value: 7, label: 'Extremely High' }
     ];
 
     const handleChange = (newValue: any) => {
@@ -81,7 +79,6 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
                     value={value}
                     defaultValue={props.standardDemand}
                     onChange={(event: any, newValue: any) => {
-                        console.log('sliding');
                         //if (storedHTML !== undefined) storedHTML.style.display = 'block';
                         handleChange(event.target.value);
                     }}

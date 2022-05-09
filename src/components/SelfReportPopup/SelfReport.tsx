@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import RangeSlider from '../../views/partials/RangeSlider';
 import { Button } from '../../views/partials/Button';
 import { colorPalettes } from '../../Pages/Overview/OverviewPage';
@@ -144,7 +144,11 @@ const SelfReport: React.FunctionComponent<ISelfReportProps> = (props) => {
                                 </p>
                                 <RangeSlider checkBox={checkBox} textColorWhite={true} labels={demandLevels} standardDemand={energyAssessment} onChange={handleEnergy} />
                             </div>
-                            <div></div>
+
+                            <div className="pl-10 pt-2 flex gap-x-5">
+                                <p className="text-white text-xs">1 = Extremely Low</p>
+                                <p className="text-white text-xs"> 7=Extremely High</p>
+                            </div>
                         </div>
                     </div>
                 </>

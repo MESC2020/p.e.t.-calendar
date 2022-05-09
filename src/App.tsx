@@ -1,5 +1,5 @@
-import React, { Component, useEffect, useState } from 'react';
-import { BrowserRouter, HashRouter, Route, Routes as Switch } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { HashRouter, Route, Routes as Switch } from 'react-router-dom';
 import SelfReport from './components/SelfReportPopup/SelfReport';
 import OverviewPage, { logOptions } from './Pages/Overview/OverviewPage';
 import StatsPage from './Pages/StatsPage';
