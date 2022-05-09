@@ -61,12 +61,7 @@
       "package.json",
       "node_modules"
     ],
-    "extraResources": [
-      {
-        "from": "./public/assets",
-        "to": "assets"
-      }
-    ],
+    "extraResources": [],
     "win": {
       "target": "nsis",
       "icon": "./build/icon.ico"
