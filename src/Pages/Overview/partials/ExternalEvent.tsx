@@ -8,12 +8,13 @@ export interface IExternalEventProps {
     onMousePress: any;
 }
 
-const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props) => {
+const ExternalEvent: React.FunctionComponent<IExternalEventProps> = (props) => {
     let elRef = useRef(null);
     let textColor = props.event?.textColor || 'white';
 
     useEffect(() => {
         if (elRef.current != null) {
+            console.log(props.event);
             let draggable = new Draggable(elRef.current, {
                 eventData: function () {
                     return { ...props.event, create: true };
@@ -58,7 +59,7 @@ const ExternalEvent: React.FunctionComponent<IExternalEventProps> = memo((props)
             </div>
         </div>
     );
-});
+};
 
 export default ExternalEvent;
 export function retrieveDemandLevel(event: any) {

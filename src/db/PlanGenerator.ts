@@ -761,6 +761,7 @@ export class PlanGenerator {
                 });
             }
         }
+
         return assignedEvents;
     }
 }

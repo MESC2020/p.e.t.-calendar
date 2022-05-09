@@ -13,7 +13,7 @@ const ProductivityGraph: React.FunctionComponent<IProductivityGraphProps> = (pro
     return (
         // 163.41 * 700
         // viewBox = <min-x> <min-y> <width> <height>
-        <svg className="" width={1605} height={255} transform="rotate(90), translate(625,723)">
+        <svg className="" width={1605} height={255} transform="rotate(90), translate(622,723)">
             <VictoryChart
                 style={{
                     parent: { pointerEvents: 'none' }

@@ -6,6 +6,7 @@ module.exports = {
     extend: {
       screens: {
         cal: "1420px",
+        settin: "1555px",
       },
       colors: {
         "my-bright-blue": "#86d3ff",

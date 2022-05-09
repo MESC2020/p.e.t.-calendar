@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3');
 export enum logOptions {
     isLocked = 'isLocked',
     usedAutoAssign = 'usedAutoAssign',
+    amountEventsDidNotGetAssignedAuto = 'amountEventsDidNotGetAssignedAuto',
     updatedEventAssignment = 'updatedEventAssignment',
     updatedEventDemandLevel = 'updatedEventDemandLevel',
     updatedEventDuration = 'updatedEventDuration',
@@ -10,7 +11,8 @@ export enum logOptions {
     deletedEvents = 'deletedEvents',
     lookedAtStats = 'lookedAtStats',
     usedDemandToggle = 'usedDemandToggle',
-    eventsGenerated = 'eventsGenerated'
+    eventsGenerated = 'eventsGenerated',
+    putBackToPool = 'putBackToPool'
 }
 export class dbMgr {
     db: SQlite | undefined;
@@ -87,6 +89,14 @@ export class dbMgr {
             },
             {
                 information: logOptions.eventsGenerated,
+                data: 0
+            },
+            {
+                information: logOptions.putBackToPool,
+                data: 0
+            },
+            {
+                information: logOptions.amountEventsDidNotGetAssignedAuto,
                 data: 0
             }
         ];
@@ -279,31 +289,26 @@ export class dbMgr {
             const eventInDatabase = (await this.retrieveEvent(event.id)) as EventObject;
             const eventProperties = Object.keys(event);
             let index = 0;
-            let alreadyIncrementedDate = false;
 
             for (let property in eventInDatabase) {
                 if (property === 'id') continue;
-                let eventValue;
+                let eventValue = undefined;
                 const eventInDatabaseValue = eventInDatabase[property as keyof EventObject];
                 if (eventProperties.includes(property)) {
                     eventValue = event[property as keyof EventObject];
                 } else if (property === 'demand') {
                     eventValue = this.retrieveDemandLevel(event);
+                } else continue;
+                if ((eventValue === null || eventValue === undefined) && (eventInDatabaseValue === null || eventInDatabaseValue === undefined)) continue;
+                if (property === 'start' && eventInDatabaseValue !== null && eventInDatabaseValue !== undefined && (eventValue === null || eventValue === undefined)) {
+                    logsToUpdate.push({ information: logOptions.putBackToPool, data: 1 });
+                    continue;
                 }
 
                 if (eventInDatabaseValue !== eventValue) {
                     switch (property) {
                         case 'start':
-                            if (!alreadyIncrementedDate) {
-                                alreadyIncrementedDate = true;
-                                logsToUpdate.push({ information: logOptions.updatedEventAssignment, data: 1 });
-                            }
-                            break;
-                        case 'end':
-                            if (!alreadyIncrementedDate) {
-                                alreadyIncrementedDate = true;
-                                logsToUpdate.push({ information: logOptions.updatedEventAssignment, data: 1 });
-                            }
+                            logsToUpdate.push({ information: logOptions.updatedEventAssignment, data: 1 });
                             break;
                         case 'deadline':
                             logsToUpdate.push({ information: logOptions.updatedEventDeadline, data: 1 });

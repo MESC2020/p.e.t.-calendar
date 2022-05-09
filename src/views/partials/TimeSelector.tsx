@@ -25,7 +25,6 @@ export const StyleWrapper = styled.div`
 const TimeSelector: React.FunctionComponent<ITimeSelectorProps> = (props) => {
     function handleTimePicking(value: Moment) {
         const onlyTime = value.format('HH:mm');
-
         //if Task already in Calendar
         if (props.startTime !== undefined && props.startTime !== null) {
             const [hour, minute] = onlyTime.split(':');

@@ -63,10 +63,15 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const handleConfirmation = (mode?: Mode) => {
         const copyEvent = { ...externalEvent };
         props.onDeadline(copyEvent);
+        console.log(copyEvent);
         if (props.data.id) props.callback(emptyEventObject);
         //props.noScroll(false);
-        if (mode !== undefined) props.onChange(copyEvent, mode);
-        else props.onChange(copyEvent);
+        console.log(mode);
+        if (mode === Mode.movingBackToPool) {
+            console.log(mode);
+            props.onChange(copyEvent, mode);
+            console.log("shouldn't be here");
+        } else props.onChange(copyEvent);
         props.display();
     };
 
@@ -163,14 +168,14 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                 <div className="flex mt-7 ml-10 gap-x-4">
                     <div className="flex flex-col">
                         <p>Duration (h/m)</p>
-                        <TimeSelector className="flex justify-center" startTime={props.data.start} duration={externalEvent.durationTime} onChange={updateDurationAndEndDate} />
+                        <TimeSelector className="flex justify-center" startTime={props.data.start} duration={props.data.durationTime} onChange={updateDurationAndEndDate} />
                     </div>
-                    <div className="  flex">
+                    <div className="  flex overflow-auto">
                         <div className="ml-10">
                             <p>Deadline?</p>
                             <SwitchButton onChange={handleChangeToggle} defaultMode={showDeadlineOrNot} />
                         </div>
-                        <div className="pl-11 mt-2">
+                        <div className="pl-11 mt-2 ">
                             {deadlineToggle ? (
                                 <input
                                     className={'block w-full'}
@@ -196,18 +201,22 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                             <Button disabled={false} onClick={closeAndDelete} backgroundColor={'white'} rounded={'rounded-full'} className={'h-16 w-16'}>
                                 {<img className="" src={process.env.PUBLIC_URL + '/someIcons/trash.png'} />}
                             </Button>
-                            <Button
-                                disabled={false}
-                                onClick={() => {
-                                    handleConfirmation(Mode.movingBackToPool);
-                                }}
-                                backgroundColor={'white'}
-                                rounded={'rounded-full'}
-                                className={'h-16 w-16'}
-                            >
-                                {<img className="" src={process.env.PUBLIC_URL + '/someIcons/minus.png'} />}
-                            </Button>
                         </>
+                    ) : (
+                        ''
+                    )}
+                    {props.data.start !== undefined && props.data.start !== null ? (
+                        <Button
+                            disabled={false}
+                            onClick={() => {
+                                handleConfirmation(Mode.movingBackToPool);
+                            }}
+                            backgroundColor={'white'}
+                            rounded={'rounded-full'}
+                            className={'h-16 w-16'}
+                        >
+                            {<img className="" src={process.env.PUBLIC_URL + '/someIcons/minus.png'} />}
+                        </Button>
                     ) : (
                         ''
                     )}

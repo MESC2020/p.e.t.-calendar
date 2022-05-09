@@ -11,6 +11,8 @@ import moment from 'moment';
 import AIpopup from './partials/AIpopup';
 import LockScreen from './partials/LockScreen';
 
+import Tooltip from '@mui/material/Tooltip';
+
 import ContextMenu from '../../views/partials/ContextMenu';
 
 export interface IOverviewPageProps {
@@ -30,7 +32,8 @@ export enum colorPalettes {
 export enum logOptions {
     isLocked = 'isLocked',
     lookedAtStats = 'lookedAtStats',
-    usedDemandToggle = 'usedDemandToggle'
+    usedDemandToggle = 'usedDemandToggle',
+    amountEventsDidNotGetAssignedAuto = 'amountEventsDidNotGetAssignedAuto'
 }
 type aiPopupContent = { message: string; data: number | undefined; hasCancelButton: boolean; hasOkayButton: boolean; hasContinueButton: boolean };
 
@@ -81,7 +84,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             const id = calendarApi.addEventSource(state.events);
             setSourceAPI(id);
         } else if (sourceAPI !== undefined) {
-            sourceAPI.refetch();
             if (!props.lockStatus) handlingResizeOfEvents(flags.demandToggle, flags.showGraphs);
         }
     });
@@ -217,7 +219,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         emptyArray(eventsInCalendar);
         events.forEach((event) => {
             const { demand, ...eventWithoutDemand } = event;
-            const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`, props.lockStatus ? 'full-width' : '', 'demand-no-animation'] };
+            const newEvent = { ...eventWithoutDemand, classNames: ['demand', `demand-${demand}`, props.lockStatus ? 'full-width' : '', 'demand-no-animation'], duration: event.durationTime };
 
             calculateDeadline(newEvent);
 
@@ -227,14 +229,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 externalEvents.push(newEvent);
             }
         });
-        if (eventsInCalendar.length !== 0 || externalEvents.length !== 0)
+        if (eventsInCalendar.length !== 0 || externalEvents.length !== 0) {
             setState(() => {
                 return {
                     events: eventsInCalendar,
                     externalEvents: externalEvents
                 };
             });
-        if (alertIfExternalEvents) alertIfNotAllTasksWereAssigned(externalEvents.length);
+        }
+
+        if (alertIfExternalEvents) {
+            alertIfNotAllTasksWereAssigned(externalEvents.length);
+            await window.api.updateLogs([{ information: logOptions.amountEventsDidNotGetAssignedAuto, data: externalEvents.length }]);
+        }
 
         return eventsInCalendar;
     }
@@ -252,7 +259,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         const toEdit = Array.isArray(arg) ? arg : [arg]; //make an array
         let formatedEdit: EventObject[] = [];
         toEdit.forEach((event) => {
-            console.log(event);
             let currentEvent: EventObject = fcEventToReactEvent(event, mode);
             formatedEdit.push(currentEvent);
         });
@@ -298,7 +304,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     When Task is dropped from task pool into the calendar
      */
     function handleEventReceive(eventInfo: any) {
-        console.log(eventInfo);
         eventInfo.revert();
         updateData(eventInfo, Mode.dragAndDrop);
     }
@@ -424,6 +429,8 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     function fcEventToReactEvent(arg: any, mode?: Mode): EventObject {
         let event;
         if (arg.event !== undefined) {
+            const dur = arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime;
+
             event = {
                 id: parseInt(arg.event.id),
                 title: arg.event.title,
@@ -436,15 +443,15 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                             : arg.event.endStr
                         : calculateEndDate(arg.event.extendedProps.durationTime, arg.event.startStr),
                 classNames: props.lockStatus ? [...arg.event.classNames, 'full-width'] : arg.event.classNames,
-                durationTime: arg.event.endStr !== null && arg.event.endStr !== undefined ? timeDifference(arg.event.startStr, arg.event.endStr) : arg.event.extendedProps.durationTime
+                durationTime: dur,
+                duration: dur
             };
         } else if (arg.id) {
             if (mode === Mode.movingBackToPool) {
-                console.log('here');
                 event = { ...arg, start: undefined, end: undefined };
             } else event = arg;
         } else event = emptyEventObject;
-        console.log(event);
+
         calculateDeadline(event);
 
         return event;
@@ -574,6 +581,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
             aipopup.hasOkayButton = true;
             aipopup.hasCancelButton = false;
             aipopup.hasContinueButton = false;
+
             displayAIpopup(aipopup);
         }
     }
@@ -582,6 +590,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         setAiPopup(content);
         document!.getElementById('overlay')!.style.display = 'block';
         //noScroll(true);
+
         setDisplayAutoAI(true);
     }
     function handleDisplayUnlock() {
@@ -706,9 +715,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 ''
             ) : (
                 <>
-                    <div className="flex ml-5 mr-5 w-full min-size h-full">
-                        <div style={{ width: '15%' }} id="pool" className="">
-                            <div className="flex gap-x-2 ">
+                    <div className="flex ml-5 mr-5  w-full min-size h-full">
+                        <div id="pool" style={{ minWidth: '165px', maxWidth: '20%' }} className="mr-3 w-full pool">
+                            <div className="flex gap-x-2 w-full">
                                 <Button
                                     color={'white'}
                                     backgroundColor={'#1e2b3'}
@@ -736,7 +745,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                     </Button>
                                 )}
                             </div>
-                            <div className="flex flex-grow flex-col gap-y-1 pool mt-4 bg-slate-100 border-2 rounded-lg w-56 h-1/2 relative">
+                            <div className="flex flex-grow flex-col gap-y-1 mt-4 overflow-auto bg-slate-100 border-2 rounded-lg h-full w-full">
                                 {state.externalEvents.map((event) => (
                                     <ExternalEvent
                                         onClick={handleLeftclick}
@@ -755,9 +764,9 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 ))}
                             </div>
                         </div>
-                        <div id="cal" style={{ width: '65%' }} className=" flex justify-end min-width-cal overflow-hidden">
-                            <div className="flex flex-col">
-                                <div id="scroll-box" className="container-overview  overflow-auto mb-5 bg-blue-50 border-2 rounded-lg drop-shadow-2xl border-blue-100">
+                        <div id="cal" style={{ minWidth: '1200px', maxWidth: '60%' }} className="w-full ">
+                            <div className="flex flex-col container-overview">
+                                <div id="scroll-box" className=" h-full overflow-auto mb-5 bg-blue-50 border-2 rounded-lg drop-shadow-2xl border-blue-100">
                                     <div style={{ height: '1600px' }} className="  box ">
                                         <FullCalendar
                                             ref={calendarRef}
@@ -796,16 +805,19 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 </div>
                             </div>
                         </div>
-                        <div id="settings" style={{ width: '20%' }} className="flex ml-2 ">
-                            <div className=" flex flex-col w-9/12">
+                        <div id="settings" style={{ minWidth: '100px', maxWidth: '20%' }} className="flex w-full ml-2 ">
+                            <div className=" flex flex-col">
                                 {props.lockStatus ? (
                                     ''
                                 ) : (
                                     <>
-                                        <div className="flex w-full">
-                                            <div id="switch" className=" ">
-                                                <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
-                                            </div>
+                                        <div className="flex w-full settin:flex-row flex-col">
+                                            <>
+                                                <div id="switch" className="">
+                                                    <SwitchButton defaultMode={flags.demandToggle} onChange={toggleDemandOnOff} />
+                                                </div>{' '}
+                                            </>
+
                                             <div className="flex">
                                                 <img style={{ width: '20px', height: '20px' }} className="mt-1" src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
                                                 <p className="mt-1">show energy pattern</p>
@@ -855,6 +867,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                 display={() => {
                                     const el = document!.getElementById('overlay');
                                     if (el) el.style.display = 'none';
+
                                     setDisplayUnlock(false);
                                 }}
                                 unLockApp={handleUnlockApp}

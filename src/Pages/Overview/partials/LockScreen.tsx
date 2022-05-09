@@ -9,7 +9,7 @@ export interface ILockScreenProps {
     noScroll: any;
     lockStatus: boolean;
 }
-const KEY = 'uzhTaskProject';
+const KEY = 'thirdWeekUserStudy!';
 
 const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
     const [showError, setError] = useState(false);

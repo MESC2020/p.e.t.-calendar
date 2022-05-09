@@ -52,7 +52,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
                             position: 'absolute',
                             top: 0,
                             right: 175,
-                            width: 10,
+                            width: 0,
                             height: 10,
                             bgcolor: 'background.paper',
                             transform: 'translateY(-50%) rotate(45deg)',
