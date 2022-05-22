@@ -1,70 +1,82 @@
-# Getting Started with Create React App
+# Productivity & Energy Task (P.E.T) calendar
+This repository includes my Bachelor Thesis' program P.E.T. The program's main functionality are
+- calendar
+- data collection via self-assessment once an hour
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+More in depth explained: User is asked to specify how the last hour felt in terms of productivity and energy via self-assessment. This information is provided via Likert Scales that go from 1 (extremely low) to 7 (extremely high). The data is then displayed inside the calendar so that the user can now see at what point of the day they're the most/least energized. With this information, user may be able to schedule their week more efficiently and thus increasing their productivity directly or indirectly. 
+Further, tasks are rated by user, again from 1 to 7, how demanding that task will be. That way, a mapping can take place between energy level and demanding level. For example, it'd be in user's interest to map a task with a demanding level of 5 to a time slot that has an energy level of 5 or more.
 
-## Available Scripts
+An auto-assign-button is provided to assign all tasks in pool automatically based on their demanding-level. 
 
-In the project directory, you can run:
+Note: The privious mentioned button is only available if tasks are in pool and if there's sufficient information about the user's energy pattern. Sufficient means: A minimum of 16 time slots with energy level data, on minimum of 2 days, are provided. 
 
-### `npm start`
+### Technologies
+I used Electron, React, TypeScript, Tailwind and CSS/HTML. Main dependencies this program is relying on are but not limited to:
+- [fullCalendar](https://fullcalendar.io/) for the main calendar functionalities
+- [victory](https://formidable.com/open-source/victory/) for displaying data in a graph-style
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Launch & Deployment
+The program can be run via craco & concurrently. Concurrently in this case makes sure that the development environment is booted not only in Electron but also on localhost in the web browser.
+npm was used to manage dependencies.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+#### Install
+```
+./npm install
+```
+To look for any missing dependencies and if there are missing ones they will be installed
 
-### `npm test`
+#### Compile
+```
+./npm run compile
+```
+Compiles `electron files` only, based on `electron/tsconfig.json`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### Run
+```
+./npm start
+```
+Compiles (important for electron) and starts the app in the development mode. It should start an Electron App. If needed, the program can also be found on this link: [http:localhost:3000](http://localhost:3000). 
+If you apply edits in React, the page will automatically reload. Edits in Electron (`electron.ts` and `preload.ts`) need a re-start. 
 
-### `npm run build`
+#### Test
+```
+./npm run test
+```
+Launches the test runner in the interactive watch mode.
+See the section about [running tests](https://create-react-app.dev/docs/running-tests/) for more information.
+Due to time limit I was not able to implement my own tests.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### Build
+```
+./npm run build
+```
+Builds the app for production to the `build` folder. This is a necessary step to distribute the app.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### Deployment
+```
+./npm run dist:win
+```
+Creates Windows Distribution of the app based on `build` setting in `package.json`. This distribution, `.exe` can be found in the (auto-created) folder `dist`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+./npm run dist:mac
+```
+Not yet implemented 
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Roadmap
+- Refactor Code
+- Implement Testing
+- Improve design
+- Improve overall experience
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Authors and acknowledgment
+#### Author
+- Micha Eschmann
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### Acknowledgment
+- Anastasia Ruvimova & Alexander Lill  // Supervisors
+- Tomas Fritz, Prof. Dr.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### License
+- Copyright protected &copy;
