@@ -1,5 +1,5 @@
 import { Draggable } from '@fullcalendar/interaction';
-import React, { memo, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { colorPalettes } from '../OverviewPage';
 
 export interface IExternalEventProps {
@@ -10,11 +10,9 @@ export interface IExternalEventProps {
 
 const ExternalEvent: React.FunctionComponent<IExternalEventProps> = (props) => {
     let elRef = useRef(null);
-    let textColor = props.event?.textColor || 'white';
 
     useEffect(() => {
         if (elRef.current != null) {
-            console.log(props.event);
             let draggable = new Draggable(elRef.current, {
                 eventData: function () {
                     return { ...props.event, create: true };

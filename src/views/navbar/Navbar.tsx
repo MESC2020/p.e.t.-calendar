@@ -13,7 +13,7 @@ const Navbar: React.FunctionComponent<INavbarProps> = (props) => {
 
     function isButtonPressed(path: string) {
         let value: boolean = false;
-        if (path == location.pathname) value = true;
+        if (path === location.pathname) value = true;
         return value;
     }
     const STATS_PATH = '/stats/';

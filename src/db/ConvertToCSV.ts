@@ -59,7 +59,6 @@ export class Converter {
     async createZIPfolder() {
         const pathBase = this.filePathBase;
         const fileNames = this.fileNames;
-        console.log(fileNames);
 
         if (pathBase !== undefined && fileNames !== undefined) {
             const output = fs.createWriteStream(`${pathBase}/data.zip`);

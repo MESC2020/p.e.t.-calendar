@@ -22,6 +22,7 @@ const RangeSlider: React.FunctionComponent<IRangeSliderProps> = (props) => {
 
             //make buttonKnob disappear when init
             //make buttonKnob appear when user uses slider
+            //Buggy behavior TODO (works not in dev mode but in distributed mode)
             for (let el of elements) {
                 const buttonKnob = el.children.item(16);
                 if (el !== undefined && buttonKnob !== undefined) {

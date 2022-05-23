@@ -21,8 +21,7 @@ export interface IAIpopupProps {
     hasContinueButton: boolean;
     hasOkayButton: boolean;
 }
-const STANDARD_DURATION = '02:00';
-const STANDARD_DEMAND = 5;
+
 const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
     const handleConfirmation = (button: buttonType) => {
         if (button === buttonType.continue) props.autoAssignTasks(true);
@@ -31,7 +30,6 @@ const AIpopup: React.FunctionComponent<IAIpopupProps> = (props) => {
     };
 
     function ifMultipleStrings() {
-        let message = '';
         return props.message.map((element: any, index: number) => {
             return index === 0 ? <p className="">{element}</p> : <p className="font-bold">{element}</p>;
         });

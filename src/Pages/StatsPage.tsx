@@ -17,7 +17,6 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
 
     useEffect(() => {
         async function getData() {
-            //hideOrShowElements(true);
             const res: IaggregatedWeekdays = await window.api.getAggregatedWeekdays();
             const totalAvg = formatTotalAvg(res);
             setTotalAvg(totalAvg);
@@ -75,14 +74,6 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
         return result;
     }
 
-    /*    function hideOrShowElements(toHide: boolean, id?: string) {
-        const ids = ['detail-information'];
-        for (let element of ids) {
-            if (id && id !== element) continue;
-            const currentDiv = document.getElementById(element);
-            if (currentDiv !== null) currentDiv.style.display = toHide ? 'none' : 'block'; // Hide by default
-        }
-    }*/
     return (
         <>
             {isLoading ? (
@@ -104,7 +95,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                                             <div className="flex justify-between">
                                                 <div className="flex">
                                                     <div style={{ height: 35, width: 35 }}>
-                                                        <img src={process.env.PUBLIC_URL + '/someIcons/productive.png'} />
+                                                        <img src={process.env.PUBLIC_URL + '/assets/productive.png'} />
                                                     </div>
                                                     <p className="font-bold pl-1">Most productive weekday</p>
                                                 </div>
@@ -115,7 +106,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
                                             <div className="flex justify-between mt-2 ">
                                                 <div className="flex">
                                                     <div style={{ height: 35, width: 35 }}>
-                                                        <img src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
+                                                        <img src={process.env.PUBLIC_URL + '/assets/energy.png'} />
                                                     </div>
                                                     <p className="font-bold pl-1">Most energized weekday</p>
                                                 </div>

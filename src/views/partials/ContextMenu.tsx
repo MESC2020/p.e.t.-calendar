@@ -24,7 +24,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
             <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
                 <Tooltip title="More Options" placement="bottom">
                     <div onClick={handleClick} className="rounded-full shadow-xl hover:ring-2 ring-my-bright-blue/50 cursor-pointer">
-                        <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/settings.png'} />
+                        <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/assets/settings.png'} />
                     </div>
                 </Tooltip>
             </Box>
@@ -70,7 +70,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
                 >
                     <ListItemIcon>
                         <div style={{ backgroundColor: '#86d3ff', borderRadius: 5 }}>
-                            <img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/unlock.png'} />
+                            <img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/assets/unlock.png'} />
                         </div>
                     </ListItemIcon>
                     Unlock Program
@@ -82,7 +82,7 @@ const ContextMenu: React.FunctionComponent<IContextMenuProps> = (props) => {
                 >
                     <ListItemIcon>
                         <div style={{ backgroundColor: '#86d3ff', borderRadius: 5 }}>
-                            <img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/store.png'} />
+                            <img style={{ width: 25, height: 25 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/assets/store.png'} />
                         </div>
                     </ListItemIcon>
                     Export Data

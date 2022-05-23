@@ -1,8 +1,4 @@
 import React from 'react';
-/**
- * Main Button that is used across our platform
- * @function
- */
 
 interface IbuttonProps {
     disabled: boolean;
@@ -38,5 +34,3 @@ export const Button = (props: IbuttonProps) => {
         </button>
     );
 };
-
-/*'from-' + props.color + '-500 to-' + props.color + '-100 focus:ring-' + props.color + '-500' : 'from-blue-500 to-blue-100 focus:ring-blue-500') */

@@ -159,7 +159,7 @@ export class Aggregator {
                 filler.push(temp);
                 tempAlreadyAdded = true;
             }
-            if (midnightNotReached && hour != 25) {
+            if (midnightNotReached && hour !== 25) {
                 count++;
                 hour = 25;
             } else loop = false;

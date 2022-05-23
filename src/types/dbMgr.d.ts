@@ -1,4 +1,3 @@
-import { TypeOfTag } from 'typescript';
 type callback = (err: error, result?: any) => any;
 
 declare global {

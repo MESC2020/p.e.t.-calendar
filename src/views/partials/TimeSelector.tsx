@@ -32,7 +32,6 @@ const TimeSelector: React.FunctionComponent<ITimeSelectorProps> = (props) => {
             const newDate = new Date(milSec).toISOString(); //new End date
             props.onChange(onlyTime, newDate);
         } else props.onChange(onlyTime);
-        console.log(onlyTime);
     }
     return (
         <div className={`${props.className}` + ' '}>

@@ -10,9 +10,6 @@ import TaskForm from './partials/TaskForm';
 import moment from 'moment';
 import AIpopup from './partials/AIpopup';
 import LockScreen from './partials/LockScreen';
-
-import Tooltip from '@mui/material/Tooltip';
-
 import ContextMenu from '../../views/partials/ContextMenu';
 
 export interface IOverviewPageProps {
@@ -59,9 +56,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
         hasOkayButton: true,
         hasContinueButton: false
     });
-
     const [isLoading, setIsLoading] = useState(true);
-
     const [displayTaskForm, setDisplayTaskForm] = useState(false);
     const [displayAutoAI, setDisplayAutoAI] = useState(false);
     const [displayUnlock, setDisplayUnlock] = useState(false);
@@ -89,22 +84,12 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     });
 
     useEffect(() => {
-        /*
-        async function checkIfLocked() {
-            if (isLocked) {
-                const isLocked = await window.api.retrieveLockStatus(logOptions.isLocked);
-                if (isLocked.data === 'false') setIsLocked(false);
-            }
-        }*/
-
         async function getData() {
             const events = await window.api.getAllEvents();
             setIsLoading(!isLoading);
             sortData(events);
             document.getElementById('scroll-box')!.scrollTop = 506;
         }
-        //if (isLocked) checkIfLocked();
-
         if (isLoading) {
             getData();
         }
@@ -546,7 +531,6 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
     }
 
     async function autoAssignTasks(includeEventsInCalendar: boolean = false) {
-        let externalEvents = [...state.externalEvents];
         let ifEventsInCalendarPermission = false;
 
         //warning
@@ -660,7 +644,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 const img = document.createElement('img');
                 img.style.width = '100%';
                 img.style.height = '100%';
-                minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/someIcons/minus.png'}`;
+                minusButton.appendChild(img).src = `${process.env.PUBLIC_URL + '/assets/minus.png'}`;
 
                 minusButton.onclick = function (e) {
                     e.stopPropagation();
@@ -673,7 +657,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                 const deleteImg = document.createElement('img');
                 img.style.width = '100%';
                 img.style.height = '100%';
-                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/someIcons/trash.png'}`;
+                deleteButton.appendChild(deleteImg).src = `${process.env.PUBLIC_URL + '/assets/trash.png'}`;
 
                 deleteButton.onclick = function (e) {
                     e.stopPropagation();
@@ -819,7 +803,7 @@ const OverviewPage: React.FunctionComponent<IOverviewPageProps> = (props) => {
                                             </>
 
                                             <div className="flex">
-                                                <img style={{ width: '20px', height: '20px' }} className="mt-1" src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
+                                                <img style={{ width: '20px', height: '20px' }} className="mt-1" src={process.env.PUBLIC_URL + '/assets/energy.png'} />
                                                 <p className="mt-1">show energy pattern</p>
                                             </div>
                                         </div>

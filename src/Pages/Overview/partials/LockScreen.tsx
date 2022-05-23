@@ -21,7 +21,6 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
         // props.noScroll(false);
     }
     function handleKeyDown(event: any) {
-        console.log('checking');
         if (event.key === 'Escape') {
             handleCancle();
         }
@@ -72,7 +71,7 @@ const LockScreen: React.FunctionComponent<ILockScreenProps> = (props) => {
                     </>
                 ) : (
                     <div className="h-full flex justify-center items-center">
-                        <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/checkmark.png'} />
+                        <img style={{ width: 40, height: 40 }} className="w-4 h-4" src={process.env.PUBLIC_URL + '/assets/checkmark.png'} />
                         <p>You already unlocked missing features. In case you think something went wrong, feel free to contact me</p>
                     </div>
                 )}

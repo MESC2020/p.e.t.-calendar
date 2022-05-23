@@ -48,7 +48,6 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
 
     const handleExternalEvent = async (key: string, value: any) => {
         setExternalEvent({ ...externalEvent, [key]: value });
-        console.log(props.data.durationTime);
     };
 
     const handleChangeToggle = () => {
@@ -63,14 +62,10 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
     const handleConfirmation = (mode?: Mode) => {
         const copyEvent = { ...externalEvent };
         props.onDeadline(copyEvent);
-        console.log(copyEvent);
         if (props.data.id) props.callback(emptyEventObject);
         //props.noScroll(false);
-        console.log(mode);
         if (mode === Mode.movingBackToPool) {
-            console.log(mode);
             props.onChange(copyEvent, mode);
-            console.log("shouldn't be here");
         } else props.onChange(copyEvent);
         props.display();
     };
@@ -121,7 +116,6 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                       durationTime: durationTime,
                       duration: durationTime
                   };
-        console.log(endDate);
         setExternalEvent((state) => {
             return {
                 ...state,
@@ -199,7 +193,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     {props.data.id ? (
                         <>
                             <Button disabled={false} onClick={closeAndDelete} backgroundColor={'white'} rounded={'rounded-full'} className={'h-16 w-16'}>
-                                {<img className="" src={process.env.PUBLIC_URL + '/someIcons/trash.png'} />}
+                                {<img className="" src={process.env.PUBLIC_URL + '/assets/trash.png'} />}
                             </Button>
                         </>
                     ) : (
@@ -215,7 +209,7 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                             rounded={'rounded-full'}
                             className={'h-16 w-16'}
                         >
-                            {<img className="" src={process.env.PUBLIC_URL + '/someIcons/minus.png'} />}
+                            {<img className="" src={process.env.PUBLIC_URL + '/assets/minus.png'} />}
                         </Button>
                     ) : (
                         ''
@@ -223,12 +217,12 @@ const TaskForm: React.FunctionComponent<ITaskFormProps> = (props) => {
                     <div className="flex justify-end gap-x-2 w-full">
                         <Button
                             backgroundColor={colorPalettes.greenButton}
-                            disabled={externalEvent.title.length == 0 || !usedDemandSlider || (deadlineToggle && externalEvent.deadline == undefined)}
+                            disabled={externalEvent.title.length === 0 || !usedDemandSlider || (deadlineToggle && externalEvent.deadline === undefined)}
                             onClick={handleConfirmation}
                             className={'w-1/6 block '}
                         >
                             <div className="flex justify-center">
-                                {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/someIcons/save.png'} />}
+                                {<img className="w-4 h-4" src={process.env.PUBLIC_URL + '/assets/save.png'} />}
                                 Save
                             </div>
                         </Button>

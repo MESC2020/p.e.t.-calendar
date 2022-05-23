@@ -1,5 +1,5 @@
 import React from 'react';
-import { VictoryArea, VictoryChart, VictoryLegend, VictoryLine, VictoryScatter, VictoryTheme } from 'victory';
+import { VictoryArea, VictoryChart, VictoryTheme } from 'victory';
 
 export interface IProductivityGraphProps {
     data?: DataObject[];

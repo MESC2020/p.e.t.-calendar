@@ -11,7 +11,7 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
 */
-// Modules to control application life and create native browser window
+
 const {
   app,
   BrowserWindow,
@@ -64,7 +64,6 @@ const constructAppPath = (hashRoute = "") => {
   return appPath.href;
 };
 
-// Importing dialog module using remote
 function storeToCSV() {
   // Resolves to a Promise<Object>
   dialog
@@ -78,16 +77,12 @@ function storeToCSV() {
     })
     .then(async (file: any) => {
       // Stating whether dialog operation was cancelled or not.
-      console.log(file.canceled);
       if (!file.canceled && file.filePaths.length !== 0) {
-        console.log(file.filePaths[0].toString());
         const converter = new Converter(
           dbManager,
           file.filePaths[0].toString()
         );
         converter.convert();
-
-        // Creating and Writing to the sample.txt file
       }
     })
     .catch((err: any) => {
@@ -114,14 +109,11 @@ function createPopupWindow(width: any, height: any) {
     },
   });
   Menu.setApplicationMenu(null);
-  //popupWindow.loadURL("http://localhost:3000/#/report");
   popupWindow.loadURL(constructAppPath("/report/"));
-  //popupWindow.loadFile(path.join(__dirname, "../index.html#report"));
+  // Open the DevTools.
   //popupWindow.webContents.openDevTools();
 
   popupWindow.on("close", (event: any) => {
-    //win = null
-
     event.preventDefault();
     popupWindow.hide();
   });
@@ -144,9 +136,7 @@ function createWindow(width: any, height: any) {
     },
   });
   mainWindow.loadURL(constructAppPath());
-  //mainWindow.loadFile(path.join(__dirname, "../index.html"));
   Menu.setApplicationMenu(null);
-  // mainWindow.loadURL("http://localhost:3000"); //For dev only
 
   // Open the DevTools.
   //mainWindow.webContents.openDevTools();
@@ -190,9 +180,7 @@ function createWindow(width: any, height: any) {
       },
     ];
     const contextMenu = Menu.buildFromTemplate(template);
-
     tray.setContextMenu(contextMenu);
-
     tray.setToolTip("P.E.T. calendar");
   }
 }
@@ -203,7 +191,7 @@ function createWindow(width: any, height: any) {
 app.whenReady().then(() => {
   const mainScreen = screen.getPrimaryDisplay();
   const { width, height } = mainScreen.workAreaSize;
-
+  //dev extensions
   /*installExtension(REACT_DEVELOPER_TOOLS, {
     loadExtensionOptions: { allowFileAccess: true },
   })
@@ -212,10 +200,9 @@ app.whenReady().then(() => {
 
   infinitePopUpLoop(width, height);
   createWindow(width, height);
-  //createPopupWindow(width, height);
+
   dbManager = new dbMgr();
   dbManager.initDb();
-  //console.log("printing path:");
 
   app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
@@ -233,7 +220,6 @@ function infinitePopUpLoop(width: any, height: any) {
     setTimeout(() => {
       popupWindow.close();
     }, 10 * 60 * 1000);
-    //createPopupWindow(width, height);
   }, 60 * 60 * 1000);
 }
 
@@ -273,7 +259,6 @@ ipcMain.handle("get-proposed-plan", async (event: any, args: any) => {
     aggregator,
     await dbManager.getAllData("Events")
   );
-  //console.log(await planner.generateAvaiableSlots(false));
   const result = await planner.assignTasks();
   dbManager.updateEvents(result);
   return result;
