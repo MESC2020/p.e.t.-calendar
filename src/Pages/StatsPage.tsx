@@ -69,6 +69,7 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
             values.push(data![weekday][measure]);
         }
         const highestValue = Math.max(...values);
+        if (highestValue === 0) return '?';
         const indexInWeekdays = values.indexOf(highestValue);
         const result = Object.values(weekdays)[indexInWeekdays];
         return result;
@@ -87,91 +88,55 @@ const StatsPage: React.FunctionComponent<IStatsPageProps> = (props) => {
             {isLoading ? (
                 ''
             ) : (
-                <div className="h-full flex justify-center w-full min-size-stats">
-               
-                        <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
-                            <div id="cover" className="grid lg:grid-cols-2 grid-cols-1 grid-flow-row">
-                             <>
-                                    <div className="grid lg:grid-cols-2 grid-flow-row gap-x-5 m-3 gap-y-2 grid-cols-1">
-                                        <StatsBox text="Weekly avg. Productivity" className="box-squared ">
-                                            <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
-                                        </StatsBox>
-                                        <StatsBox text="Weekly avg. Energy" className="box-squared ">
-                                            <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
-                                        </StatsBox>{' '}
-                                        <StatsBox className="mr-8 w-full">
-                                            <div id="detail-information" className="overflow-hidden">
-                                                <div className="flex justify-between">
-                                                    <div className="flex">
-                                                        <div style={{ height: 35, width: 35 }}>
-                                                            <img src={process.env.PUBLIC_URL + '/someIcons/productive.png'} />
-                                                        </div>
-                                                        <p className="font-bold pl-1">Most productive weekday</p>
+                <div className="h-full flex justify-center w-full min-size-statsPage">
+                    <div className="bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
+                        <div id="cover" className="grid lg:grid-cols-2 grid-cols-1 grid-flow-row">
+                            <>
+                                <div className="grid lg:grid-cols-2 grid-flow-row gap-x-5 m-3 gap-y-2 grid-cols-1">
+                                    <StatsBox text="Weekly avg. Productivity" className="box-squared ">
+                                        <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
+                                    </StatsBox>
+                                    <StatsBox text="Weekly avg. Energy" className="box-squared ">
+                                        <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
+                                    </StatsBox>{' '}
+                                    <StatsBox className="mr-8 w-full">
+                                        <div id="detail-information" className="overflow-hidden">
+                                            <div className="flex justify-between">
+                                                <div className="flex">
+                                                    <div style={{ height: 35, width: 35 }}>
+                                                        <img src={process.env.PUBLIC_URL + '/someIcons/productive.png'} />
                                                     </div>
-                                                    <p className="pt-4" style={{ color: '#3b83f6' }}>
-                                                        {getHighestDay(measurement.productive)}
-                                                    </p>
+                                                    <p className="font-bold pl-1">Most productive weekday</p>
                                                 </div>
-                                                <div className="flex justify-between mt-2 ">
-                                                    <div className="flex">
-                                                        <div style={{ height: 35, width: 35 }}>
-                                                            <img src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
-                                                        </div>
-                                                        <p className="font-bold pl-1">Most energized weekday</p>
-                                                    </div>
-                                                    <p className="pt-4" style={{ color: '#3b83f6' }}>
-                                                        {getHighestDay(measurement.energy)}
-                                                    </p>
-                                                </div>
+                                                <p className="" style={{ color: '#3b83f6' }}>
+                                                    {getHighestDay(measurement.productive)}
+                                                </p>
                                             </div>
-                                        </StatsBox>
-                                    </div>
-                                </>
+                                            <div className="flex justify-between mt-2 ">
+                                                <div className="flex">
+                                                    <div style={{ height: 35, width: 35 }}>
+                                                        <img src={process.env.PUBLIC_URL + '/someIcons/energy.png'} />
+                                                    </div>
+                                                    <p className="font-bold pl-1">Most energized weekday</p>
+                                                </div>
+                                                <p className="" style={{ color: '#3b83f6' }}>
+                                                    {getHighestDay(measurement.energy)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </StatsBox>
+                                </div>
+                            </>
 
-                                <StatsBox text="Self-assessed Productivity & Energy" className="m-3">
-                                    <VictoryLineChart data={data!} />
-                                </StatsBox>
-                            </div>
+                            <StatsBox text="Self-assessed Productivity & Energy" className="m-3">
+                                <VictoryLineChart data={data!} />
+                            </StatsBox>
                         </div>
                     </div>
-              
+                </div>
             )}
         </>
     );
 };
 
 export default StatsPage;
-
-/*<div className="flex justify-end w-11/12 bg-blue-50 border-blue-100 border-2 rounded-lg drop-shadow-2xl ">
-                        <div className="w-1/2 b flex flex-col border-black border-2">
-                            <StatsBox text="Weekly avg. Productivity" className="box-squared align-middle border-black border-2">
-                                <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
-                            </StatsBox>
-                            <StatsBox text="Weekly avg. Energy" className="box-squared border-black border-2">
-                                <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
-                            </StatsBox>
-                        </div>
-                        <div className=" w-full border-black border-2">
-                            <StatsBox text="Self-assessed Productivity & Energy" className="box-stretched border-black border-2">
-                                <VictoryLineChart data={completeAndRetrieveData()} />
-                            </StatsBox>
-                        </div>
-                    </div>*/
-
-/*<div id="cover" className="flex flex-row h-5/6">
-                            <div className="w-1/3 flex flex-col justify-between m-5 ">
-                                <StatsBox text="Weekly avg. Productivity" className="w-8/12 h-72 box-squared ">
-                                    <VictoryPieChart data={totalAvg!.productive} max={7} inPrecent={false} />
-                                </StatsBox>
-                                <StatsBox text="Weekly avg. Energy" className="h-72 w-8/12 box-squared ">
-                                    <VictoryPieChart data={totalAvg!.energy} max={7} inPrecent={false} />
-                                </StatsBox>
-                            </div>
-                            {document.getElementById('cover') ? (
-                                <StatsBox text="Self-assessed Productivity & Energy" className="m-5 ">
-                                    <VictoryLineChart width={2 * (document.getElementById('cover')!.offsetWidth / 3)} height={document.getElementById('cover')!.offsetHeight} data={data!} />
-                                </StatsBox>
-                            ) : (
-                                ''
-                            )}
-                        </div>*/

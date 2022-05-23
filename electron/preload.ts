@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("api", {
   deleteEvents: (args: any) => ipcRenderer.send("delete-events", args),
   updateEvents: (args: any) => ipcRenderer.send("update-events", args),
   getAllEvents: (args: any) => ipcRenderer.invoke("get-all-events", args),
+  getProposedPlan: (args: any) => ipcRenderer.invoke("get-proposed-plan", args),
 
   //report handling
   closePopup: (args: any) => ipcRenderer.send("close-popup", args),
@@ -22,5 +23,13 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("get-aggregated-hours", args),
   getAggregatedWeekdays: (args: any) =>
     ipcRenderer.invoke("get-aggregated-weekdays", args),
+
+  //log handling
+  retrieveLockStatus: (args: any) =>
+    ipcRenderer.invoke("retrieve-lock-status", args),
+  updateLogs: (args: any) => ipcRenderer.send("update-logs", args),
+
+  //save-handling
+  exportToCSV: (args: any) => ipcRenderer.send("export-to-csv", args),
 });
 export {};

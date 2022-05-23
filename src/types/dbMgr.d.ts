@@ -10,6 +10,7 @@ declare global {
         get(sql: string, callback: callback): any;
         prepare(sql: string): any;
         last_insert_rowid(): any;
+        serialize(calls: any): any;
     };
     type error = {
         message?: string;
@@ -27,6 +28,11 @@ declare global {
     interface IaggregatedWeekdays {
         [day: string]: { [measurement: string]: number };
     }
+
+    type log = {
+        information: string;
+        data: any;
+    };
 }
 
 export {};

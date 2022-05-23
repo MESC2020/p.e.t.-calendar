@@ -26,14 +26,13 @@ const TimeSelector: React.FunctionComponent<ITimeSelectorProps> = (props) => {
     function handleTimePicking(value: Moment) {
         const onlyTime = value.format('HH:mm');
         //if Task already in Calendar
-        if (props.startTime !== undefined) {
+        if (props.startTime !== undefined && props.startTime !== null) {
             const [hour, minute] = onlyTime.split(':');
             let milSec = new Date(props.startTime).getTime() + parseInt(hour) * 60 * 60 * 1000 + parseInt(minute) * 60 * 1000;
             const newDate = new Date(milSec).toISOString(); //new End date
-            props.onChange('end', newDate);
-        }
-        //if Task still in Task-Pool
-        else props.onChange('duration', onlyTime);
+            props.onChange(onlyTime, newDate);
+        } else props.onChange(onlyTime);
+        console.log(onlyTime);
     }
     return (
         <div className={`${props.className}` + ' '}>

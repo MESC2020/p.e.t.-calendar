@@ -15,6 +15,7 @@ interface IbuttonProps {
     textColor?: string;
     id?: string;
     isButtonPressed?: boolean;
+    rounded?: string;
 }
 
 export const Button = (props: IbuttonProps) => {
@@ -25,7 +26,13 @@ export const Button = (props: IbuttonProps) => {
             disabled={props.disabled}
             onClick={props.onClick}
             color={props.textColor ? props.textColor : 'white'}
-            className={(props.isButtonPressed ? 'ring-blue-500 ring-2 ring-offset-2 ' : '') + (props.fullWidth ? 'w-full' : '') + ' focus:ring-blue-500 ' + (props.className ?? '')}
+            className={
+                (props.isButtonPressed ? 'ring-2 ring-calendar-blue/50 ring-offset-2 ' : '') +
+                (props.rounded ? `${props.rounded} ` : 'rounded-xl ') +
+                (props.fullWidth ? 'w-full' : '') +
+                ' focus:ring-calendar-blue/50 ' +
+                (props.className ?? '')
+            }
         >
             {props.children}
         </button>

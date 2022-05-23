@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import ProductivityGraph from '../../../components/charts/VictoryProductivityGraph';
-import { weekdays } from '../../../db/Aggregator';
 
 export interface IVerticalGraphProps {
     className?: string;
     showAnimation: boolean;
-}
-
-interface IpreparedData {
-    [day: string]: [value: GraphData[]];
+    unlockAIbutton: any;
 }
 
 type WeekdayWithHours = {
@@ -25,111 +21,49 @@ const VerticalGraph: React.FunctionComponent<IVerticalGraphProps> = (props) => {
     const [data, setData] = useState<WeekdayWithHours[]>();
     useEffect(() => {
         async function getData() {
-            const res: IaggregatedHoursWithoutEnergy = await window.api.getAggregatedHours();
-            const days: WeekdayWithHours[] = await prepareData(res);
+            const res: WeekdayWithHours[] = await window.api.getAggregatedHours();
+            if (unlockAiButton(res)) props.unlockAIbutton(true);
 
-            setData(days);
-            if (days !== undefined) setIsLoading(!isLoading);
+            setData(res);
+            if (res !== undefined) setIsLoading(!isLoading);
         }
         if (isLoading) getData();
     });
 
-    function prepareData(objectHours: IaggregatedHoursWithoutEnergy) {
-        const days: WeekdayWithHours[] = [];
-        const allKeys = Object.keys(objectHours);
-        const enumWeekdays = Object.keys(weekdays);
-
-        let count = 0;
-        //check if object is not empty
-        if (allKeys.length !== 0) {
-            //go through each weekday
-            for (let keyDay of enumWeekdays) {
-                const day: GraphData[] = [];
-                count = 0;
-                //if that weekday has data
-                if (allKeys.includes(keyDay)) {
-                    for (let keyTime in objectHours[keyDay]) {
-                        const lastKeyTime: boolean = Object.keys(objectHours[keyDay]).indexOf(keyTime) === Object.keys(objectHours[keyDay]).length - 1;
-                        const [hour, minute] = keyTime.split(':');
-                        //if there are times skipped - filled them up with "00:00"
-                        if (count < parseInt(hour)) {
-                            const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
-                            const ifNotMidnightReached = lastKeyTime && keyTime !== '24:00';
-                            const completedData = completeData(count, parseInt(hour), ifNotMidnightReached, tempObj);
-                            count = parseInt(hour);
-                            day.push(...completedData);
-                        } else {
-                            const tempObj = { x: keyTime, y: objectHours[keyDay][keyTime] };
-                            day.push(tempObj);
-                            if (lastKeyTime && day.length !== 25) {
-                                const completedData = completeData(count + 1, 25, false);
-                                day.push(...completedData);
-                            }
-                        }
-                        count++;
-                    }
-                }
-                //if that weekday has no data (fill it up completely with "00:00")
-                else {
-                    const completedData = completeData(0, 25, false);
-                    day.push(...completedData);
-                }
-                const final = { [keyDay]: day };
-                days.push(final);
-            }
-        }
-        //if the complete object is empty, fill the whole week with "00:00"
-        else {
-            enumWeekdays.forEach((weekday) => {
-                const emptyDay = completeData(0, 25, false);
-                const final = { [weekday]: emptyDay };
-                days.push(final);
-            });
-        }
-        return days;
-    }
-
-    function completeData(count: number, hour: number, midnightNotReached: boolean, temp?: GraphData) {
-        const filler = [];
-        let loop = true;
-        let tempAlreadyAdded = false;
-        while (loop) {
-            while (count < hour) {
-                let time = count < 10 ? `0${count}:00` : `${count}:00`;
-                const tempObj = { x: time, y: 0 };
-                filler.push(tempObj);
-                count++;
-            }
-            if (temp !== undefined && !tempAlreadyAdded) {
-                filler.push(temp);
-                tempAlreadyAdded = true;
-            }
-            if (midnightNotReached && hour != 25) {
-                count++;
-                hour = 25;
-            } else loop = false;
-        }
-
-        return filler;
-    }
-
     function returnGraphs() {
         if (data !== undefined) {
             return data.map((data) => (
-                <div className="overlap-day-box overflow-hidden ">
+                <div className="overlap-day-box pointer-events-none   overflow-hidden ">
                     <ProductivityGraph showAnimation={props.showAnimation} data={data[Object.keys(data)[0]]} />
                 </div>
             ));
         }
     }
+    function unlockAiButton(res: WeekdayWithHours[]) {
+        let counterHourSlot = 0;
+        let counterDifferentDays = 0;
+        const MINIMUM_HOUR_SLOTS = 16;
+        const MINIMUM_WEEKDAYS = 2;
+        for (let weekdays of res) {
+            const checkBeforeCounting = counterHourSlot;
+            for (let weekday in weekdays) {
+                for (let graphData of weekdays[weekday]) {
+                    if (graphData.y > 0) counterHourSlot++; //count only the time slots that are not 0
+                }
+            }
+            if (counterHourSlot - checkBeforeCounting > 0) counterDifferentDays++; //count the day only if it contains data
+        }
+        if (counterDifferentDays >= MINIMUM_WEEKDAYS && counterHourSlot >= MINIMUM_HOUR_SLOTS) return true;
+        else return false;
+    }
 
     return (
-        <div className={`${props.className}` + ' click-through opacity-10 h-full w-full '}>
-            <div className="w-full overlap-header"></div>
+        <div className={`${props.className}` + ' click-through  pointer-events-none opacity-20 h-full w-full '}>
+            <div className="w-full overlap-header h-full "></div>
             {isLoading ? (
                 ''
             ) : (
-                <div className="flex overlap-main overflow-hidden">
+                <div className="flex overlap-main h-full overflow-hidden">
                     <>{returnGraphs()}</>
                 </div>
             )}

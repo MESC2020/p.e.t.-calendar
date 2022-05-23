@@ -1,10 +1,10 @@
 .container-overview {
     width: 1200px;
-    height: 1600px;
+    height: 92vh;
     position: relative;
 }
-.min-size{
-    min-width: 1420px;
+.min-size {
+    min-width: 1460px;
 }
 
 .box {
@@ -19,14 +19,14 @@
     margin-bottom: 3.4em;
 }
 .overlap-main {
-    height: 1500px;
-    width: 1144px;
+    height: 1504px;
+    width: 1130px;
     position: absolute;
     right: 0px;
 }
 
 .overlap-day-box {
-    width: 163.42px;
+    width: 161.16px;
     height: 100%;
 }
 
@@ -34,35 +34,53 @@
     pointer-events: none;
 }
 
-.card {
-    @apply bg-white rounded-xl shadow-lg;
-}
-
-#overlay {
-    position: fixed; /* Sit on top of the page content */
-    display: none; /* Hidden by default */
-    width: 100%; /* Full width (cover the whole page) */
-    height: 100%; /* Full height (cover the whole page) */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
-    z-index: 1000; /* Specify a stack order in case you're using a different order for other elements */
-}
-#popup {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    -ms-transform: translate(-50%, -50%);
+.pool {
+    height: 80vh;
+    max-height: 92vh;
 }
 
 .max-height {
-    max-height: 600px;
+    max-height: 80vh;
     overflow-y: scroll;
+}
+.min-width-cal {
 }
 
 .min-height {
-    min-height: 200px;
+    min-height: 220px;
+}
+
+.min-size-statsPage {
+    min-width: 618px;
+}
+
+.injected-container {
+    @apply flex flex-col justify-end items-end;
+    position: relative;
+
+    margin-right: 1px;
+    z-index: 1000;
+
+    width: 50px;
+    height: 70px;
+
+    padding: 0 !important;
+}
+
+.injected-buttons {
+    @apply border-2 border-calendar-blue;
+    background-color: white;
+    margin-top: 8px;
+
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+
+    padding: 0 !important;
+
+    overflow: hidden;
+}
+
+.prevent-pointer {
+    pointer-events: none;
 }
