@@ -40,6 +40,10 @@ type Window = {
   hide(): any;
   on(eventListening: string, func: any): any;
   destroy(): any;
+  setVisibleOnAllWorkspaces(flag: boolean, other: any): any;
+  setAlwaysOnTop(flag: boolean, option: string): any;
+  setFullScreenable(flag: boolean): any;
+  moveTop(): any;
 };
 
 let popupWindow: Window;
@@ -121,6 +125,11 @@ function createPopupWindow(width: any, height: any) {
     event.preventDefault();
     popupWindow.hide();
   });
+  popupWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  popupWindow.setAlwaysOnTop(true, "normal");
+  popupWindow.setFullScreenable(false);
+  // Below statement completes the flow
+  popupWindow.moveTop();
 }
 
 function createWindow(width: any, height: any) {
