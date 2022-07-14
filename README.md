@@ -76,7 +76,7 @@ Not yet implemented
 
 #### Acknowledgment
 - Anastasia Ruvimova & Alexander Lill  // Supervisors
-- Tomas Fritz, Prof. Dr.
+- Thomas Fritz, Prof. Dr.
 
 ### License
 - Copyright protected &copy;
